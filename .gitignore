@@ -1,0 +1,34 @@
+# Ambientes Virtuais
+venv/
+env/
+.venv/
+
+# Python (Arquivos compilados)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Banco de Dados (Não envie seu banco de teste para o Git)
+db.sqlite3
+
+# Arquivos de Sistema e IDE
+.vscode/
+.idea/
+.DS_Store
+
+# Variáveis de ambiente e Segredos
+.env
+local_settings.py
+
+# Arquivos de mídia e estáticos (Uploads dos usuários)
+media/
+staticfiles/
+
+#segredos smtp e app
+.env
+
+
+
+
+
+.cache_ggshield

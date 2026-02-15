@@ -9,8 +9,13 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from pathlib import Path
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +25,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-y$lnu3w=(c6+m5o6ie@p_@4yk%hn$kwc^*9af&pd1o$91*0yy%'
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,6 +42,17 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework.authtoken',
+    'corsheaders',     # Se estiver usando  
+    'django_filters',
+    'companies',
+    'jobs',
+    'pdf',
+    'resumes',
+    'users.apps.UsersConfig',
+    'captcha',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +70,7 @@ ROOT_URLCONF = 'core.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,6 +84,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
+# Autenticação
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
@@ -102,9 +121,9 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'pt-br'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'America/Fortaleza'
 
 USE_I18N = True
 
@@ -116,7 +135,73 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+#STATIC_ROOT = BASE_DIR / 'staticfiles'  # Pasta onde collectstatic vai colocar arquivos
+
+STATICFILES_DIRS = [
+   # BASE_DIR / 'static',  # Pasta de arquivos estáticos durante desenvolvimento
+]
+# Media files (Upload de usuários)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Traduções
+LOCALE_PATHS = [BASE_DIR / 'locale']
+
+# CONFIGURAÇÃO DE E-MAIL (DESCOMENTE A VERSÃO QUE DESEJAR)
+# mostrar e-mails no terminal (VS Code)
+#DEFAULT_FROM_EMAIL = 'sistema@prisma.com' 
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# MODO REAL (Para quando quiser enviar e-mails de verdade)
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587    
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'armazen26@gmail.com'
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD') # Não é a senha normal, é a "Senha de App"
+
+
+
+from django.contrib.messages import constants as messages
+
+MESSAGE_TAGS = {
+    messages.DEBUG: 'secondary',
+    messages.INFO: 'info',
+    messages.SUCCESS: 'success',
+    messages.WARNING: 'warning',
+    messages.ERROR: 'danger',
+}
+
+from datetime import timedelta
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'CHECK_REVOCATION': False,
+    'UPDATE_LAST_LOGIN': True,
+}
+# Configuração de E-mail para Desenvolvimento (mostra no terminal)
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+#DEFAULT_FROM_EMAIL = 'sistema-egressos@suauniversidade.edu.br'
+# Chaves de teste do Google (funcionam em qualquer localhost)
+RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
+RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
+
+RECAPTCHA_LANGUAGE = 'pt-BR'
+
+AUTH_USER_MODEL = 'users.User'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend', # Mantém o padrão
+    'users.backends.EmailOrPinBackend',          # Adiciona o seu novo tradutor
+]
