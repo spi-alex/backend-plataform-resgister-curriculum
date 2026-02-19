@@ -1,9 +1,15 @@
+import zipfile
+import io
+from django.http import HttpResponse
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response 
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from .models import Resume
 from .serializers import ResumeSerializer
-
+from pdf.views import gerar_pdf_puro
+from pdf.views import gerar_pdf_bytes
 class ResumeViewSet(viewsets.ModelViewSet):
     serializer_class = ResumeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -35,7 +41,7 @@ class ResumeViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Verifica Role
-        if getattr(user, 'role', 'CANDIDATE') != 'CANDIDATE':
+        if getattr(user, 'role', 'candidate') != 'candidate':
             raise PermissionDenied("Apenas candidatos podem criar currículos.")
             
         # Verifica duplicidade
@@ -44,3 +50,38 @@ class ResumeViewSet(viewsets.ModelViewSet):
             
         # Salva vinculando ao usuário
         serializer.save(user=user)
+@api_view(['POST']) # Usamos POST para poder enviar uma lista de IDs no corpo
+@permission_classes([IsAuthenticated])
+def export_resumes_zip(request):
+    if request.user.role.lower() != 'gestor':
+        return Response({"error": "Acesso negado."}, status=403)
+
+    # O Frontend deve enviar algo como: {"resume_ids": [1, 5, 10]}
+    resume_ids = request.data.get('resume_ids', [])
+    
+    if not resume_ids:
+        return Response({"error": "Nenhum currículo selecionado."}, status=400)
+
+    # Cria um buffer na memória para o arquivo ZIP
+    zip_buffer = io.BytesIO()
+
+    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+        resumes = Resume.objects.filter(id__in=resume_ids)
+        print(resumes)
+        for resume in resumes:
+            # 1. Gerar o PDF para este currículo específico
+            # Substitua pela sua função real de PDF. Ela deve retornar bytes.
+            pdf_content = gerar_pdf_puro(resume, request)
+            
+            # 2. Nome do arquivo dentro do ZIP (ex: curriculo_joao.pdf)
+            filename = f"curriculo_{resume.user.username}_{resume.id}.pdf"
+            
+            # 3. Adiciona o PDF ao ZIP
+            zip_file.writestr(filename, pdf_content)
+
+    # Prepara a resposta para download
+    zip_buffer.seek(0)
+    response = HttpResponse(zip_buffer.read(), content_type='application/zip')
+    response['Content-Disposition'] = 'attachment; filename="curriculos_exportados.zip"'
+    
+    return response

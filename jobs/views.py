@@ -14,11 +14,13 @@ from .serializers import JobSerializer, ApplicationSerializer
 
 class IsCompany(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'COMPANY')
+        print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'company')
 
 class IsCandidate(BasePermission):
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'CANDIDATE')
+        print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
+        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'candidate')
 
 # --------------------------------------------------------------------------
 

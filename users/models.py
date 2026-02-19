@@ -4,14 +4,14 @@ import random
 
 class User(AbstractUser):
     ROLE_CHOICES = (
-        ('ADMIN', 'Admin'),
-        ('COMPANY', 'Empresa'),
-        ('CANDIDATE', 'Candidato'),
-        ('GESTOR', 'Gestor'),  # Novo
-        ('ALUNO', 'Aluno'),    # Novo
+        ('admin', 'Admin'),
+        ('company', 'Empresa'),
+        ('candidate', 'Candidato'),
+        ('gestor', 'Gestor'),  # Novo
+        ('aluno', 'Aluno'),    # Novo
     )
     
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='CANDIDATE')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
     pin = models.CharField(max_length=10, unique=True, null=True, blank=True)
 
     def save(self, *args, **kwargs):
@@ -28,28 +28,7 @@ class User(AbstractUser):
                 return new_pin
 
 class Profile(models.Model):
-    TYPES = (('candidate', 'Candidato'), ('company', 'Empresa'))
+    TYPES = (('candidate', 'Candidato'), ('company', 'Empresa'), ('gestor', 'Gestor'), ('aluno', 'Aluno'))
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     type = models.CharField(max_length=10, choices=TYPES)
     
-'''from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import User
-
-class User(AbstractUser):
-    # Opções de papéis
-    ROLE_CHOICES = (
-        ('ADMIN', 'Admin'),
-        ('COMPANY', 'Empresa'),
-        ('CANDIDATE', 'Candidato'),
-    )
-    
-    # O CAMPO QUE ESTAVA FALTANDO OU COM NOME ERRADO:
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='CANDIDATE')
-   # pin = models.CharField(max_length=10, unique=True, null=True, blank=True)
-class Profile(models.Model):
-    TYPES = (('candidate', 'Candidato'), ('company', 'Empresa'))
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
-    type = models.CharField(max_length=10, choices=TYPES) 
-'''
-  

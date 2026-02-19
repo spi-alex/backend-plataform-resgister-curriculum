@@ -9,4 +9,9 @@ urlpatterns = [
     # Rotas de Login (JWT) - Mantenha se você já tinha
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
+    path('dashboard/', views.gestor_dashboard, name='gestor-dashboard'),
+    path('gestor/resumes/', views.list_all_resumes, name='gestor-resumes'),
+    path('gestor/companies/', views.list_all_companies, name='gestor-companies'),
+    path('gestor/jobs/', views.list_all_jobs, name='gestor-jobs'),
+    
 ]
