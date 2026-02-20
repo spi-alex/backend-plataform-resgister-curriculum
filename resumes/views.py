@@ -15,8 +15,35 @@ class ResumeViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
         # Garante que o usuário só veja/edite o próprio currículo
-        return Resume.objects.filter(user=self.request.user)
+        if getattr(user, 'role', 'candidate') in ['candidate', 'aluno']:
+            return Resume.objects.filter(user=user)
+        
+        # 2. Se for Gestor (ou outro), ele vê todos e pode FILTRAR
+        queryset = Resume.objects.all()
+
+        # PEGAR PARÂMETROS DA URL (Ex: ?curso=Direito)
+        curso = self.request.query_params.get('curso')
+        situacao = self.request.query_params.get('situacao')
+        ano_ingresso = self.request.query_params.get('ano_ingresso')
+        ano_conclusao = self.request.query_params.get('ano_conclusao')
+
+        # APLICAR FILTROS (Se o parâmetro existir na URL)
+        if curso:
+            # icontains busca parte do nome e ignora maiúsculas/minúsculas
+            queryset = queryset.filter(curso__icontains=curso)
+        
+        if situacao:
+            queryset = queryset.filter(situacao=situacao)
+            
+        if ano_ingresso:
+            queryset = queryset.filter(ano_ingresso=ano_ingresso)
+            
+        if ano_conclusao:
+            queryset = queryset.filter(ano_conclusao=ano_conclusao)
+
+        return queryset
 
     # --- MÉTODO CREATE CUSTOMIZADO (Com a sua mensagem) ---
     def create(self, request, *args, **kwargs):
@@ -41,8 +68,9 @@ class ResumeViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         # Verifica Role
-        if getattr(user, 'role', 'candidate') != 'candidate':
-            raise PermissionDenied("Apenas candidatos podem criar currículos.")
+        # --- ALTERAÇÃO AQUI: Permitir candidato OU aluno ---
+        if user.role not in ['candidate', 'aluno']:
+            raise PermissionDenied("Apenas candidatos ou alunos podem criar currículos.")
             
         # Verifica duplicidade
         if Resume.objects.filter(user=user).exists():
