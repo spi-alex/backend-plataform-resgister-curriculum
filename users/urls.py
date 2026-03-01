@@ -13,5 +13,7 @@ urlpatterns = [
     path('gestor/resumes/', views.list_all_resumes, name='gestor-resumes'),
     path('gestor/companies/', views.list_all_companies, name='gestor-companies'),
     path('gestor/jobs/', views.list_all_jobs, name='gestor-jobs'),
+    path('password-reset/', views.password_reset_request, name='password_reset_request'),
+    path('password-reset-confirm/<uidb64>/<token>/', views.password_reset_confirm, name='password_reset_confirm'),
     
 ]

@@ -56,6 +56,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # Se estiver usando
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -204,4 +205,8 @@ AUTH_USER_MODEL = 'users.User'
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # Mantém o padrão
     'users.backends.EmailOrPinBackend',          # Adiciona o seu novo tradutor
+]
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173", # Porta comum do Vite
+    "http://127.0.0.1:5173",
 ]

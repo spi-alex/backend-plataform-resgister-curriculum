@@ -1,3 +1,6 @@
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode
+from django.utils.encoding import force_bytes
 from django.db.models import Count
 from django.core.mail import send_mail
 from rest_framework.decorators import api_view, permission_classes
@@ -6,12 +9,16 @@ from rest_framework.response import Response
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.tokens import RefreshToken
 from companies.models import Company
+from core import settings
 from jobs.models import Job, Application # <--- IMPORTANTE: Importe o modelo de vagas quando tiver ele criado
 import uuid  #  gerar números únicos
 from .models import User
 from captcha.models import CaptchaStore 
 from django.utils import timezone
 from resumes.models import Resume
+from django.utils.http import urlsafe_base64_decode
+from django.conf import settings
+
 User = get_user_model()
 
 @api_view(['POST'])
@@ -159,3 +166,83 @@ def list_all_jobs(request):
     )
 
     return Response(jobss)
+
+@api_view(['POST'])
+@permission_classes([AllowAny]) # Qualquer um pode pedir o reset
+def password_reset_request(request):
+    email_sujo = request.data.get('email', '')
+    email = email_sujo.strip()
+    user = User.objects.filter(email__iexact=email).first()
+    
+    print(f"DEBUG: Email original: '{email_sujo}'")
+    print(f"DEBUG: Email limpo: '{email}'")
+    print(f"DEBUG: Usuário encontrado? {user is not None}")
+
+    print(f"DEBUG: Tentativa de reset para o email: {email}")
+    print(f"DEBUG: Usuário encontrado? {user is not None}")
+    # Por segurança, sempre damos a mesma resposta
+    resposta_padrao = {"message": "Se este e-mail estiver cadastrado, as instruções foram enviadas."}
+
+    if user:
+        # Gerar os dados do link
+        token = default_token_generator.make_token(user)
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        
+        # O link que o usuário vai usar para trocar a senha
+        link_recuperacao = f"http://localhost:8000/api/users/password-reset-confirm/{uid}/{token}/"
+
+        # --- PADRÃO QUE FUNCIONOU NO PIN ---
+        assunto = 'PRISMA - Recuperação de Senha'
+        mensagem = (
+            f"Olá {user.username},\n\n"
+            f"Recebemos um pedido para redefinir sua senha.\n"
+            f"Clique no link abaixo ou cole no seu navegador para prosseguir:\n\n"
+            f"{link_recuperacao}\n\n"
+            f"Se você não solicitou isso, ignore este e-mail."
+        )
+        remetente = settings.EMAIL_HOST_USER # Use o mesmo do PIN
+        destinatario = [user.email]
+
+        send_mail(assunto, mensagem, remetente, destinatario)
+        # ------------------------------------
+
+    return Response(resposta_padrao, status=200)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm(request, uidb64, token):
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
+
+    if user is not None and default_token_generator.check_token(user, token):
+        new_password = request.data.get('new_password')
+        if not new_password:
+            return Response({"error": "Nova senha é obrigatória."}, status=400)
+            
+        # 1. Altera a senha
+        user.set_password(new_password)
+        user.save()
+
+        # 2. --- NOVO: E-MAIL DE CONFIRMAÇÃO DE ALTERAÇÃO ---
+        assunto = 'PRISMA - Senha Alterada com Sucesso'
+        mensagem = (
+            f"Olá {user.username},\n\n"
+            f"Este é um aviso de segurança para confirmar que a sua senha no sistema PRISMA foi alterada recentemente.\n\n"
+            f"Se foi você quem realizou esta alteração, pode ignorar este e-mail.\n"
+            f"Caso você NÃO tenha solicitado isso, entre em contato com o suporte imediatamente."
+        )
+        remetente = settings.EMAIL_HOST_USER # Usando a sua config oficial
+        destinatario = [user.email]
+
+        try:
+            send_mail(assunto, mensagem, remetente, destinatario)
+        except Exception as e:
+            # Logamos o erro mas não travamos a resposta, pois a senha JÁ foi trocada
+            print(f"Erro ao enviar e-mail de confirmação: {e}")
+        # --------------------------------------------------
+
+        return Response({"message": "Senha alterada com sucesso! Um e-mail de confirmação foi enviado."}, status=200)
+    
+    return Response({"error": "O link de recuperação é inválido ou expirou."}, status=400)
