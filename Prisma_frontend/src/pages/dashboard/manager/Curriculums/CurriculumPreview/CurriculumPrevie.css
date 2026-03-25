@@ -1,0 +1,162 @@
+/* Fundo */
+.preview-container {
+  background-color: #f3f4f6;
+  min-height: 100vh;
+  padding: 40px 0;
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: #1f2937;
+}
+
+/* Botão */
+.preview-actions {
+  width: 900px;
+  margin: 0 auto 20px;
+  text-align: right;
+}
+
+.btn-download {
+  background-color: #059669;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: 0.3s;
+  font-size: 14px;
+}
+
+.btn-download:hover {
+  background-color: #047857;
+}
+
+/* Página A4 */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  max-width: 900px;
+  margin: 0 auto;
+  background: white;
+  padding: 60px;
+  position: relative;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+/* Header */
+.header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 20px;
+  margin-bottom: 40px;
+}
+
+.header h1 {
+  font-size: 38px;
+  font-weight: 300;
+  margin: 0;
+}
+
+.city {
+  color: #6b7280;
+  margin-top: 5px;
+}
+
+.contact-info {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #374151;
+}
+
+/* Seções */
+.section {
+  margin-bottom: 35px;
+}
+
+.section h2 {
+  color: #059669;
+  font-size: 14px;
+  text-transform: uppercase;
+  font-weight: bold;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+  letter-spacing: 1px;
+}
+
+/* Blocos */
+.block {
+  margin-bottom: 20px;
+}
+
+.title {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.period {
+  font-size: 13px;
+  color: #6b7280;
+  margin-top: 3px;
+}
+
+.description {
+  font-size: 14px;
+  margin-top: 5px;
+  line-height: 1.6;
+  color: #374151;
+}
+
+/* Listas */
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 6px;
+  font-size: 14px;
+}
+
+/* Rodapé */
+.footer {
+  position: absolute;
+  bottom: 30px;
+  left: 60px;
+  right: 60px;
+  text-align: center;
+  font-size: 12px;
+  color: #9ca3af;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 10px;
+}
+
+/* Tela de erro */
+.preview-error {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #dc2626;
+  font-size: 18px;
+}
+
+/* Impressão */
+@media print {
+
+  body {
+    background: white;
+  }
+
+  .preview-actions {
+    display: none;
+  }
+
+  .a4-page {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  @page {
+    size: A4;
+    margin: 0;
+  }
+}

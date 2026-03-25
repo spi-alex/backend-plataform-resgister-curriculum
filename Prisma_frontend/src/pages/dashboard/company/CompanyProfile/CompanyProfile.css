@@ -1,0 +1,210 @@
+.company-profile {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* HERO */
+
+.profile-hero {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  gap: 2rem;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+}
+
+.profile-image-wrapper {
+  position: relative;
+}
+
+.profile-image {
+  width: 120px;
+  height: 120px;
+  border-radius: 16px;
+  object-fit: cover;
+}
+
+.profile-image-button {
+  position: absolute;
+  bottom: -8px;
+  right: -8px;
+  background: #16a34a;
+  border: none;
+  color: white;
+  padding: 6px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+.profile-info h2 {
+  margin: 0;
+  font-size: 1.6rem;
+}
+
+.profile-badge {
+  background: #dcfce7;
+  color: #15803d;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
+.profile-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.profile-email {
+  margin-top: 0.5rem;
+  color: #64748b;
+}
+
+.profile-member-since {
+  font-size: 0.8rem;
+  color: #94a3b8;
+}
+
+/* GRID */
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.profile-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.profile-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.profile-card-header h3 {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+}
+
+.profile-edit-btn {
+  background: none;
+  border: none;
+  color: #16a34a;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.profile-field {
+  margin-bottom: 1rem;
+}
+
+.profile-field span {
+  display: block;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.profile-field strong {
+  color: #1e293b;
+}
+
+/* SEGURANÇA */
+
+.profile-security-btn {
+  width: 100%;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  padding: 1rem;
+  border-radius: 12px;
+  display: flex;
+  justify-content: space-between;
+  cursor: pointer;
+}
+
+.profile-security-info {
+  margin-top: 1rem;
+  background: #eff6ff;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  display: flex;
+  gap: 6px;
+}
+
+/* NOTIFICAÇÕES */
+
+.profile-notifications label {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+/* AJUDA */
+
+.profile-help {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.profile-help button {
+  padding: 0.75rem;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  cursor: pointer;
+}
+
+/* ZONA PERIGOSA */
+
+.profile-danger {
+  margin-top: 2rem;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+.profile-danger-info {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.profile-danger-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.logout-btn {
+  background: #f1f5f9;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.deactivate-btn {
+  background: #fee2e2;
+  color: #b91c1c;
+  border: none;
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+}

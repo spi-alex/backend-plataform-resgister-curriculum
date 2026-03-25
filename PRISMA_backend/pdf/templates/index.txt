@@ -1,0 +1,23 @@
+<!-- templates/index.html -->
+{% extends 'base.html' %} {% block title %}Página Inicial{% endblock %} {% block
+content %}
+<div class="row">
+  <div class="col-md-12">
+    <h1 class="display-4">Bem-vindo ao Django 5!</h1>
+    <p class="lead">
+      Este é um projeto inicial configurado com Django 5 e Bootstrap 5.
+    </p>
+    <hr class="my-4" />
+    <p>
+      Comece a desenvolver sua aplicação editando os arquivos em
+      <code>myapp/</code>.
+    </p>
+    <a
+      class="btn btn-primary btn-lg"
+      href="{% url 'admin:index' %}"
+      role="button"
+      >Acessar Admin</a
+    >
+  </div>
+</div>
+{% endblock %}

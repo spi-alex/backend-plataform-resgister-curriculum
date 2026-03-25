@@ -1,0 +1,32 @@
+.topbar {
+  height: 64px;
+  background-color: #0f2e13;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 24px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 600;
+}
+
+.logo {
+  width: 36px;
+  height: 36px;
+  background-color: #4e8f5d;
+  border-radius: 50%;
+}
+
+.user-chip {
+  background-color: #4e8f5d;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 14px;
+}

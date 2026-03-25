@@ -1,0 +1,17 @@
+.charts-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.chart-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(248, 116, 116, 0.05);
+}
+
+.chart-card h3 {
+  margin-bottom: 16px;
+  font-size: 1rem;
+}

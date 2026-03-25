@@ -1,0 +1,135 @@
+/* ================= PÁGINA ================= */
+/* centraliza tudo na tela */
+.reset-page {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #b9cbb5;
+  padding: 20px;
+}
+
+/* ================= CAIXA EXTERNA ================= */
+.reset-outer {
+  background-color: #5f755a;
+  padding: 40px;
+  border-radius: 12px;
+  width: 480px;
+  max-width: 100%;
+}
+
+.reset-outer h1 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 24px;
+  font-size: 26px;
+}
+
+/* ================= CAIXA INTERNA ================= */
+.reset-inner {
+  background-color: #163b12;
+  padding: 32px;
+  border-radius: 12px;
+
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ================= LABEL ================= */
+/* resolve label colado no input */
+.reset-inner label {
+  margin-bottom: 6px;
+  display: block;
+  color: #fff;
+  font-size: 14px;
+}
+
+/* ================= INPUT ================= */
+.reset-inner input {
+  width: 100%;
+  height: 44px;
+
+  padding: 0 14px;
+
+  border-radius: 12px; 
+  border: none;
+
+  background-color: #f1f1f1;
+  font-size: 14px;
+}
+
+.reset-inner input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px #16a34a;
+}
+
+/* ================= BOTÃO ================= */
+.reset-inner button {
+  width: 100%;
+  height: 46px;
+
+  background-color: #16a34a; 
+  color: #ffffff;
+
+  border: none;
+  border-radius: 14px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.reset-inner button:hover:not(:disabled) {
+  background-color: #15803d;
+}
+
+.reset-inner button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ================= MENSAGEM ================= */
+.mensagem {
+  color: #eaeaea;
+  font-size: 14px;
+  text-align: center;
+}
+
+/* ================= LINK ================= */
+.link {
+  text-align: center;
+  margin-top: 8px;
+}
+
+.link a {
+  color: #16a34a;          
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.link a:hover {
+  text-decoration: underline;
+}
+
+/* ================= RESPONSIVO ================= */
+@media (max-width: 480px) {
+  .reset-outer {
+    padding: 24px;
+  }
+
+  .reset-inner {
+    padding: 24px;
+  }
+
+  .reset-outer h1 {
+    font-size: 22px;
+  }
+
+  .reset-inner button {
+    font-size: 15px;
+  }
+}

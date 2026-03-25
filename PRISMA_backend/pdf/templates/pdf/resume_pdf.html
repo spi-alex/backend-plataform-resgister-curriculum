@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8" />
+    <style>
+      @page {
+        margin: 1.5cm;
+      }
+      body {
+        font-family: "Helvetica", "Arial", sans-serif;
+        color: #333;
+        line-height: 1.5;
+      }
+
+      .header {
+        text-align: left;
+        border-bottom: 3px solid #004a8d;
+        padding-bottom: 15px;
+        margin-bottom: 20px;
+      }
+      .name {
+        font-size: 28pt;
+        font-weight: bold;
+        color: #004a8d;
+        margin: 0;
+      }
+      .contact-info {
+        font-size: 10pt;
+        color: #666;
+        margin-top: 5px;
+      }
+
+      .section {
+        margin-bottom: 25px;
+      }
+      .section-title {
+        font-size: 14pt;
+        font-weight: bold;
+        color: #004a8d;
+        text-transform: uppercase;
+        border-bottom: 1px solid #004a8d;
+        margin-bottom: 10px;
+      }
+
+      .item {
+        margin-bottom: 15px;
+      }
+      .item-title {
+        font-weight: bold;
+        font-size: 12pt;
+        display: block;
+      }
+      .item-subtitle {
+        font-style: italic;
+        color: #555;
+      }
+      .item-description {
+        margin-top: 5px;
+        text-align: justify;
+      }
+
+      .summary {
+        text-align: justify;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1 class="name">{{ fullName|default:"Nome não informado" }}</h1>
+      <div class="contact-info">
+        {{ email }} | {{ phone }} | {{ city }} - {{ state }}
+      </div>
+    </div>
+
+    {% if summary %}
+    <div class="section">
+      <div class="section-title">Resumo Profissional</div>
+      <div class="summary">{{ summary }}</div>
+    </div>
+    {% endif %}
+
+    <div class="section">
+      <div class="section-title">Experiência Profissional</div>
+      {% if experiences %} {% for exp in experiences %}
+      <div class="item">
+        <span class="item-title">{{ exp.role }} na {{ exp.company }}</span>
+        <span class="item-subtitle"
+          >{{ exp.startDate }} - {{ exp.endDate|default:"Atual" }}</span
+        >
+        <div class="item-description">{{ exp.description }}</div>
+      </div>
+      {% endfor %} {% else %}
+      <p>Nenhuma experiência registrada.</p>
+      {% endif %}
+    </div>
+
+    <div class="section">
+      <div class="section-title">Formação Acadêmica</div>
+      {% if education %} {% for edu in education %}
+      <div class="item">
+        <span class="item-title">{{ edu.course }}</span>
+        <span class="item-subtitle"
+          >{{ edu.institution }} | Conclusão: {{ edu.year }}</span
+        >
+      </div>
+      {% endfor %} {% endif %}
+    </div>
+  </body>
+</html>
