@@ -1,0 +1,204 @@
+/* ===== RESET ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== BASE ===== */
+
+.company-dashboard {
+  min-height: 100vh;
+  background-color: #f5f7f6;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", sans-serif;
+  color: #1f2937;
+}
+
+/* ===== HEADER ===== */
+
+.company-header {
+  height: 64px;
+  background-color: #2f7d57;
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+}
+
+.company-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.company-header span {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.toggle-sidebar {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* ===== LAYOUT ===== */
+
+.company-layout {
+  display: flex;
+  flex: 1;
+}
+
+/* ===== SIDEBAR ===== */
+
+.company-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  padding: 24px 16px;
+
+  display: flex;
+  flex-direction: column;
+
+  transition: width 0.3s ease, padding 0.3s ease;
+}
+
+/* Sidebar fechada */
+
+.company-sidebar.closed {
+  width: 80px;
+  padding: 24px 8px;
+}
+
+/* NAV */
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+}
+
+/* NAV ITEM */
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  padding: 12px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+
+  color: #1f2937;
+  border-radius: 8px;
+  font-size: 14px;
+  text-align: left;
+
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-item:hover {
+  background-color: #e6f4ea;
+  color: #14532d;
+}
+
+/* Logout */
+
+.nav-item.danger {
+  margin-top: auto;
+  color: #b91c1c;
+}
+
+.nav-item.danger:hover {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Quando fechada */
+
+.company-sidebar.closed .nav-item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.company-sidebar.closed .nav-item span {
+  display: none;
+}
+
+/* ===== MAIN CONTENT ===== */
+
+.company-content {
+  flex: 1;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ===== RESPONSIVO ===== */
+
+@media (max-width: 768px) {
+  .company-layout {
+    flex-direction: column;
+  }
+
+  .company-sidebar {
+    width: 100%;
+  }
+}
+
+/* ===== HEADER ===== */
+
+.company-header {
+  background-color: #2f7d57 !important;
+  color: #ffffff !important;
+}
+
+.company-header h1,
+.company-header span,
+.company-header button {
+  color: #ffffff !important;
+}
+
+/* ===== TOOLTIP QUANDO FECHADA ===== */
+
+.company-sidebar.closed .nav-item {
+  position: relative;
+}
+
+.company-sidebar.closed .nav-item::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+
+  background-color: #14532d;
+  color: #ffffff;
+  padding: 6px 10px;
+  border-radius: 6px;
+
+  font-size: 12px;
+  white-space: nowrap;
+
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.company-sidebar.closed .nav-item:hover::after {
+  opacity: 1;
+}

@@ -1,0 +1,339 @@
+/* =========================
+   BASE
+========================= */
+
+.manager-jobs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* =========================
+   KPIs
+========================= */
+
+.jobs-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+.jobs-kpis .kpi-card {
+  background-color: #ffffff;
+  border-radius: 16px;
+  padding: 20px 24px;
+
+  border: 1px solid #d1e7dc;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.jobs-kpis .kpi-card::before {
+  content: "";
+  display: block;
+  width: 32px;
+  height: 4px;
+  background-color: #2f7d57;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+
+.jobs-kpis .kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
+}
+
+.jobs-kpis .kpi-card span {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.jobs-kpis .kpi-card strong {
+  font-size: 28px;
+  font-weight: 700;
+  color: #2f7d57;
+}
+
+/* variantes */
+.jobs-kpis .kpi-card.success::before {
+  background-color: #059669;
+}
+
+.jobs-kpis .kpi-card.danger::before {
+  background-color: #dc2626;
+}
+
+/* =========================
+   FILTROS
+========================= */
+
+.filters-box {
+  background: #fff;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.filters input,
+.filters select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.filter-btn {
+  background: #2f7d57;
+  color: #fff;
+  border-radius: 10px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filter-btn:hover {
+  background: #256846;
+}
+
+/* =========================
+   CONTEÚDO PRINCIPAL
+========================= */
+
+.jobs-content {
+  display: flex;
+  gap: 24px;
+}
+
+/* =========================
+   GRID DE VAGAS
+========================= */
+
+.jobs-grid {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+/* =========================
+   CARD DA VAGA
+========================= */
+
+.job-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.job-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start; 
+  gap: 8px;
+}
+
+
+.company {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.job-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* STATUS */
+
+.status {
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.status.open {
+  background: #d1fae5;
+  color: #059669;
+}
+
+/* INFO */
+
+.job-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: #374151;
+}
+
+.job-info div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* BOTÃO */
+
+.view-btn {
+  margin-top: auto;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+
+  background-color: #2f7d57;
+  color: #fff;
+  font-weight: 600;
+}
+
+.view-btn:hover {
+  background-color: #256846;
+}
+
+/* =========================
+   PAINEL DE EMPRESAS
+========================= */
+
+.companies-panel {
+  width: 280px;
+  background: #fff;
+  border-radius: 16px;
+  padding: 16px;
+  border: 1px solid #e5e7eb;
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.companies-panel ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.companies-panel li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  font-size: 14px;
+  padding: 8px 4px;
+}
+
+.companies-panel li + li {
+  border-top: 1px solid #f3f4f6;
+}
+
+/* =========================
+   RESUMO MENSAL
+========================= */
+
+.monthly-summary {
+  background: #ecfdf5;
+  padding: 16px;
+  border-radius: 12px;
+}
+
+.monthly-summary h4 {
+  font-size: 12px;
+  margin-bottom: 12px;
+  color: #065f46;
+}
+
+.monthly-summary > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.monthly-summary > div > div {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 10px;
+  padding: 12px;
+  text-align: center;
+}
+
+.monthly-summary strong {
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.monthly-summary span {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+/* =========================
+   RESPONSIVIDADE
+========================= */
+
+/* Tablets e telas médias */
+@media (max-width: 1024px) {
+  .jobs-content {
+    flex-direction: column;
+  }
+
+  .companies-panel {
+    width: 100%;
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .jobs-kpis {
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  }
+
+  .filters {
+    grid-template-columns: 1fr;
+  }
+
+  .job-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .status {
+    align-self: flex-start;
+  }
+
+  .jobs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile pequeno */
+@media (max-width: 480px) {
+  .jobs-kpis .kpi-card {
+    padding: 16px;
+  }
+
+  .job-card {
+    padding: 14px;
+  }
+
+  .monthly-summary > div {
+    flex-direction: column;
+  }
+}

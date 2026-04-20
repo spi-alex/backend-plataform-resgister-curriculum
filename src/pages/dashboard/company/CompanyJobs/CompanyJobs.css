@@ -1,0 +1,251 @@
+/* ======================== */
+/* BASE */
+/* ======================== */
+
+.company-jobs {
+  padding: 32px;
+  background: #F9FBFA;
+  min-height: 100%;
+}
+
+/* ======================== */
+/* TOP SECTION */
+/* ======================== */
+
+.jobs-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.jobs-top h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.jobs-top p {
+  color: #64748b;
+  margin-top: 6px;
+}
+
+/* ======================== */
+/* BUTTON */
+/* ======================== */
+
+.primary-button {
+  background: #059669;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: 0.2s ease;
+  box-shadow: 0 4px 10px rgba(5,150,105,0.2);
+}
+
+.primary-button:hover {
+  background: #047857;
+}
+
+/* ======================== */
+/* FILTERS */
+/* ======================== */
+
+.jobs-filters {
+  background: white;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #ecfdf5;
+  margin-bottom: 32px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.search-box {
+  flex: 1;
+  min-width: 260px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f1f5f9;
+  padding: 8px 12px;
+  border-radius: 10px;
+}
+
+.search-box input {
+  border: none;
+  background: transparent;
+  outline: none;
+  width: 100%;
+}
+
+.filter-group {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.filter-group select {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: none;
+  background: #f1f5f9;
+  cursor: pointer;
+}
+
+/* ======================== */
+/* TABLE */
+/* ======================== */
+
+.jobs-table-container {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #ecfdf5;
+  overflow: hidden;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead {
+  background: rgba(236,253,245,0.5);
+}
+
+th {
+  text-align: left;
+  padding: 16px 24px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+}
+
+td {
+  padding: 20px 24px;
+  font-size: 14px;
+  color: #475569;
+  vertical-align: middle;
+}
+
+td strong {
+  display: block;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+td span {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+tbody tr {
+  border-top: 1px solid #f1f5f9;
+  transition: 0.2s ease;
+}
+
+tbody tr:hover {
+  background: rgba(236,253,245,0.2);
+}
+
+.disabled {
+  opacity: 0.6;
+}
+
+/* ======================== */
+/* STATUS */
+/* ======================== */
+
+.status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status.active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.status.closed {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+/* ======================== */
+/* ACTIONS */
+/* ======================== */
+
+.actions {
+  text-align: right;
+}
+
+.actions button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: 8px;
+  color: #64748b;
+  padding: 6px;
+  border-radius: 8px;
+  transition: 0.2s;
+}
+
+.actions button:hover {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.actions .danger:hover {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+/* ======================== */
+/* PAGINATION */
+/* ======================== */
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid #f1f5f9;
+  background: rgba(236,253,245,0.3);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.pagination-controls button {
+  background: none;
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.pagination-controls button.active {
+  background: #059669;
+  color: white;
+  border: none;
+}
+
+.pagination-controls button:hover {
+  background: #ecfdf5;
+}

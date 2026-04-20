@@ -1,0 +1,274 @@
+/* ===== CONTAINER PRINCIPAL ===== */
+.jobdetails-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 60px 24px;
+  background-color: #f8fafc;
+  min-height: 100vh;
+}
+
+
+/* ================= BREADCRUMB ================= */
+.jd-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  margin-bottom: 40px;
+  color: #64748b;
+}
+
+
+.jd-breadcrumb span {
+  cursor: pointer;
+}
+
+
+.jd-breadcrumb .active {
+  font-weight: 600;
+  color: #065f46;
+}
+
+
+.arrow {
+  font-size: 18px;
+}
+
+
+/* ================= HERO CARD ================= */
+.jd-hero {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  margin-bottom: 50px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.04);
+  position: relative;
+}
+
+
+/* Título */
+.jd-hero-left h1 {
+  font-size: 34px;
+  margin: 16px 0 12px 0;
+  color: #111827;
+}
+
+
+/* Subtítulo */
+.jd-subtitle {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 20px;
+}
+
+
+/* Badges */
+.jd-badges {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+
+.jd-status {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+
+.jd-status.aberta {
+  background: #dcfce7;
+  color: #166534;
+}
+
+
+.jd-status.encerrada {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+
+.jd-contract {
+  font-size: 12px;
+  color: #64748b;
+  align-self: center;
+}
+
+
+/* Publicação */
+.jd-hero-right {
+  position: absolute;
+  top: 40px;
+  right: 40px;
+  text-align: right;
+}
+
+
+.jd-deadline-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 4px;
+}
+
+
+.jd-deadline-date {
+  font-weight: 700;
+  color: #059669;
+  font-size: 15px;
+}
+
+
+/* ================= BOTÕES ================= */
+.jd-hero-actions {
+  margin-top: 35px;
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+
+.jd-primary-btn {
+  background: #059669;
+  color: #fff;
+  padding: 14px 26px;
+  border-radius: 16px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+
+.jd-primary-btn:hover {
+  background: #047857;
+}
+
+
+.jd-secondary-btn {
+  background: #f1f5f9;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+
+.jd-outline-btn {
+  border: 1px solid #e2e8f0;
+  background: white;
+  padding: 14px 26px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+
+/* ================= GRID ================= */
+.jd-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 40px;
+}
+
+
+/* ================= CARDS ================= */
+.jd-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 35px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.03);
+  margin-bottom: 30px;
+}
+
+
+.jd-card h3 {
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: #111827;
+}
+
+
+.jd-card p {
+  line-height: 1.7;
+  font-size: 15px;
+  color: #475569;
+}
+
+
+/* Lista */
+.jd-card ul {
+  padding-left: 18px;
+}
+
+
+.jd-card li {
+  margin-bottom: 12px;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+
+/* ================= INFO BLOCK ================= */
+.jd-info-block {
+  margin-bottom: 22px;
+}
+
+
+.jd-info-block span {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #94a3b8;
+  display: block;
+  margin-bottom: 6px;
+}
+
+
+.jd-info-block strong {
+  font-size: 15px;
+  color: #111827;
+}
+
+
+/* Linha lateral */
+.jd-info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+
+/* ================= RESPONSIVO ================= */
+@media (max-width: 900px) {
+  .jd-grid {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+
+
+  .jd-hero {
+    padding: 28px;
+  }
+
+
+  .jd-hero-right {
+    position: static;
+    margin-top: 20px;
+    text-align: left;
+  }
+
+
+  .jd-hero-left h1 {
+    font-size: 26px;
+  }
+
+
+  .jd-card {
+    padding: 24px;
+  }
+}
+

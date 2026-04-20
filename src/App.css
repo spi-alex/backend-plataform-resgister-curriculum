@@ -1,0 +1,15 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing: border-box;
+  outline: none;
+}
+
+:root {
+  /* Cores principais */
+  --color-bg: #000000;
+  --color-cards:#11360e;
+  --color-tags-info:#69975c;
+  ---color-inputs:#dfdfdf;
+  --color-div-bg:#4d674a;
+}

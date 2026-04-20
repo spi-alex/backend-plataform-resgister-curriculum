@@ -1,0 +1,26 @@
+.sidebar {
+  width: 260px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0f2e13, #0b2410);
+  padding: 24px 16px;
+}
+
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.menu button {
+  background-color: #4e8f5d;
+  border: none;
+  border-radius: 14px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.menu button.danger {
+  background-color: #7a2d2d;
+}
