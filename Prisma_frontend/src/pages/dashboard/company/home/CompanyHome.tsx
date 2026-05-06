@@ -1,4 +1,6 @@
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import api from "../../../../services/api";
 import {
   Briefcase,
   CheckCircle,
@@ -10,12 +12,53 @@ import {
 
 import "./CompanyHome.css";
 
+interface DashboardData {
+  estatisticas: {
+    total_vagas: number;
+    vagas_ativas: number;
+    total_candidaturas: number;
+  };
+  funil_de_recrutamento: Record<string, number>;
+}
+
+interface Job {
+  id: number;
+  title: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export default function CompanyHome() {
   const navigate = useNavigate();
+  const [data, setData] = useState<DashboardData | null>(null);
+  const [recentJobs, setRecentJobs] = useState<Job[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        // Busca estatísticas e vagas ao mesmo tempo
+        const [dashRes, jobsRes] = await Promise.all([
+          api.get("jobs/dashboard/"),
+          api.get("jobs/"),
+        ]);
+
+        setData(dashRes.data);
+        // Pega apenas as 3 últimas vagas para a home
+        setRecentJobs(jobsRes.data.slice(0, 3));
+      } catch (error) {
+        console.error("Erro ao carregar dashboard:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadDashboard();
+  }, []);
+
+  if (loading) return <div className="loading">Carregando dashboard...</div>;
 
   return (
     <div className="company-dashboard-home">
-
       {/* ===== RESUMO ===== */}
       <section className="dashboard-section">
         <h2 className="section-title">
@@ -24,15 +67,13 @@ export default function CompanyHome() {
         </h2>
 
         <div className="kpi-grid">
-
           <div className="kpi-card">
             <div className="kpi-icon green">
               <Briefcase size={28} />
             </div>
             <div>
               <p className="kpi-label">Vagas Ativas</p>
-              <h3>12</h3>
-              <span className="kpi-highlight">+2 este mês</span>
+              <h3>{data?.estatisticas.vagas_ativas || 0}</h3>
             </div>
           </div>
 
@@ -41,8 +82,8 @@ export default function CompanyHome() {
               <Briefcase size={28} />
             </div>
             <div>
-              <p className="kpi-label">Vagas Encerradas</p>
-              <h3>45</h3>
+              <p className="kpi-label">Total de Vagas</p>
+              <h3>{data?.estatisticas.total_vagas || 0}</h3>
             </div>
           </div>
 
@@ -52,62 +93,39 @@ export default function CompanyHome() {
             </div>
             <div>
               <p className="kpi-label">Total Candidatos</p>
-              <h3>1.284</h3>
-              <span className="kpi-highlight">+14% engajamento</span>
+              <h3>{data?.estatisticas.total_candidaturas || 0}</h3>
             </div>
           </div>
-
         </div>
       </section>
 
-      {/* ===== ENCAMINHAMENTOS ===== */}
+      {/* ===== FUNIL DE RECRUTAMENTO (No lugar de encaminhamentos estáticos) ===== */}
       <section className="dashboard-section">
         <div className="section-header">
           <h2 className="section-title">
             <Send size={20} />
-            Encaminhamentos Recentes
+            Status das Candidaturas
           </h2>
-
-          <button className="link-button" onClick={() => navigate("/dashboard/empresa/vagas")}>
-            Ver todos 
-          </button>
         </div>
 
         <div className="forwards-grid">
-
-          <div className="forward-card">
-            <div>
-              <h4>Desenvolvedor Frontend</h4>
-              <p>8 currículos encaminhados</p>
-            </div>
-            <span className="badge">Ontem</span>
-          </div>
-
-          <div className="forward-card">
-            <div>
-              <h4>Product Designer Senior</h4>
-              <p>15 currículos encaminhados</p>
-            </div>
-            <span className="badge">Hoje</span>
-          </div>
-
-          <div className="forward-card">
-            <div>
-              <h4>Analista Financeiro</h4>
-              <p>3 currículos encaminhados</p>
-            </div>
-            <span className="badge">há 2 dias</span>
-          </div>
-
+          {data &&
+            Object.entries(data.funil_de_recrutamento).map(([status, qtd]) => (
+              <div key={status} className="forward-card">
+                <div>
+                  <h4>{status}</h4>
+                  <p>{qtd} candidatos neste estágio</p>
+                </div>
+                <span className="badge">Atualizado</span>
+              </div>
+            ))}
         </div>
       </section>
 
-      {/* ===== TABELA VAGAS ===== */}
+      {/* ===== TABELA VAGAS RECENTES ===== */}
       <section className="dashboard-section table-section">
-
         <div className="table-header">
           <h2>Vagas Recentes</h2>
-
           <button
             className="primary-button"
             onClick={() => navigate("/dashboard/empresa/vagas/nova")}
@@ -122,56 +140,49 @@ export default function CompanyHome() {
             <thead>
               <tr>
                 <th>Título</th>
-                <th>Área</th>
                 <th>Status</th>
                 <th>Data</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-
-              <tr>
-                <td>SDR - Sales Development</td>
-                <td>Vendas</td>
-                <td><span className="status active">Ativa</span></td>
-                <td>12 Out, 2023</td>
-                <td>
-                  <button className="manage-btn">
-                    Gerenciar <ChevronRight size={16} />
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>QA Automation Junior</td>
-                <td>Tecnologia</td>
-                <td><span className="status active">Ativa</span></td>
-                <td>10 Out, 2023</td>
-                <td>
-                  <button className="manage-btn">
-                    Gerenciar <ChevronRight size={16} />
-                  </button>
-                </td>
-              </tr>
-
-              <tr>
-                <td>Gerente de Marketing</td>
-                <td>Marketing</td>
-                <td><span className="status closed">Encerrada</span></td>
-                <td>05 Out, 2023</td>
-                <td>
-                  <button className="manage-btn">
-                    Gerenciar <ChevronRight size={16} />
-                  </button>
-                </td>
-              </tr>
-
+              {recentJobs.map((job) => (
+                <tr key={job.id}>
+                  <td>{job.title}</td>
+                  <td>
+                    <span
+                      className={`status ${job.is_active ? "active" : "closed"}`}
+                    >
+                      {job.is_active ? "Ativa" : "Encerrada"}
+                    </span>
+                  </td>
+                  <td>
+                    {new Date(job.created_at).toLocaleDateString("pt-BR")}
+                  </td>
+                  <td>
+                    <button
+                      className="manage-btn"
+                      onClick={() => navigate(`/dashboard/empresa/vagas`)}
+                    >
+                      Gerenciar <ChevronRight size={16} />
+                    </button>
+                  </td>
+                </tr>
+              ))}
+              {recentJobs.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={4}
+                    style={{ textAlign: "center", padding: "20px" }}
+                  >
+                    Nenhuma vaga publicada recentemente.
+                  </td>
+                </tr>
+              )}
             </tbody>
           </table>
         </div>
-
       </section>
-
     </div>
   );
 }

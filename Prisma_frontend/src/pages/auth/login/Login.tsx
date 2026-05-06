@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "../../../components/Button/Button";
 import { Input } from "../../../components/Input/Input";
@@ -8,21 +8,32 @@ import "./Login.css";
 export default function Login() {
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
-
   const navigate = useNavigate();
   const { login } = useAuth();
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("reset") === "true") {
+      localStorage.clear();
+      sessionStorage.clear();
+    }
+  }, []);
+
   const handleLogin = async () => {
+    if (!email.trim() || !senha.trim()) return;
+
     try {
       const loggedUser = await login(email, senha);
-      const role = loggedUser.role;
+      const role = String(loggedUser.role).toLowerCase();
 
-      // Usamos as strings que o TS agora reconhece no UserRole
-      if (role === "aluno" || role === "student" || role === "candidate") {
+      // Agora as comparações abaixo são válidas para o TypeScript
+      if (["aluno", "student", "candidate"].includes(role)) {
         navigate("/dashboard/aluno");
-      } else if (role === "manager" || role === "gestor") {
+      } else if (["manager", "gestor", "admin"].includes(role)) {
         navigate("/dashboard/gestor");
-      } else if (role === "company" || role === "empresa") {
+      } else if (["company", "empresa"].includes(role)) {
+        navigate("/dashboard/empresa");
+      } else {
         navigate("/dashboard/empresa");
       }
     } catch (error) {
@@ -41,7 +52,19 @@ export default function Login() {
 
       <div className="login-container">
         <h1 className="text-info">Login</h1>
-        <p className="text-info">Faça login para acessar o PRISMA</p>
+        <Input
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <Input
+          label="Senha"
+          type="password"
+          value={senha}
+          onChange={(e) => setSenha(e.target.value)}
+        />
+        <Button title="Entrar" onClick={handleLogin} />
 
         <Input
           label="Email"

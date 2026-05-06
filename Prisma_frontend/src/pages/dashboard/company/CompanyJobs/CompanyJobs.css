@@ -4,7 +4,7 @@
 
 .company-jobs {
   padding: 32px;
-  background: #F9FBFA;
+  background: #f9fbfa;
   min-height: 100%;
 }
 
@@ -48,7 +48,7 @@
   gap: 6px;
   cursor: pointer;
   transition: 0.2s ease;
-  box-shadow: 0 4px 10px rgba(5,150,105,0.2);
+  box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
 }
 
 .primary-button:hover {
@@ -120,7 +120,7 @@ table {
 }
 
 thead {
-  background: rgba(236,253,245,0.5);
+  background: rgba(236, 253, 245, 0.5);
 }
 
 th {
@@ -156,7 +156,7 @@ tbody tr {
 }
 
 tbody tr:hover {
-  background: rgba(236,253,245,0.2);
+  background: rgba(236, 253, 245, 0.2);
 }
 
 .disabled {
@@ -223,7 +223,7 @@ tbody tr:hover {
   align-items: center;
   padding: 16px 24px;
   border-top: 1px solid #f1f5f9;
-  background: rgba(236,253,245,0.3);
+  background: rgba(236, 253, 245, 0.3);
 }
 
 .pagination-controls {

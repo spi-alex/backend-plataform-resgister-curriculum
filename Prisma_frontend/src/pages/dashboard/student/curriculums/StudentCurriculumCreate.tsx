@@ -1,4 +1,5 @@
 import { useState, ChangeEvent } from "react";
+import { useNavigate } from "react-router-dom"; // Importado corretamente
 import api from "../../../../services/api";
 import "./StudentCurriculumCreate.css";
 
@@ -41,6 +42,9 @@ interface FormData {
 }
 
 export default function StudentCurriculumCreate() {
+  // CORREÇÃO: O Hook deve ser declarado aqui, no início do componente
+  const navigate = useNavigate();
+
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
     location: "",
@@ -102,7 +106,6 @@ export default function StudentCurriculumCreate() {
   ) {
     const { name, value } = e.target;
     const updated = [...formData.experiences];
-
     updated[index][name as keyof Experience] = value;
     setFormData({ ...formData, experiences: updated });
   }
@@ -135,7 +138,6 @@ export default function StudentCurriculumCreate() {
   ) {
     const { name, value } = e.target;
     const updated = [...formData.projects];
-
     updated[index][name as keyof Project] = value;
     setFormData({ ...formData, projects: updated });
   }
@@ -161,7 +163,6 @@ export default function StudentCurriculumCreate() {
   ) {
     const { name, value } = e.target;
     const updated = [...formData.education];
-
     updated[index][name as keyof Education] = value;
     setFormData({ ...formData, education: updated });
   }
@@ -170,6 +171,7 @@ export default function StudentCurriculumCreate() {
 
   async function handleSaveCurriculum() {
     const token = localStorage.getItem("access_token");
+    // CORREÇÃO: Removido o 'useNavigate' daqui de dentro
     if (!token) return;
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -184,11 +186,10 @@ export default function StudentCurriculumCreate() {
           resumeId = listResponse.data[0].id;
         }
       } catch {
-        // Se der erro na busca, apenas prosseguimos para tentar criar
         console.log("Sem currículo prévio encontrado.");
       }
 
-      // 2. Se não existir, CRIA e pega o ID da resposta na hora
+      // 2. Se não existir, CRIA
       if (!resumeId) {
         const payload = {
           title: formData.fullName || "Meu Currículo",
@@ -196,18 +197,23 @@ export default function StudentCurriculumCreate() {
         };
         const saveResponse = await api.post("/resumes/", payload, config);
         resumeId = saveResponse.data.id;
+      } else {
+        // OPCIONAL: Se já existe, você pode querer dar um PUT para atualizar
+        const payload = {
+          title: formData.fullName || "Meu Currículo",
+          content: JSON.stringify(formData),
+        };
+        await api.put(`/resumes/${resumeId}/`, payload, config);
       }
 
-      // 3. Verificação de segurança
       if (!resumeId) {
         alert("Erro ao identificar o currículo.");
         return;
       }
 
-      // 4. Delay de segurança (500ms) para garantir que o banco persistiu o dado
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 5. Exportação do PDF usando o ID garantido
+      // 5. Exportação do PDF
       const response = await api.get(`/pdf/export/${resumeId}/`, {
         ...config,
         responseType: "blob",
@@ -223,17 +229,14 @@ export default function StudentCurriculumCreate() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      alert("PDF gerado com sucesso!");
-    } catch (error: unknown) {
-      // Cast do erro para evitar 'any' e satisfazer o ESLint
-      const err = error as { response?: { status?: number; data?: unknown } };
+      alert("Currículo salvo e PDF gerado com sucesso!");
 
+      // REDIRECIONAMENTO: Volta para o dashboard para mostrar o currículo salvo
+      navigate("/dashboard/aluno");
+    } catch (error: unknown) {
+      const err = error as { response?: { status?: number; data?: unknown } };
       if (err.response?.status === 401) {
         alert("Sessão expirada. Por favor, faça login novamente.");
-      } else if (err.response?.status === 404) {
-        alert(
-          "Currículo ainda processando. Tente clicar novamente em instantes.",
-        );
       } else {
         alert("Erro na comunicação com o servidor.");
       }

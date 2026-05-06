@@ -73,3 +73,15 @@
     grid-template-columns: 1fr;
   }
 }
+.form-actions button {
+  opacity: 1 !important;
+  visibility: visible !important;
+  background-color: #004d40; /* Ou a cor principal do seu tema */
+  color: white;
+  cursor: pointer;
+}
+
+.form-actions button:disabled {
+  opacity: 0.7; /* Um pouco menos de brilho se estiver desativado, mas não transparente */
+  cursor: not-allowed;
+}

@@ -161,6 +161,7 @@ LOCALE_PATHS = [BASE_DIR / 'locale']
 RESEND_API_KEY = os.getenv("RESEND_API_KEY") # Não é a senha normal, é a "Senha de App"
 
 
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 from django.contrib.messages import constants as messages
 
@@ -204,4 +205,15 @@ AUTHENTICATION_BACKENDS = [
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173", # Porta comum do Vite
     "http://127.0.0.1:5173",
+]
+
+
+# IMPORTANTE: Para o React conseguir ler o cabeçalho de autenticação se necessário
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "authorization",
+    "content-type",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
 ]

@@ -9,7 +9,7 @@ class Company(models.Model):
         on_delete=models.CASCADE, 
         related_name='company'
     ) 
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255) 
     cnpj = models.CharField(max_length=18, unique=True)
     description = models.TextField()
     website = models.URLField(blank=True)

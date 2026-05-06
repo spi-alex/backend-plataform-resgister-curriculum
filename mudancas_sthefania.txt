@@ -1,0 +1,194 @@
+ Prisma_frontend/.gitignore => .gitignore           |   0
+ PRISMA_backend/.gitignore                          |  34 --
+ PRISMA_backend/README.md                           |  42 --
+ PRISMA_backend/companies/admin.py                  |   9 -
+ PRISMA_backend/companies/apps.py                   |   6 -
+ .../companies/migrations/0001_initial.py           |  32 --
+ PRISMA_backend/companies/migrations/__init__.py    |   0
+ PRISMA_backend/companies/models.py                 |  22 -
+ PRISMA_backend/companies/serializers.py            |  13 -
+ PRISMA_backend/companies/tests.py                  |   3 -
+ PRISMA_backend/companies/urls.py                   |  10 -
+ PRISMA_backend/companies/views.py                  |  20 -
+ PRISMA_backend/core/__init__.py                    |   0
+ PRISMA_backend/core/asgi.py                        |  16 -
+ PRISMA_backend/core/settings.py                    | 207 ----------
+ PRISMA_backend/core/urls.py                        |  19 -
+ PRISMA_backend/core/views.py                       |   5 -
+ PRISMA_backend/core/wsgi.py                        |  16 -
+ PRISMA_backend/desktop.ini                         |   6 -
+ PRISMA_backend/jobs/__init__.py                    |   0
+ PRISMA_backend/jobs/admin.py                       |  13 -
+ PRISMA_backend/jobs/apps.py                        |   8 -
+ PRISMA_backend/jobs/migrations/0001_initial.py     |  45 --
+ PRISMA_backend/jobs/migrations/__init__.py         |   0
+ PRISMA_backend/jobs/models.py                      |  43 --
+ PRISMA_backend/jobs/serializers.py                 |  56 ---
+ PRISMA_backend/jobs/signals.py                     |  43 --
+ PRISMA_backend/jobs/tests.py                       |   3 -
+ PRISMA_backend/jobs/urls.py                        |  16 -
+ PRISMA_backend/jobs/views.py                       | 172 --------
+ PRISMA_backend/manage.py                           |  22 -
+ PRISMA_backend/pdf/__init__.py                     |   0
+ PRISMA_backend/pdf/admin.py                        |   3 -
+ PRISMA_backend/pdf/apps.py                         |   6 -
+ PRISMA_backend/pdf/migrations/__init__.py          |   0
+ PRISMA_backend/pdf/models.py                       |   3 -
+ PRISMA_backend/pdf/serializers.py                  |   0
+ PRISMA_backend/pdf/templates/base.txt              |  76 ----
+ PRISMA_backend/pdf/templates/index.txt             |  23 --
+ PRISMA_backend/pdf/templates/pdf/resume_pdf.html   | 110 -----
+ PRISMA_backend/pdf/tests.py                        |   3 -
+ PRISMA_backend/pdf/urls.py                         |   6 -
+ PRISMA_backend/pdf/views.py                        | 144 -------
+ PRISMA_backend/requirements.txt                    | Bin 1988 -> 0 bytes
+ PRISMA_backend/resumes/__init__.py                 |   0
+ PRISMA_backend/resumes/admin.py                    |   7 -
+ PRISMA_backend/resumes/apps.py                     |   6 -
+ PRISMA_backend/resumes/migrations/0001_initial.py  |  27 --
+ ...e_ano_conclusao_resume_ano_ingresso_and_more.py |  33 --
+ PRISMA_backend/resumes/migrations/__init__.py      |   0
+ PRISMA_backend/resumes/models.py                   |  30 --
+ PRISMA_backend/resumes/serializers.py              |  23 --
+ PRISMA_backend/resumes/tests.py                    |   3 -
+ PRISMA_backend/resumes/urls.py                     |  14 -
+ PRISMA_backend/resumes/views.py                    | 115 ------
+ PRISMA_backend/users/__init__.py                   |   0
+ PRISMA_backend/users/admin.py                      |  31 --
+ PRISMA_backend/users/apps.py                       |   9 -
+ PRISMA_backend/users/backends.py                   |  18 -
+ PRISMA_backend/users/emails.py                     |  32 --
+ PRISMA_backend/users/migrations/0001_initial.py    |  56 ---
+ .../users/migrations/0002_alter_user_role.py       |  18 -
+ .../users/migrations/0003_alter_user_role.py       |  18 -
+ .../0004_alter_profile_type_alter_user_role.py     |  23 --
+ PRISMA_backend/users/migrations/__init__.py        |   0
+ PRISMA_backend/users/models.py                     |  34 --
+ PRISMA_backend/users/permissions.py                |  37 --
+ PRISMA_backend/users/serializers.py                | 103 -----
+ PRISMA_backend/users/signals.py                    |  40 --
+ PRISMA_backend/users/tests.py                      |   3 -
+ PRISMA_backend/users/urls.py                       |  19 -
+ PRISMA_backend/users/views.py                      | 239 -----------
+ Prisma_frontend/.env                               |   1 -
+ Prisma_frontend/src/context/Authcontext.tsx        |  99 -----
+ .../auth/password/ResetPassword/ResetPassword.css  |   0
+ .../company/CompanyJobs/CompanyJobs.tsx.tsx        | 161 --------
+ .../pages/dashboard/manager/jobs/ManagerJobs.tsx   | 164 --------
+ .../curriculums/StudentCurriculumCreate.tsx        | 455 --------------------
+ Prisma_frontend/src/services/api.ts                |  20 -
+ Prisma_frontend/src/vite-env.d.ts                  |  10 -
+ Prisma_frontend/README.md => README.md             |   0
+ .../eslint.config.js => eslint.config.js           |   0
+ Prisma_frontend/index.html => index.html           |   0
+ .../package-lock.json => package-lock.json         | 280 -------------
+ Prisma_frontend/package.json => package.json       |   1 -
+ {Prisma_frontend/public => public}/vite.svg        |   0
+ {Prisma_frontend/src => src}/App.css               |   0
+ {Prisma_frontend/src => src}/App.tsx               |   0
+ .../src => src}/components/Button/Button.css       |   0
+ .../src => src}/components/Button/Button.tsx       |   0
+ .../src => src}/components/Header/Header.css       |   0
+ .../src => src}/components/Header/Header.tsx       |   0
+ .../src => src}/components/Input/Input.css         |   0
+ .../src => src}/components/Input/Input.tsx         |   0
+ .../components/Layout/PageContainer.tsx            |   0
+ .../components/Layout/Sidebar/Sidebar.css          |   0
+ .../components/Layout/Sidebar/Sidebar.tsx          |   0
+ .../components/Layout/Topbar/Topbar.css            |   0
+ .../components/Layout/Topbar/Topbar.tsx            |   0
+ .../components/PasswordInput/PasswordInput.css     |   0
+ .../components/PasswordInput/PasswordInput.tsx     |   0
+ .../src => src}/components/Radio/Radio.css         |   0
+ .../src => src}/components/Radio/Radio.tsx         |   0
+ src/context/Authcontext.tsx                        | 104 +++++
+ {Prisma_frontend/src => src}/main.tsx              |   0
+ .../src => src}/pages/Initial/initial.css          |   0
+ .../src => src}/pages/Initial/initial.tsx          |   0
+ .../src => src}/pages/auth/login/Login.css         |   0
+ .../src => src}/pages/auth/login/Login.tsx         |  36 +-
+ .../auth/password/RequestReset/RequestReset.css    |   0
+ .../auth/password/RequestReset/RequestReset.tsx    |   0
+ .../auth/password/ResetPassword/ResetPassword.css  | 178 ++++++++
+ .../auth/password/ResetPassword/ResetPassword.tsx  |   0
+ .../CompanyRegistration/CompanyRegistration.css    |   0
+ .../CompanyRegistration/CompanyRegistration.tsx    |   0
+ .../register/SelectUserType/SelectUserType.css     |   0
+ .../register/SelectUserType/SelectUserType.tsx     |   0
+ .../StudentRegistration/StudentRegistration.css    |  20 -
+ .../StudentRegistration/StudentRegistration.tsx    | 213 ++++------
+ .../company/CompanyCreateJob/CompanyCreateJob.css  |   0
+ .../company/CompanyCreateJob/CompanyCreateJob.tsx  |   2 +-
+ .../CompanyJobs/CandidateView/CandidateView.tsx    | 298 ++++++++++++++
+ .../CandidateView/CandidateViewProfile.tsx         | 251 +++++++++++
+ .../CandidateView/CurriculumPrevielpdf.tsx         | 171 ++++++++
+ .../dashboard/company/CompanyJobs/CompanyJobs.css  |   0
+ .../dashboard/company/CompanyJobs/CompanyJobs.tsx  | 209 ++++++++++
+ .../company/CompanyJobs/CompanyJobsDetails.tsx     | 173 ++++++++
+ .../company/CompanyProfile/CompanyProfile.css      | 135 +++++-
+ .../company/CompanyProfile/CompanyProfile.tsx      |   0
+ .../company/CompanyUpdateJob/UpdateJob.tsx         | 182 ++++++++
+ .../dashboard/company/components/CompanyHeader.tsx |   0
+ .../company/components/CompanySidebar.tsx          |   4 +-
+ .../pages/dashboard/company/home/CompanyHome.css   |   0
+ .../pages/dashboard/company/home/CompanyHome.tsx   |   0
+ .../dashboard/company/layout/CompanyLayout.css     |   0
+ .../dashboard/company/layout/CompanyLayout.tsx     |   0
+ .../CurriculumPreview/CurriculumPrevie.css         |   0
+ .../CurriculumPreview/curriculumPreview.tsx        |   0
+ .../ManagerCurriculums/ManagerCurriculumList.css   |   0
+ .../ManagerCurriculums/ManagerCurriculumList.tsx   |   0
+ .../ManagerCurriculums/ManagerCurriculumView.css   |  42 ++
+ .../ManagerCurriculums/ManagerCurriculumView.tsx   |   0
+ .../manager/Curriculums/Mocks/curriculumData.ts    |   0
+ .../manager/Curriculums/Mocks/curriculumFactory.ts |   0
+ .../manager/Curriculums/Mocks/mockCurriculums.ts   |   0
+ .../components/CurriculumExperience.tsx            |   0
+ .../Curriculums/components/CurriculumHeader.tsx    |   0
+ .../Curriculums/components/CurriculumSidebar..tsx  |   0
+ .../Curriculums/components/CurriculumSummary.tsx   |   0
+ .../pages/dashboard/manager/Home/ManagerHome.css   |   0
+ .../pages/dashboard/manager/Home/ManagerHome.tsx   |   5 -
+ .../dashboard/manager/components/KPIs/KPICard.css  |   0
+ .../dashboard/manager/components/KPIs/KPICard.tsx  |   0
+ .../dashboard/manager/components/KPIs/KPIGrid.tsx  |   0
+ .../dashboard/manager/components/ManagerHeader.tsx |   0
+ .../dashboard/manager/components/ManagerLayout.css |   0
+ .../manager/components/ManagerSidebar.tsx          |  10 +
+ .../pages/dashboard/manager/jobs/ManagerJobs.css   |   0
+ src/pages/dashboard/manager/jobs/ManagerJobs.tsx   | 201 +++++++++
+ .../manager/jobs/ManagerJobsDetails/JobDetails.tsx | 209 ++++++++++
+ .../jobs/ManagerJobsDetails/JobsDetails.css        | 274 ++++++++++++
+ src/pages/dashboard/manager/jobs/Mocks/JobsMock.ts |  44 ++
+ .../dashboard/manager/layout/ManagerLayout.css     |   0
+ .../dashboard/manager/layout/ManagerLayout.tsx     |   0
+ .../dashboard/manager/reports/ManagerReports.css   |   0
+ .../dashboard/manager/reports/ManagerReports.tsx   |   0
+ .../components/ChartsSection/ChartsSection.css     |   0
+ .../components/ChartsSection/ChartsSection.tsx     |   0
+ .../components/ReportsFilters/ReportsFilters.css   |   0
+ .../components/ReportsFilters/ReportsFilters.tsx   |   0
+ .../components/ReportsTable/ReportsTable.css       |   0
+ .../components/ReportsTable/ReportsTable.tsx       |   0
+ .../reports/components/SummaryCards/ReportCard.css |   0
+ .../reports/components/SummaryCards/ReportCard.tsx |   0
+ .../dashboard/student/components/StudentHeader.tsx |   0
+ .../student/components/StudentSidebar.tsx          |  39 +-
+ .../curriculums/StudentCurriculumCreate.css        |   0
+ .../curriculums/StudentCurriculumCreate.tsx        | 247 +++++++++++
+ .../student/curriculums/StudentCurriculumView.tsx  | 166 ++++++++
+ .../pages/dashboard/student/home/StudentHome.css   |   0
+ .../pages/dashboard/student/home/StudentHome.tsx   |   5 +-
+ src/pages/dashboard/student/jobs/studentJobs.tsx   | 131 ++++++
+ .../dashboard/student/jobs/studentJobsDetails.tsx  | 144 +++++++
+ .../dashboard/student/layout/StudentLayout.css     |   0
+ .../dashboard/student/layout/StudentLayout.tsx     |   0
+ src/pages/profile/Profile.css                      | 458 +++++++++++++++++++++
+ src/pages/profile/Profile.tsx                      | 317 ++++++++++++++
+ {Prisma_frontend/src => src}/routes/AppRoutes.tsx  |  33 +-
+ .../companies/__init__.py => src/services/api.ts   |   0
+ .../tsconfig.app.json => tsconfig.app.json         |   0
+ Prisma_frontend/tsconfig.json => tsconfig.json     |   0
+ .../tsconfig.node.json => tsconfig.node.json       |   0
+ Prisma_frontend/vite.config.ts => vite.config.ts   |   0
+ 193 files changed, 4108 insertions(+), 3577 deletions(-)

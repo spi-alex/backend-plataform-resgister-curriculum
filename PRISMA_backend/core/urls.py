@@ -12,7 +12,7 @@ urlpatterns = [
     # --- Apps do Projeto ---
     # Aqui usamos 'include', então não precisamos importar as Views
     path('api/users/', include('users.urls')),
-    path('api/resumes/', include('resumes.urls')),
+    path('api/resumes/', include('resumes.urls')), 
     path('api/companies/', include('companies.urls')), # Descomente se já existir
     path('api/jobs/', include('jobs.urls')),
     path('api/pdf/', include('pdf.urls')), # Descomente se já existir

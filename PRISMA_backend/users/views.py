@@ -12,6 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
+from .serializers import MyTokenObtainPairSerializer
 # Importações dos seus modelos
 from .models import Profile
 from companies.models import Company
@@ -20,6 +21,7 @@ from captcha.models import CaptchaStore
 from resumes.models import Resume
 from .emails import enviar_email_async
 
+from rest_framework_simplejwt.views import TokenObtainPairView
 User = get_user_model()
 
 @api_view(['POST'])
@@ -27,7 +29,7 @@ User = get_user_model()
 def register_user(request):
     data = request.data
     
-    # 1. Validação do Captcha (Obrigatória antes de salvar qualquer dado)
+    # 1. Validação do Captcha
     captcha_key = data.get('captcha_0') 
     captcha_value = data.get('captcha_1')
     try:
@@ -39,35 +41,61 @@ def register_user(request):
         return Response({"error": "Erro na validação do Captcha."}, status=400)
 
     try:
-        # 2. Captura do Nome Real (Garantindo que não seja o e-mail)
-        # Verificamos dentro do objeto 'perfil' que o seu React envia
-        perfil_raw = data.get('perfil', {})
-        nome_completo = perfil_raw.get('nome') or data.get('nome') or "Usuário PRISMA"
+        # 2. Definição da Role
+        role_solicitada = data.get('role', 'candidate').lower()
         
-        # 3. Criação do Usuário
-        # O Django exige um username único; se você usa o e-mail como username, ele aparecerá na primeira coluna
+        # 3. Garantia de Username (Evita erro 500 se o React não enviar 'username')
+        # Tenta pegar username, se não existir usa o email, se não gera um aleatório
+        username_final = data.get('username') or data.get('email') or f"user_{uuid.uuid4().hex[:8]}"
+
+        # 4. Criação do Usuário Base
         user = User.objects.create_user(
-            username=data['username'],
-            email=data['email'],
-            password=data['password'],
-            role=data.get('role', 'candidate').lower()
+            username=username_final,
+            email=data.get('email'),
+            password=data.get('password'),
+            role=role_solicitada
         )
 
-        # 4. FORÇANDO O NOME NO BANCO (O que resolve o seu problema visual)
-        # O Admin do Django usa first_name e last_name por padrão
-        partes_nome = nome_completo.split(' ', 1)
-        user.first_name = partes_nome[0]
-        user.last_name = partes_nome[1] if len(partes_nome) > 1 else ''
-        user.save() # Importante salvar novamente após alterar os campos
+        # 5. Tratamento de Nome (Diferencia Empresa de Pessoa Física)
+        if role_solicitada in ['company', 'empresa']:
+            user.first_name = data.get('company_name') or data.get('nome') or "Empresa PRISMA"
+            user.last_name = ''
+        else:
+            perfil_raw = data.get('perfil', {})
+            nome_completo = perfil_raw.get('nome') or data.get('nome') or "Usuário PRISMA"
+            partes_nome = nome_completo.split(' ', 1)
+            user.first_name = partes_nome[0]
+            user.last_name = partes_nome[1] if len(partes_nome) > 1 else ''
+        
+        user.save()
 
-        # 5. Criação do Profile vinculado (Conforme seu modelo OneToOne)
+        # 6. Criação Automática do Profile
         Profile.objects.create(
             user=user,
             type=user.role
         )
 
-        # 6. Envio de E-mail Assíncrono (Evita o delay de 5 segundos)
-        # O try/except interno evita que o erro do Resend quebre o cadastro [cite: 8, 9]
+        # 7. Lógica Específica para Empresa (Com trava de segurança para CNPJ)
+        if role_solicitada in ['company', 'empresa']:
+            from companies.models import Company 
+            
+            cnpj_enviado = data.get('cnpj')
+            
+            # Validação: Se o CNPJ já existir, interrompe para não dar erro 500
+            if cnpj_enviado and Company.objects.filter(cnpj=cnpj_enviado).exists():
+                user.delete() # Remove o user criado para permitir tentar de novo com o mesmo e-mail
+                return Response({"error": "Este CNPJ já está cadastrado no sistema."}, status=400)
+
+            Company.objects.create(
+                owner=user,
+                name=user.first_name,
+                # Se não vier CNPJ, gera um temporário para não violar a unicidade do banco
+                cnpj=cnpj_enviado or f"TEMP-{uuid.uuid4().hex[:10]}",
+                description=data.get('description', ''),
+                website=data.get('website', '')
+            )
+
+        # 8. Envio de E-mail Assíncrono com PIN
         assunto = 'Bem-vindo ao PRISMA'
         mensagem = f"Olá {user.first_name}, seu PIN de acesso é: {user.pin}"
         
@@ -75,19 +103,23 @@ def register_user(request):
             try:
                 enviar_email_async(assunto, mensagem, user.email)
             except Exception as e:
-                print(f"Erro no serviço de e-mail (Resend): {e}")
+                print(f"Erro no serviço de e-mail: {e}")
 
         threading.Thread(target=enviar_email_seguro).start()
 
+        # 9. Geração de Tokens JWT
         refresh = RefreshToken.for_user(user)
         return Response({
-            "message": "Usuário criado com sucesso!",
-            "tokens": {"refresh": str(refresh), "access": str(refresh.access_token)}
+            "message": f"Cadastro de {role_solicitada} realizado com sucesso!",
+            "tokens": {
+                "refresh": str(refresh), 
+                "access": str(refresh.access_token)
+            }
         }, status=201)
 
     except Exception as e:
-        return Response({"error": str(e)}, status=500)
-
+        # Se cair aqui, pelo menos retornamos a mensagem real do erro para debug
+        return Response({"error": f"Erro interno: {str(e)}"}, status=500)
 # ... (restante das suas funções gestor_dashboard, list_all_resumes, etc, permanecem iguais)
     
 @api_view(['GET'])
@@ -164,76 +196,74 @@ def list_all_jobs(request):
     return Response(jobss)
 
 @api_view(['POST'])
-@permission_classes([AllowAny]) # Qualquer um pode pedir o reset
+@permission_classes([AllowAny])
 def password_reset_request(request):
-    email_sujo = request.data.get('email', '')
-    email = email_sujo.strip()
+    """
+    Passo 1: Recebe o e-mail e envia o PIN que já existe no banco.
+    """
+    email = request.data.get('email', '').strip()
     user = User.objects.filter(email__iexact=email).first()
     
-    # Resposta padrão por segurança (evita que hackers saibam quais e-mails existem)
+    # Resposta padrão para evitar enumeração de usuários
     resposta_padrao = {"message": "Se este e-mail estiver cadastrado, as instruções foram enviadas."}
 
     if user:
-        token = default_token_generator.make_token(user)
-        uid = urlsafe_base64_encode(force_bytes(user.pk))
-        
-        # O link para o seu Frontend (ajuste o domínio se necessário)
-        link_recuperacao = f"http://localhost:5173/password-reset-confirm/{uid}/{token}/"
+        # Opcional: Gerar um novo PIN toda vez que pedir reset para aumentar a segurança
+        user.pin = user.generate_unique_pin()
+        user.save()
 
         assunto = 'PRISMA - Recuperação de Senha'
         mensagem = (
-            f"Olá {user.username},\n\n"
-            f"Recebemos um pedido para redefinir a sua senha.\n"
-            f"Clique no link abaixo para prosseguir:\n\n"
-            f"{link_recuperacao}\n\n"
-            f"Se não solicitou isto, ignore este e-mail."
+            f"Olá {user.first_name or user.username},\n\n"
+            f"Você solicitou a redefinição de sua senha.\n"
+            f"Seu código PIN de verificação é: {user.pin}\n\n"
+            f"Use este código no sistema para cadastrar uma nova senha."
         )
 
-        # --- AQUI ESTÁ A MÁGICA ---
         threading.Thread(
             target=enviar_email_async,
             args=(assunto, mensagem, user.email)
         ).start()
-        # --------------------------
 
     return Response(resposta_padrao, status=200)
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
-def password_reset_confirm(request, uidb64, token):
-    try:
-        uid = urlsafe_base64_decode(uidb64).decode()
-        user = User.objects.get(pk=uid)
-    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
-        user = None
+def password_reset_confirm_pin(request):
+    """
+    Passo 2: Recebe Email, PIN e Nova Senha.
+    Valida se o PIN pertence àquele e-mail e altera a senha.
+    """
+    email = request.data.get('email', '').strip()
+    pin_enviado = request.data.get('pin', '').strip()
+    new_password = request.data.get('new_password')
 
-    if user is not None and default_token_generator.check_token(user, token):
-        new_password = request.data.get('new_password')
-        if not new_password:
-            return Response({"error": "Nova senha é obrigatória."}, status=400)
-            
+    if not new_password:
+        return Response({"error": "A nova senha é obrigatória."}, status=400)
+
+    # Busca o usuário que combina e-mail e PIN
+    user = User.objects.filter(email__iexact=email, pin=pin_enviado).first()
+
+    if user:
         # 1. Altera a senha
         user.set_password(new_password)
+        
+        # 2. Gera um novo PIN após o sucesso (invalida o anterior)
+        user.pin = user.generate_unique_pin()
         user.save()
 
-        # 2. --- NOVO: E-MAIL DE CONFIRMAÇÃO DE ALTERAÇÃO ---
-        assunto = 'PRISMA - Senha Alterada com Sucesso'
-        mensagem = (
-            f"Olá {user.username},\n\n"
-            f"Este é um aviso de segurança para confirmar que a sua senha no sistema PRISMA foi alterada recentemente.\n\n"
-            f"Se foi você quem realizou esta alteração, pode ignorar este e-mail.\n"
-            f"Caso você NÃO tenha solicitado isso, entre em contato com o suporte imediatamente."
-        )
-        remetente = settings.EMAIL_HOST_USER # Usando a sua config oficial
-        destinatario = [user.email]
+        # 3. E-mail de confirmação (Segurança)
+        assunto = 'PRISMA - Senha Alterada'
+        mensagem = f"Olá {user.username}, sua senha foi alterada com sucesso via código PIN."
+        
+        threading.Thread(
+            target=enviar_email_async,
+            args=(assunto, mensagem, user.email)
+        ).start()
 
-        try:
-            send_mail(assunto, mensagem, remetente, destinatario)
-        except Exception as e:
-            # Logamos o erro mas não travamos a resposta, pois a senha JÁ foi trocada
-            print(f"Erro ao enviar e-mail de confirmação: {e}")
-        # --------------------------------------------------
-
-        return Response({"message": "Senha alterada com sucesso! Um e-mail de confirmação foi enviado."}, status=200)
+        return Response({"message": "Senha alterada com sucesso!"}, status=200)
     
-    return Response({"error": "O link de recuperação é inválido ou expirou."}, status=400)
+    return Response({"error": "Código PIN inválido ou e-mail incorreto."}, status=400)
+
+class MyTokenObtainPairView(TokenObtainPairView):
+    serializer_class = MyTokenObtainPairSerializer
