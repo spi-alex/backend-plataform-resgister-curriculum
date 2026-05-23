@@ -1,5 +1,5 @@
-import { useState, ChangeEvent } from "react";
-import { useNavigate } from "react-router-dom"; // Importado corretamente
+import { useState, ChangeEvent, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
 import "./StudentCurriculumCreate.css";
 
@@ -42,8 +42,8 @@ interface FormData {
 }
 
 export default function StudentCurriculumCreate() {
-  // CORREÇÃO: O Hook deve ser declarado aqui, no início do componente
   const navigate = useNavigate();
+  const [loadingData, setLoadingData] = useState(true);
 
   const [formData, setFormData] = useState<FormData>({
     fullName: "",
@@ -68,6 +68,34 @@ export default function StudentCurriculumCreate() {
     courses: "",
     languages: "",
   });
+
+  // CARREGA DADOS EXISTENTES SE HOUVER
+  useEffect(() => {
+    async function loadExistingCurriculum() {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setLoadingData(false);
+        return;
+      }
+
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+
+      try {
+        const response = await api.get("/resumes/", config);
+        if (response.data && response.data.length > 0) {
+          // Deserializa o JSON que está salvo na coluna content do Django
+          const existingData = JSON.parse(response.data[0].content);
+          setFormData(existingData);
+        }
+      } catch (error) {
+        console.error("Erro ao carregar currículo existente:", error);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+
+    loadExistingCurriculum();
+  }, []);
 
   function handleChange(
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -167,11 +195,9 @@ export default function StudentCurriculumCreate() {
     setFormData({ ...formData, education: updated });
   }
 
-  // ---------- GERAÇÃO DO HTML E ENVIO PARA O BACKEND ----------
-
+  // ---------- SALVAR OU ATUALIZAR NO BACKEND ----------
   async function handleSaveCurriculum() {
     const token = localStorage.getItem("access_token");
-    // CORREÇÃO: Removido o 'useNavigate' daqui de dentro
     if (!token) return;
 
     const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -179,7 +205,6 @@ export default function StudentCurriculumCreate() {
     try {
       let resumeId: number | null = null;
 
-      // 1. Tenta buscar currículo existente
       try {
         const listResponse = await api.get("/resumes/", config);
         if (listResponse.data && listResponse.data.length > 0) {
@@ -189,20 +214,17 @@ export default function StudentCurriculumCreate() {
         console.log("Sem currículo prévio encontrado.");
       }
 
-      // 2. Se não existir, CRIA
+      const payload = {
+        title: formData.fullName || "Meu Currículo",
+        content: JSON.stringify(formData),
+      };
+
       if (!resumeId) {
-        const payload = {
-          title: formData.fullName || "Meu Currículo",
-          content: JSON.stringify(formData),
-        };
+        // Criar Novo
         const saveResponse = await api.post("/resumes/", payload, config);
         resumeId = saveResponse.data.id;
       } else {
-        // OPCIONAL: Se já existe, você pode querer dar um PUT para atualizar
-        const payload = {
-          title: formData.fullName || "Meu Currículo",
-          content: JSON.stringify(formData),
-        };
+        // Atualizar Existente
         await api.put(`/resumes/${resumeId}/`, payload, config);
       }
 
@@ -213,7 +235,7 @@ export default function StudentCurriculumCreate() {
 
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // 5. Exportação do PDF
+      // Exportação do PDF
       const response = await api.get(`/pdf/export/${resumeId}/`, {
         ...config,
         responseType: "blob",
@@ -229,24 +251,23 @@ export default function StudentCurriculumCreate() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      alert("Currículo salvo e PDF gerado com sucesso!");
-
-      // REDIRECIONAMENTO: Volta para o dashboard para mostrar o currículo salvo
+      alert("Currículo atualizado e PDF gerado com sucesso!");
       navigate("/dashboard/aluno");
-    } catch (error: unknown) {
-      const err = error as { response?: { status?: number; data?: unknown } };
-      if (err.response?.status === 401) {
-        alert("Sessão expirada. Por favor, faça login novamente.");
-      } else {
-        alert("Erro na comunicação com o servidor.");
-      }
+    } catch {
+      alert("Erro na comunicação com o servidor ao salvar.");
     }
+  }
+
+  if (loadingData) {
+    return (
+      <div className="student-curriculum">Carregando suas informações...</div>
+    );
   }
 
   return (
     <div className="student-curriculum">
       <header className="page-header">
-        <h2>Criar Currículo</h2>
+        <h2>Gerenciar Currículo</h2>
       </header>
 
       {/* FOTO */}
@@ -265,26 +286,35 @@ export default function StudentCurriculumCreate() {
         <h3>Informações Pessoais</h3>
         <input
           name="fullName"
+          value={formData.fullName}
           placeholder="Nome completo"
           onChange={handleChange}
         />
         <input
           name="location"
+          value={formData.location}
           placeholder="Cidade / Estado"
           onChange={handleChange}
         />
         <input
           name="area"
+          value={formData.area}
           placeholder="Área de atuação"
           onChange={handleChange}
         />
         <input
           name="email"
+          value={formData.email}
           type="email"
           placeholder="Email"
           onChange={handleChange}
         />
-        <input name="phone" placeholder="Telefone" onChange={handleChange} />
+        <input
+          name="phone"
+          value={formData.phone}
+          placeholder="Telefone"
+          onChange={handleChange}
+        />
       </section>
 
       {/* FORMAÇÃO */}
@@ -431,17 +461,29 @@ export default function StudentCurriculumCreate() {
       {/* CAMPOS SIMPLES */}
       <section className="card">
         <h3>Habilidades</h3>
-        <textarea name="skills" onChange={handleChange} />
+        <textarea
+          name="skills"
+          value={formData.skills}
+          onChange={handleChange}
+        />
       </section>
 
       <section className="card">
         <h3>Cursos Complementares</h3>
-        <textarea name="courses" onChange={handleChange} />
+        <textarea
+          name="courses"
+          value={formData.courses}
+          onChange={handleChange}
+        />
       </section>
 
       <section className="card">
         <h3>Idiomas</h3>
-        <textarea name="languages" onChange={handleChange} />
+        <textarea
+          name="languages"
+          value={formData.languages}
+          onChange={handleChange}
+        />
       </section>
 
       <div className="footer-action">

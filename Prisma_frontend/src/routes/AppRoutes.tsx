@@ -18,6 +18,7 @@ import { ResetPassword } from "../pages/auth/password/ResetPassword/ResetPasswor
 import StudentLayout from "../pages/dashboard/student/layout/StudentLayout";
 import StudentHome from "../pages/dashboard/student/home/StudentHome";
 import StudentCurriculumCreate from "../pages/dashboard/student/curriculums/StudentCurriculumCreate";
+import StudentCurriculumView from "../pages/dashboard/student/curriculums/StudentCurriculumView";
 
 /* ========================= */
 /* Dashboard Gestor */
@@ -57,6 +58,7 @@ export default function AppRoutes() {
         <Route path="/dashboard/aluno" element={<StudentLayout />}>
           <Route index element={<StudentHome />} />
           <Route path="curriculo" element={<StudentCurriculumCreate />} />
+          <Route path="curriculo/view" element={<StudentCurriculumView />} />
         </Route>
       </Route>
 

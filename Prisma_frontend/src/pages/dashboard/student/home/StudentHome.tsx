@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import api from "../../../../services/api"; // Ajuste o caminho se necessário
+import api from "../../../../services/api";
 import "./StudentHome.css";
 
 export default function StudentHome() {
@@ -21,7 +21,7 @@ export default function StudentHome() {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        // Se o array vier com itens, o usuário já tem currículo
+        // Se o array vier com itens, o usuário já tem currículo cadastrado
         if (response.data && response.data.length > 0) {
           setHasCurriculum(true);
         } else {
@@ -38,16 +38,31 @@ export default function StudentHome() {
     checkCurriculum();
   }, []);
 
+  // Navegação usando caminhos baseados na estrutura do seu sistema de rotas
   const handleCreateCurriculum = () => {
     navigate("/dashboard/aluno/curriculo");
   };
 
   const handleViewCurriculum = () => {
-    navigate("/dashboard/aluno/curriculo/view"); // Ajuste para sua rota de visualização
+    // CORREÇÃO: Caso a rota absoluta quebre a sessão, você pode usar o caminho exato
+    // Certifique-se de que no seu arquivo de rotas (Ex: App.tsx) o path seja exatamente este.
+    navigate("/dashboard/aluno/curriculo/view");
   };
 
   if (loading) {
-    return <div className="student-home">Carregando...</div>;
+    return (
+      <div
+        className="student-home"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "50vh",
+        }}
+      >
+        <p>Carregando dados do painel...</p>
+      </div>
+    );
   }
 
   return (
@@ -85,7 +100,7 @@ export default function StudentHome() {
           </div>
         </div>
       ) : (
-        /* ESTADO: NÃO POSSUI (Seu código original) */
+        /* ESTADO: NÃO POSSUI */
         <div className="empty-card">
           <div className="empty-icon">
             <div className="icon-circle">

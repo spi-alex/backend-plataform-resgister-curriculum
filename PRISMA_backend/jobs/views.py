@@ -39,12 +39,26 @@ class JobViewSet(viewsets.ModelViewSet):
             return [IsCandidate()]
         return [permissions.IsAuthenticatedOrReadOnly()]
 
-    # BLINDAGEM 1: Apenas o dono da empresa pode editar/deletar suas próprias vagas
+    # BLINDAGEM 1: Apenas o dono da empresa pode editar/deletar suas próprias vagas é a regra de negocio
     def get_queryset(self):
         queryset = super().get_queryset()
-        # Se for uma ação de escrita (edit/delete), filtramos para garantir que pertence ao usuário
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return queryset.filter(company__owner=self.request.user)
+        user = self.request.user
+
+        # Se o usuário não estiver logado, manda a lista padrão (útil para listagens públicas)
+        if not user or user.is_anonymous:
+            return queryset.filter(is_active=True)
+
+        # BLINDAGEM MESTRA: Se for uma Empresa, ela SÓ visualiza, edita e deleta as vagas DELA MESMAA
+        if getattr(user, 'role', '') == 'company':
+            return queryset.filter(company__owner=user)
+
+        # Se for Aluno/Candidato ou Administrador, vê todas as vagas ativas normalmente
+        if getattr(user, 'role', '') == 'candidate':
+            return queryset.filter(is_active=True)
+        #mesma coisa do anterior mas pro gestor e admin
+        if getattr(user, 'role', '') in ['admin', 'gestor']:
+            return queryset.filter(is_active=True)
+
         return queryset
 
     def perform_create(self, serializer):
