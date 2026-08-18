@@ -1,13 +1,46 @@
 import { useParams } from "react-router-dom";
-import { mockCurriculums } from "../Mocks/mockCurriculums";
+import { useEffect, useState } from "react";
+import api from "../../../../../services/api";
+import type { ParsedResume } from "../../../../../utils/resume";
+import { parseResume, downloadResumePdf } from "../../../../../utils/resume";
 import "./CurriculumPrevie.css"
 
 export default function CurriculumPreview() {
   const { id } = useParams();
+  const [curriculum, setCurriculum] = useState<ParsedResume | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const curriculum = mockCurriculums.find(
-    (c) => c.id === Number(id)
-  );
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchResume() {
+      try {
+        setLoading(true);
+        const response = await api.get(`/resumes/${id}/`);
+        setCurriculum(parseResume(response.data));
+      } catch (error) {
+        console.error("Erro ao buscar currículo:", error);
+        setCurriculum(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchResume();
+  }, [id]);
+
+  async function handleDownload() {
+    if (!curriculum) return;
+    try {
+      await downloadResumePdf(curriculum.id, `curriculo_${curriculum.fullName || "aluno"}.pdf`);
+    } catch {
+      alert("Não foi possível baixar o PDF.");
+    }
+  }
+
+  if (loading) {
+    return <div className="preview-error">Carregando currículo...</div>;
+  }
 
   if (!curriculum) {
     return (
@@ -23,7 +56,7 @@ export default function CurriculumPreview() {
       {/* Botão baixar */}
       <div className="preview-actions">
         <button
-          onClick={() => window.print()}
+          onClick={handleDownload}
           className="btn-download"
         >
           Baixar PDF
@@ -35,8 +68,8 @@ export default function CurriculumPreview() {
 
         {/* Header */}
         <header className="header">
-          <h1>{curriculum.name}</h1>
-          <p className="city">{curriculum.city}</p>
+          <h1>{curriculum.fullName || curriculum.username}</h1>
+          <p className="city">{curriculum.location}</p>
 
           <div className="contact-info">
             <p><strong>Email:</strong> {curriculum.email}</p>
@@ -49,46 +82,47 @@ export default function CurriculumPreview() {
         <section className="section">
           <h2>Formação Acadêmica</h2>
 
-          <p className="title">
-            {curriculum.education.course}
-          </p>
-          <p>{curriculum.education.institution}</p>
-          <p className="description">
-            {curriculum.education.description}
-          </p>
+          {curriculum.education && curriculum.education.length > 0 ? (
+            curriculum.education.map((edu, index) => (
+              <div key={index} className="block">
+                <p className="title">{edu.course}</p>
+                <p>{edu.institution}</p>
+                {edu.description && <p className="description">{edu.description}</p>}
+              </div>
+            ))
+          ) : (
+            <p className="description">Nenhuma formação informada.</p>
+          )}
         </section>
 
         {/* Experiência */}
         <section className="section">
           <h2>Experiência Profissional</h2>
 
-          {curriculum.experiences.map((exp, index) => (
-            <div key={index} className="block">
-              <p className="title">
-                {exp.role} — {exp.company}
-              </p>
-              <p className="period">{exp.period}</p>
-              <p className="description">
-                {exp.description}
-              </p>
-            </div>
-          ))}
+          {curriculum.experiences && curriculum.experiences.length > 0 ? (
+            curriculum.experiences.map((exp, index) => (
+              <div key={index} className="block">
+                <p className="title">
+                  {exp.role} — {exp.company}
+                </p>
+                <p className="period">{exp.period}</p>
+                {exp.description && <p className="description">{exp.description}</p>}
+              </div>
+            ))
+          ) : (
+            <p className="description">Nenhuma experiência cadastrada.</p>
+          )}
         </section>
 
         {/* Projetos */}
-        {curriculum.projects.length > 0 && (
+        {curriculum.projects && curriculum.projects.length > 0 && (
           <section className="section">
             <h2>Projetos Acadêmicos</h2>
 
             {curriculum.projects.map((project, index) => (
               <div key={index} className="block">
                 <p className="title">{project.title}</p>
-                <p className="description">
-                  {project.description}
-                </p>
-                <p className="period">
-                  <strong>Tecnologias:</strong> {project.technologies}
-                </p>
+                {project.description && <p className="description">{project.description}</p>}
               </div>
             ))}
           </section>
@@ -97,31 +131,25 @@ export default function CurriculumPreview() {
         {/* Habilidades */}
         <section className="section">
           <h2>Habilidades</h2>
-          <ul>
-            {curriculum.skills.map((skill, index) => (
-              <li key={index}>{skill}</li>
-            ))}
-          </ul>
+          <p className="description" style={{ whiteSpace: "pre-line" }}>
+            {curriculum.skills || "Nenhuma habilidade listada."}
+          </p>
         </section>
 
         {/* Cursos */}
         <section className="section">
           <h2>Cursos Complementares</h2>
-          <ul>
-            {curriculum.extraCourses.map((course, index) => (
-              <li key={index}>{course}</li>
-            ))}
-          </ul>
+          <p className="description" style={{ whiteSpace: "pre-line" }}>
+            {curriculum.courses || "Nenhum curso complementar listado."}
+          </p>
         </section>
 
         {/* Idiomas */}
         <section className="section">
           <h2>Idiomas</h2>
-          <ul>
-            {curriculum.languages.map((language, index) => (
-              <li key={index}>{language}</li>
-            ))}
-          </ul>
+          <p className="description" style={{ whiteSpace: "pre-line" }}>
+            {curriculum.languages || "Nenhum idioma listado."}
+          </p>
         </section>
 
         {/* Rodapé */}

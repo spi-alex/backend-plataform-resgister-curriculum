@@ -17,8 +17,19 @@ export default function CompanyRegistration() {
     razaoSocial: "",
     nomeFantasia: "",
     cnpj: "",
+    areaAtuacao: "",
     email: "",
     telefone: "",
+    responsavelNome: "",
+    responsavelCpf: "",
+    responsavelCargo: "",
+    responsavelTelefone: "",
+    cep: "",
+    rua: "",
+    numero: "",
+    bairro: "",
+    cidade: "",
+    estado: "",
     senha: "",
     confirmarSenha: "",
     termos: false,
@@ -48,8 +59,11 @@ export default function CompanyRegistration() {
     return () => clearTimeout(timer);
   }, []);
 
-  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const { name, value, type, checked } = e.target;
+  function handleChange(
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) {
+    const { name, value, type } = e.target;
+    const checked = (e.target as HTMLInputElement).checked;
 
     if (name === "cnpj") {
       let v = value.replace(/\D/g, "").slice(0, 14);
@@ -62,10 +76,27 @@ export default function CompanyRegistration() {
       return;
     }
 
-    if (name === "telefone") {
+    if (name === "telefone" || name === "responsavelTelefone") {
       let v = value.replace(/\D/g, "").slice(0, 11);
       v = v.replace(/^(\d{2})(\d)/, "($1) $2").replace(/(\d{5})(\d)/, "$1-$2");
-      setForm({ ...form, telefone: v });
+      setForm({ ...form, [name]: v });
+      return;
+    }
+
+    if (name === "responsavelCpf") {
+      let v = value.replace(/\D/g, "").slice(0, 11);
+      v = v
+        .replace(/^(\d{3})(\d)/, "$1.$2")
+        .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+        .replace(/\.(\d{3})(\d)/, ".$1-$2");
+      setForm({ ...form, responsavelCpf: v });
+      return;
+    }
+
+    if (name === "cep") {
+      let v = value.replace(/\D/g, "").slice(0, 8);
+      v = v.replace(/^(\d{5})(\d)/, "$1-$2");
+      setForm({ ...form, cep: v });
       return;
     }
 
@@ -77,7 +108,20 @@ export default function CompanyRegistration() {
 
   async function handleSubmit() {
     // Validação simples que não usa o estado 'errors' para não travar o ESLint
-    if (!form.razaoSocial || !form.email || !form.senha || !captchaValue) {
+    if (
+      !form.razaoSocial ||
+      !form.email ||
+      !form.senha ||
+      !captchaValue ||
+      !form.areaAtuacao ||
+      !form.responsavelNome ||
+      !form.responsavelCpf ||
+      !form.cep ||
+      !form.rua ||
+      !form.numero ||
+      !form.cidade ||
+      !form.estado
+    ) {
       alert("Por favor, preencha todos os campos obrigatórios.");
       return;
     }
@@ -112,7 +156,18 @@ export default function CompanyRegistration() {
           razao_social: form.razaoSocial,
           nome_fantasia: form.nomeFantasia,
           cnpj: form.cnpj.replace(/\D/g, ""),
+          area_atuacao: form.areaAtuacao,
           telefone: form.telefone.replace(/\D/g, ""),
+          responsavel_nome: form.responsavelNome,
+          responsavel_cpf: form.responsavelCpf.replace(/\D/g, ""),
+          responsavel_cargo: form.responsavelCargo,
+          responsavel_telefone: form.responsavelTelefone.replace(/\D/g, ""),
+          cep: form.cep.replace(/\D/g, ""),
+          rua: form.rua,
+          numero: form.numero,
+          bairro: form.bairro,
+          cidade: form.cidade,
+          estado: form.estado,
           user_type: "company",
         },
       };
@@ -171,6 +226,7 @@ export default function CompanyRegistration() {
         </div>
 
         <section className="register-card">
+          <h2>Dados da Empresa</h2>
           <div className="form-grid">
             <Input
               label="Razão Social"
@@ -192,6 +248,12 @@ export default function CompanyRegistration() {
               onChange={handleChange}
             />
             <Input
+              label="Área de atuação"
+              name="areaAtuacao"
+              value={form.areaAtuacao}
+              onChange={handleChange}
+            />
+            <Input
               label="Email Corporativo"
               type="email"
               name="email"
@@ -203,6 +265,81 @@ export default function CompanyRegistration() {
               name="telefone"
               placeholder="(99) 99999-9999"
               value={form.telefone}
+              onChange={handleChange}
+            />
+          </div>
+        </section>
+
+        <section className="register-card">
+          <h2>Responsável pelo Cadastro</h2>
+          <div className="form-grid">
+            <Input
+              label="Nome do responsável"
+              name="responsavelNome"
+              value={form.responsavelNome}
+              onChange={handleChange}
+            />
+            <Input
+              label="CPF do responsável"
+              name="responsavelCpf"
+              placeholder="000.000.000-00"
+              value={form.responsavelCpf}
+              onChange={handleChange}
+            />
+            <Input
+              label="Cargo"
+              name="responsavelCargo"
+              value={form.responsavelCargo}
+              onChange={handleChange}
+            />
+            <Input
+              label="Telefone do responsável"
+              name="responsavelTelefone"
+              placeholder="(99) 99999-9999"
+              value={form.responsavelTelefone}
+              onChange={handleChange}
+            />
+          </div>
+        </section>
+
+        <section className="register-card">
+          <h2>Endereço</h2>
+          <div className="form-grid">
+            <Input
+              label="CEP"
+              name="cep"
+              placeholder="00000-000"
+              value={form.cep}
+              onChange={handleChange}
+            />
+            <Input
+              label="Rua"
+              name="rua"
+              value={form.rua}
+              onChange={handleChange}
+            />
+            <Input
+              label="Número"
+              name="numero"
+              value={form.numero}
+              onChange={handleChange}
+            />
+            <Input
+              label="Bairro"
+              name="bairro"
+              value={form.bairro}
+              onChange={handleChange}
+            />
+            <Input
+              label="Cidade"
+              name="cidade"
+              value={form.cidade}
+              onChange={handleChange}
+            />
+            <Input
+              label="Estado"
+              name="estado"
+              value={form.estado}
               onChange={handleChange}
             />
           </div>

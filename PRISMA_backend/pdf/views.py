@@ -4,14 +4,42 @@ import io
 from django.http import HttpResponse
 from django.template.loader import render_to_string
 from django.shortcuts import get_object_or_404
-from django.core.exceptions import PermissionDenied
-from requests import Response
+from rest_framework.exceptions import PermissionDenied
 from weasyprint import HTML
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from resumes.models import Resume
+from jobs.models import Application
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import SessionAuthentication, TokenAuthentication
+
+
+def _pode_acessar_curriculo(user, resume):
+    """
+    Regra única de autorização para qualquer rota que exponha o PDF de um
+    currículo. Antes disso não havia checagem nenhuma além de estar logado
+    (IsAuthenticated) — qualquer usuário autenticado podia baixar o
+    currículo de qualquer outro trocando o `pk` na URL.
+
+    Pode acessar:
+    - o próprio dono do currículo;
+    - o gestor (ou superusuário/staff);
+    - uma empresa cujo dono é o `owner` de alguma vaga para a qual esse
+      currículo tenha se candidatado (é assim que a tela de candidatos da
+      empresa consome o mesmo pdf_url).
+    """
+    if not user or not user.is_authenticated:
+        return False
+
+    if resume.user_id == user.id:
+        return True
+
+    if user.is_staff or user.is_superuser or getattr(user, 'role', '') == 'gestor':
+        return True
+
+    return Application.objects.filter(
+        resume=resume, job__company__owner=user
+    ).exists()
 
 
 
@@ -42,6 +70,11 @@ def export_resume_pdf(request, pk):
     # 1. Busca o currículo no banco
     resume = get_object_or_404(Resume, pk=pk)
 
+    # 1.1 Trava de autorização (IDOR corrigido): só o dono, o gestor ou a
+    # empresa que recebeu uma candidatura desse currículo podem baixar o PDF.
+    if not _pode_acessar_curriculo(request.user, resume):
+        raise PermissionDenied("Você não tem permissão para acessar este currículo.")
+
     # 2. Transforma a string JSON 'content' em um dicionário Python
     try:
         dados_formulario = json.loads(resume.content)
@@ -69,76 +102,3 @@ def export_resume_pdf(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{nome_arquivo}"'
 
     return response
-'''
-@api_view(['GET'])
-# Agora o Django aceita tanto o Login do navegador quanto o Token do Postman
-@authentication_classes([JWTAuthentication, SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def export_resume_pdf(request, pk):
-    resume = get_object_or_404(Resume, pk=pk)
-
-
-    dados_do_formulario = json.loads(resume.content)
-
-    is_owner = (resume.user == request.user)
-    is_admin = request.user.is_staff
-    
-    if not (is_owner or is_admin):
-        raise PermissionDenied("Você não tem permissão para visualizar este currículo.")
-
-    # Se seu arquivo está em pdf/templates/pdf/resume_pdf.html, use este caminho:
-    html_string = render_to_string('pdf/resume_pdf.html', {
-         
-        'resume': resume
-    })
-
-    html = HTML(string=html_string, base_url=request.build_absolute_uri('/'))
-    pdf_file = html.write_pdf()
-
-    response = HttpResponse(pdf_file, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="curriculo_{resume.user.username}.pdf"'
-
-    return response
-
-
-
-'''
-
-
-
-
-'''
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def export_resume_zip(request):
-    # 1. Validação de Segurança para o Gestor
-    if request.user.role.lower() != 'gestor':
-        return Response({"error": "Apenas gestores podem baixar em lote."}, status=403)
-
-    # 2. Receber IDs do Frontend: {"resume_ids": [1, 2, 3]}
-    resume_ids = request.data.get('resume_ids', [])
-    if not resume_ids:
-        return Response({"error": "Selecione ao menos um currículo."}, status=400)
-
-    # 3. Criar o "pacote" virtual na memória RAM
-    zip_buffer = io.BytesIO()
-    with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        resumes = Resume.objects.filter(id__in=resume_ids)
-        
-        for resume in resumes:
-            # Reutilizamos a lógica do WeasyPrint
-            pdf_bytes = gerar_pdf_bytes(resume, request)
-            
-            # Nome do arquivo dentro do ZIP
-            filename = f"curriculo_{resume.user.username}_{resume.id}.pdf"
-            
-            # Adicionamos o PDF ao arquivo ZIP
-            zip_file.writestr(filename, pdf_bytes)
-
-    # 4. Preparar o arquivo para o download
-    zip_buffer.seek(0)
-    response = HttpResponse(zip_buffer.getvalue(), content_type='application/zip')
-    response['Content-Disposition'] = 'attachment; filename="lote_curriculos.zip"'
-    
-    return response
-'''

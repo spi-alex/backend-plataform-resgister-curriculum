@@ -1,11 +1,21 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { View, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 
-import { mockCurriculums } from "../Mocks/mockCurriculums";
+import api from "../../../../../services/api";
+import type { RawResume } from "../../../../../utils/resume";
+import { parseResume, downloadResumePdf } from "../../../../../utils/resume";
 import "./ManagerCurriculumList.css";
 
 const ITEMS_PER_PAGE = 10;
+
+interface CurriculumRow {
+  id: number;
+  name: string;
+  course: string;
+  institution: string;
+  email: string;
+}
 
 function getPaginationPages(
   current: number,
@@ -38,32 +48,102 @@ function getPaginationPages(
 export default function ManagerCurriculumList() {
   const navigate = useNavigate();
 
+  const [curriculums, setCurriculums] = useState<CurriculumRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
+
   const [search, setSearch] = useState("");
   const [courseFilter, setCourseFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
+  useEffect(() => {
+    async function loadResumes() {
+      try {
+        setLoading(true);
+        const response = await api.get("users/gestor/resumes/");
+        const rows: CurriculumRow[] = (response.data as RawResume[]).map((raw) => {
+          const resume = parseResume(raw);
+          const institution = resume.education?.[0]?.institution || "Não informado";
+          return {
+            id: resume.id,
+            name: resume.fullName || resume.username || "Sem nome",
+            course: resume.curso || resume.area || "Não informado",
+            institution,
+            email: resume.email || "Sem e-mail",
+          };
+        });
+        setCurriculums(rows);
+      } catch (error) {
+        console.error("Erro ao carregar currículos:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadResumes();
+  }, []);
+
   const filteredCurriculums = useMemo(() => {
-    return mockCurriculums.filter((cv) => {
+    return curriculums.filter((cv) => {
       const matchesSearch = `${cv.name} ${cv.course} ${cv.institution} ${cv.email}`
         .toLowerCase()
         .includes(search.toLowerCase());
 
-      const matchesCourse = courseFilter
-        ? cv.course === courseFilter
-        : true;
+      const matchesCourse = courseFilter ? cv.course === courseFilter : true;
 
       return matchesSearch && matchesCourse;
     });
-  }, [search, courseFilter]);
+  }, [curriculums, search, courseFilter]);
 
-  const totalPages = Math.ceil(
-    filteredCurriculums.length / ITEMS_PER_PAGE
-  );
+  const totalPages = Math.ceil(filteredCurriculums.length / ITEMS_PER_PAGE);
 
   const paginatedCurriculums = filteredCurriculums.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  async function handleDownload(cv: CurriculumRow) {
+    try {
+      await downloadResumePdf(cv.id, `curriculo_${cv.name}.pdf`);
+    } catch {
+      alert("Não foi possível baixar este currículo.");
+    }
+  }
+
+  async function handleExportList() {
+    if (filteredCurriculums.length === 0) {
+      alert("Nenhum currículo para exportar com os filtros atuais.");
+      return;
+    }
+
+    setExporting(true);
+    try {
+      const response = await api.post(
+        "resumes/gestor/export-zip/",
+        { resume_ids: filteredCurriculums.map((cv) => cv.id) },
+        { responseType: "blob" },
+      );
+
+      const zipBlob = new Blob([response.data], { type: "application/zip" });
+      const url = window.URL.createObjectURL(zipBlob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "curriculos_exportados.zip";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erro ao exportar currículos:", error);
+      alert("Não foi possível exportar os currículos selecionados.");
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  if (loading) {
+    return <p>Carregando currículos...</p>;
+  }
 
   return (
     <main className="manager-curriculum-list">
@@ -82,9 +162,9 @@ export default function ManagerCurriculumList() {
           <p>Lista geral de currículos disponíveis no sistema.</p>
         </div>
 
-        <button className="export-btn">
+        <button className="export-btn" onClick={handleExportList} disabled={exporting}>
           <FileText size={18} />
-          <span>Exportar lista</span>
+          <span>{exporting ? "Exportando..." : "Exportar lista (.zip)"}</span>
         </button>
       </header>
 
@@ -107,7 +187,7 @@ export default function ManagerCurriculumList() {
           }}
         >
           <option value="">Filtrar por Curso</option>
-          {[...new Set(mockCurriculums.map((cv) => cv.course))].map(
+          {[...new Set(curriculums.map((cv) => cv.course))].map(
             (course) => (
               <option key={course} value={course}>
                 {course}
@@ -154,13 +234,8 @@ export default function ManagerCurriculumList() {
                       <View size={18} />
                     </button>
 
-                    {/* DOWNLOAD / PREVIEW PDF */}
-                    <button
-                      title="Download PDF"
-                      onClick={() =>
-                        navigate(`/dashboard/gestor/curriculos/${cv.id}/preview`)
-                      }
-                    >
+                    {/* DOWNLOAD PDF */}
+                    <button title="Download PDF" onClick={() => handleDownload(cv)}>
                       <FileText size={18} />
                     </button>
 

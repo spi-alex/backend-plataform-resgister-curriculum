@@ -4,7 +4,35 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .models import Profile
+
 User = get_user_model()
+
+
+class ProfileSerializer(serializers.ModelSerializer):
+    """
+    Dados pessoais/acadêmicos/endereço do aluno-egresso (ou institucionais
+    equivalentes), coletados no cadastro e agora persistidos de verdade.
+    Usado pelo endpoint `GET/PATCH /api/users/me/`.
+    """
+    name = serializers.SerializerMethodField()
+    email = serializers.ReadOnlyField(source='user.email')
+    pin = serializers.ReadOnlyField(source='user.pin')
+    role = serializers.ReadOnlyField(source='user.role')
+
+    class Meta:
+        model = Profile
+        fields = [
+            'name', 'email', 'pin', 'role',
+            'cpf', 'telefone', 'data_nascimento',
+            'instituicao', 'curso', 'situacao_academica',
+            'ano_inicio', 'previsao_conclusao', 'ano_conclusao',
+            'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado',
+        ]
+
+    def get_name(self, obj):
+        full_name = obj.user.get_full_name()
+        return full_name if full_name else obj.user.username
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)

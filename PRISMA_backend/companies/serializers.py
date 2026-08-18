@@ -5,9 +5,18 @@ from .models import Company
 User = get_user_model()
 
 class CompanySerializer(serializers.ModelSerializer):
+    # Campos derivados do usuário dono, usados na página de Perfil da Empresa
+    email = serializers.ReadOnlyField(source='owner.email')
+    created_at = serializers.ReadOnlyField(source='owner.date_joined')
+
     class Meta:
         model = Company
-        fields = ['id', 'name', 'cnpj', 'description', 'website']
+        fields = [
+            'id', 'name', 'cnpj', 'description', 'website', 'email', 'created_at',
+            'nome_fantasia', 'area_atuacao', 'telefone',
+            'responsavel_nome', 'responsavel_cpf', 'responsavel_cargo', 'responsavel_telefone',
+            'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado',
+        ]
         read_only_fields = ['owner'] # O dono é preenchido via código
 
     def create(self, validated_data):

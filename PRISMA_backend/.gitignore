@@ -24,7 +24,7 @@ local_settings.py
 media/
 staticfiles/
 
-#segredos smtp e app
+
 .env
 
 

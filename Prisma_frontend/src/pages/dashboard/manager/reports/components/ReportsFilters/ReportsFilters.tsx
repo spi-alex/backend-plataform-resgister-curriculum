@@ -1,20 +1,35 @@
 import "./ReportsFilters.css";
 
-export function ReportsFilters() {
+interface ReportsFiltersProps {
+  courses: string[];
+  course: string;
+  onCourseChange: (course: string) => void;
+  situacao: string;
+  onSituacaoChange: (situacao: string) => void;
+}
+
+export function ReportsFilters({
+  courses,
+  course,
+  onCourseChange,
+  situacao,
+  onSituacaoChange,
+}: ReportsFiltersProps) {
   return (
     <section className="reports-filters">
-      <select>
-        <option>Todos os cursos</option>
-        <option>Administração</option>
-        <option>TI</option>
-        <option>Edificações</option>
+      <select value={course} onChange={(e) => onCourseChange(e.target.value)}>
+        <option value="">Todos os cursos</option>
+        {courses.map((c) => (
+          <option key={c} value={c}>
+            {c}
+          </option>
+        ))}
       </select>
 
-      <select>
-        <option>Todos os status</option>
-        <option>Aprovado</option>
-        <option>Em análise</option>
-        <option>Reprovado</option>
+      <select value={situacao} onChange={(e) => onSituacaoChange(e.target.value)}>
+        <option value="">Todas as situações</option>
+        <option value="estudando">Estudando</option>
+        <option value="concluido">Concluído</option>
       </select>
     </section>
   );

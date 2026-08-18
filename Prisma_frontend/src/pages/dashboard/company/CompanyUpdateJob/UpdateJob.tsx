@@ -1,14 +1,9 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import api from "../../../../services/api";
-import {
-  Rocket,
-  X,
-  Info,
-  FileText
-} from "lucide-react";
+import { Rocket, X, Info, FileText } from "lucide-react";
 
-import "./CompanyCreateJob.css";
+import "../CompanyCreateJob/CompanyCreateJob.css";
 
 export default function CompanyJobUpdate() {
   const navigate = useNavigate();
@@ -28,7 +23,8 @@ export default function CompanyJobUpdate() {
   useEffect(() => {
     async function loadJob() {
       try {
-        const response = await api.get(`jobs/${id}/`);
+        // CORREÇÃO: Adicionada a barra '/' antes de 'jobs' para garantir rotas limpas no Axios
+        const response = await api.get(`/jobs/${id}/`);
         setFormData({
           title: response.data.title,
           description: response.data.description,
@@ -36,14 +32,14 @@ export default function CompanyJobUpdate() {
           salary: response.data.salary || "",
           is_active: response.data.is_active,
         });
-      } catch {
-        console.error("Erro ao carregar vaga");
+      } catch (error) {
+        console.error("Erro ao carregar vaga:", error);
         navigate("/dashboard/empresa/vagas");
       } finally {
         setFetching(false);
       }
     }
-    loadJob();
+    if (id) loadJob();
   }, [id, navigate]);
 
   // 2. ENVIAR ATUALIZAÇÃO
@@ -52,24 +48,34 @@ export default function CompanyJobUpdate() {
     setLoading(true);
 
     try {
-      await api.patch(`jobs/${id}/`, formData);
+      // CORREÇÃO: Ajustado o endpoint para coincidir com a URL padrão do Django REST Framework
+      await api.patch(`/jobs/${id}/`, formData);
       alert("Vaga atualizada com sucesso!");
       navigate("/dashboard/empresa/vagas");
-    } catch {
+    } catch (error) {
+      console.error("Erro ao atualizar vaga:", error);
       alert("Erro ao atualizar vaga.");
     } finally {
       setLoading(false);
     }
   };
 
-  if (fetching) return <div className="loading">Carregando dados da vaga...</div>;
+  if (fetching)
+    return (
+      <div className="loading" style={{ padding: "20px" }}>
+        Carregando dados da vaga...
+      </div>
+    );
 
   return (
     <div className="company-job-create">
       <div className="job-create-header">
         <div>
           <h1>Editar Oportunidade</h1>
-          <p>Atualize as informações da vaga #{id} para manter os candidatos informados.</p>
+          <p>
+            Atualize as informações da vaga #{id} para manter os candidatos
+            informados.
+          </p>
         </div>
       </div>
 
@@ -88,7 +94,9 @@ export default function CompanyJobUpdate() {
                 type="text"
                 required
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
               />
             </div>
 
@@ -98,7 +106,9 @@ export default function CompanyJobUpdate() {
                 <input
                   type="number"
                   value={formData.salary}
-                  onChange={(e) => setFormData({ ...formData, salary: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, salary: e.target.value })
+                  }
                 />
               </div>
 
@@ -106,7 +116,12 @@ export default function CompanyJobUpdate() {
                 <label>Status da Vaga</label>
                 <select
                   value={formData.is_active ? "true" : "false"}
-                  onChange={(e) => setFormData({ ...formData, is_active: e.target.value === "true" })}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      is_active: e.target.value === "true",
+                    })
+                  }
                 >
                   <option value="true">Ativa (Recebendo candidaturas)</option>
                   <option value="false">Encerrada / Rascunho</option>
@@ -130,7 +145,9 @@ export default function CompanyJobUpdate() {
                 rows={4}
                 required
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
               />
             </div>
 
@@ -140,7 +157,9 @@ export default function CompanyJobUpdate() {
                 rows={4}
                 required
                 value={formData.requirements}
-                onChange={(e) => setFormData({ ...formData, requirements: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, requirements: e.target.value })
+                }
               />
             </div>
           </div>

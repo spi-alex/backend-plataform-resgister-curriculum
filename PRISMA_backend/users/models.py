@@ -7,8 +7,8 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('company', 'Empresa'),
         ('candidate', 'Candidato'),
-        ('gestor', 'Gestor'),  # Novo
-        ('aluno', 'Aluno'),    # Novo
+        ('gestor', 'Gestor'),  
+        ('aluno', 'Aluno'),    
     )
     
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
@@ -29,6 +29,33 @@ class User(AbstractUser):
 
 class Profile(models.Model):
     TYPES = (('candidate', 'Candidato'), ('company', 'Empresa'), ('gestor', 'Gestor'), ('aluno', 'Aluno'))
+    SITUACAO_ACADEMICA_CHOICES = (('aluno', 'Aluno'), ('egresso', 'Egresso'))
+
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     type = models.CharField(max_length=10, choices=TYPES)
-    
+
+    # --- Dados pessoais (cadastro de aluno/egresso) ---
+    # Estes campos já são coletados pelo formulário de cadastro
+    # (StudentRegistration.tsx -> payload.perfil) mas até aqui o backend
+    # descartava tudo, salvando só nome/e-mail/senha. Ver register_user().
+    cpf = models.CharField(max_length=14, blank=True, null=True)
+    telefone = models.CharField(max_length=20, blank=True, null=True)
+    data_nascimento = models.DateField(blank=True, null=True)
+
+    # --- Dados acadêmicos ---
+    instituicao = models.CharField(max_length=255, blank=True, null=True)
+    curso = models.CharField(max_length=150, blank=True, null=True)
+    situacao_academica = models.CharField(
+        max_length=10, choices=SITUACAO_ACADEMICA_CHOICES, blank=True, null=True
+    )
+    ano_inicio = models.PositiveIntegerField(blank=True, null=True)
+    previsao_conclusao = models.CharField(max_length=20, blank=True, null=True)
+    ano_conclusao = models.PositiveIntegerField(blank=True, null=True)
+
+    # --- Endereço ---
+    cep = models.CharField(max_length=9, blank=True, null=True)
+    rua = models.CharField(max_length=255, blank=True, null=True)
+    numero = models.CharField(max_length=20, blank=True, null=True)
+    bairro = models.CharField(max_length=100, blank=True, null=True)
+    cidade = models.CharField(max_length=100, blank=True, null=True)
+    estado = models.CharField(max_length=2, blank=True, null=True)

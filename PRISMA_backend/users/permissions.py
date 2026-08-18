@@ -31,7 +31,5 @@ class IsCompany(permissions.BasePermission):
             return True
 
         # 3. Para usuários comuns, verifica se é uma Empresa.
-        return bool(
-            hasattr(request.user, 'profile') and 
-            request.user.profile.user_type == 'company'
-        )
+        # (O campo no model Profile chama-se 'type', não 'user_type')
+        return getattr(request.user, 'role', '') in ['company', 'empresa']

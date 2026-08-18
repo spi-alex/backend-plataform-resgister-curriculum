@@ -1,5 +1,4 @@
 import {
-  Plus,
   List,
   Search,
   Download,
@@ -10,10 +9,21 @@ import {
   Briefcase,
   FileText,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
+import api from "../../../../services/api";
+import type { RawResume } from "../../../../utils/resume";
+import { parseResume } from "../../../../utils/resume";
 import KPIGrid from "../components/KPIs/KPIGrid";
 import "./ManagerHome.css";
+
+interface RelatorioGeral {
+  total_alunos: number;
+  total_empresas: number;
+  total_vagas: number;
+  total_curriculos: number;
+}
 
 interface Curriculum {
   id: number;
@@ -23,23 +33,52 @@ interface Curriculum {
 }
 
 export default function ManagerHome() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [relatorio, setRelatorio] = useState<RelatorioGeral | null>(null);
+  const [curriculums, setCurriculums] = useState<Curriculum[]>([]);
+  const [vagasAbertas, setVagasAbertas] = useState(0);
 
-  const curriculums: Curriculum[] = [
-    { id: 1, name: "João Silva", email: "joao@email.com", course: "Engenharia" },
-    {
-      id: 2,
-      name: "Maria Oliveira",
-      email: "maria@email.com",
-      course: "Administração",
-    },
-    {
-      id: 3,
-      name: "Lucas Pereira",
-      email: "lucas@email.com",
-      course: "Sistemas de Informação",
-    },
-  ];
+  useEffect(() => {
+    async function loadDashboard() {
+      try {
+        setLoading(true);
+        const [dashboardRes, resumesRes, jobsRes] = await Promise.all([
+          api.get("users/dashboard/"),
+          api.get("users/gestor/resumes/"),
+          api.get("users/gestor/jobs/"),
+        ]);
+
+        setRelatorio(dashboardRes.data.relatorio_geral);
+        setVagasAbertas(
+          jobsRes.data.filter((job: { is_active: boolean }) => job.is_active).length,
+        );
+
+        const parsed: Curriculum[] = (resumesRes.data as RawResume[])
+          .map((raw) => {
+            const resume = parseResume(raw);
+            return {
+              id: resume.id,
+              name: resume.fullName || resume.username || "Sem nome",
+              email: resume.email || "Sem e-mail",
+              course: resume.curso || resume.area || "Não informado",
+            };
+          })
+          // Mais recentes primeiro (o backend já ordena, mas garantimos aqui)
+          .reverse()
+          .slice(0, 3);
+
+        setCurriculums(parsed);
+      } catch (error) {
+        console.error("Erro ao carregar dashboard do gestor:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboard();
+  }, []);
 
   const filteredCurriculums = curriculums.filter((cv) =>
     `${cv.name} ${cv.email} ${cv.course}`
@@ -47,58 +86,57 @@ export default function ManagerHome() {
       .includes(search.toLowerCase())
   );
 
+  if (loading) {
+    return <p>Carregando painel do gestor...</p>;
+  }
+
   return (
     <>
-   {/* KPIs */}
-<KPIGrid
-  items={[
-    {
-      icon: <Users size={40} />,
-      label: "Alunos cadastrados",
-      value: 120,
-    },
-    {
-      icon: <GraduationCap size={40} />,
-      label: "Egressos",
-      value: 40,
-    },
-    {
-      icon: <Building2 size={40} />,
-      label: "Empresas",
-      value: 18,
-    },
-    {
-      icon: <FileText size={40} />,
-      label: "Currículos",
-      value: curriculums.length,
-    },
-    {
-      icon: <BriefcaseBusiness size={40} />,
-      label: "Vagas cadastradas",
-      value: 7,
-    },
-    {
-      icon: <Briefcase size={40} />,
-      label: "Vagas abertas",
-      value: 3,
-    },
-  ]}
-/>  
+      {/* KPIs */}
+      <KPIGrid
+        items={[
+          {
+            icon: <Users size={40} />,
+            label: "Alunos cadastrados",
+            value: relatorio?.total_alunos ?? 0,
+          },
+          {
+            icon: <GraduationCap size={40} />,
+            label: "Currículos",
+            value: relatorio?.total_curriculos ?? 0,
+          },
+          {
+            icon: <Building2 size={40} />,
+            label: "Empresas",
+            value: relatorio?.total_empresas ?? 0,
+          },
+          {
+            icon: <FileText size={40} />,
+            label: "Vagas cadastradas",
+            value: relatorio?.total_vagas ?? 0,
+          },
+          {
+            icon: <BriefcaseBusiness size={40} />,
+            label: "Vagas abertas",
+            value: vagasAbertas,
+          },
+          {
+            icon: <Briefcase size={40} />,
+            label: "Vagas encerradas",
+            value: (relatorio?.total_vagas ?? 0) - vagasAbertas,
+          },
+        ]}
+      />
 
       {/* BLOCO DE VAGAS */}
       <section className="vacancy-banner">
         <div className="vacancy-text">
-          <h2>Gerencie suas vagas</h2>
-          <p>Crie, edite e acompanhe vagas disponíveis para alunos e egressos.</p>
+          <h2>Gerencie as vagas</h2>
+          <p>Acompanhe as vagas cadastradas pelas empresas parceiras.</p>
         </div>
 
         <div className="vacancy-actions">
-          <button onClick={() => alert("Cadastro de vaga – em breve")}>
-            <Plus size={18} />
-            <span>Cadastrar vaga</span>
-          </button>
-
-          <button onClick={() => alert("Lista de vagas – em breve")}>
+          <button onClick={() => navigate("/dashboard/gestor/vagas")}>
             <List size={18} />
             <span>Ver vagas</span>
           </button>
@@ -125,12 +163,10 @@ export default function ManagerHome() {
 
           <button
             className="download-all-btn"
-            onClick={() =>
-              alert("Download de todos os currículos (.zip) – em breve")
-            }
+            onClick={() => navigate("/dashboard/gestor/curriculos")}
           >
             <Download size={16} />
-            <span>Baixar todos (.zip)</span>
+            <span>Ver todos os currículos</span>
           </button>
         </div>
 
@@ -152,12 +188,7 @@ export default function ManagerHome() {
                 <span className="cv-email">{cv.email}</span>
 
                 <button
-                  onClick={() =>
-                    window.open(
-                      `/dashboard/gestor/curriculo/${cv.id}`,
-                      "_blank"
-                    )
-                  }
+                  onClick={() => navigate(`/dashboard/gestor/curriculo/${cv.id}`)}
                 >
                   Abrir
                 </button>

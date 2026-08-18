@@ -1,6 +1,7 @@
 import {
   LayoutDashboard,
   FileText,
+  Briefcase,
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -32,6 +33,15 @@ export default function StudentSidebar({ sidebarOpen }: SidebarProps) {
         >
           <FileText size={20} />
           {sidebarOpen && <span>Meu Currículo</span>}
+        </button>
+
+        {/* VAGAS */}
+        <button
+          className="nav-item"
+          onClick={() => navigate("/dashboard/aluno/vagas")}
+        >
+          <Briefcase size={20} />
+          {sidebarOpen && <span>Vagas</span>}
         </button>
 
         {/* SAIR */}

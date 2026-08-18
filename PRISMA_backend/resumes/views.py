@@ -16,34 +16,51 @@ class ResumeViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        # Garante que o usuário só veja/edite o próprio currículo
-        if getattr(user, 'role', 'candidate') in ['candidate', 'aluno']:
+        role = getattr(user, 'role', 'candidate')
+
+        # 1. Candidato/aluno só vê e edita o próprio currículo
+        if role in ['candidate', 'aluno']:
             return Resume.objects.filter(user=user)
-        
-        # 2. Se for Gestor (ou outro), ele vê todos e pode FILTRAR
-        queryset = Resume.objects.all()
 
-        # PEGAR PARÂMETROS DA URL (Ex: ?curso=Direito)
-        curso = self.request.query_params.get('curso')
-        situacao = self.request.query_params.get('situacao')
-        ano_ingresso = self.request.query_params.get('ano_ingresso')
-        ano_conclusao = self.request.query_params.get('ano_conclusao')
+        # 2. Empresa: NUNCA a lista inteira de currículos (isso era o bug de
+        # IDOR — antes, qualquer role diferente de candidate/aluno caía no
+        # "Resume.objects.all()" lá embaixo, então uma empresa logada
+        # conseguia listar o currículo de todo mundo, não só de quem se
+        # candidatou às vagas dela). Aqui ela só enxerga currículos ligados
+        # a uma candidatura para uma vaga que ela é dona.
+        if role in ['company', 'empresa'] and not (user.is_staff or user.is_superuser):
+            return Resume.objects.filter(
+                applications__job__company__owner=user
+            ).distinct()
 
-        # APLICAR FILTROS (Se o parâmetro existir na URL)
-        if curso:
-            # icontains busca parte do nome e ignora maiúsculas/minúsculas
-            queryset = queryset.filter(curso__icontains=curso)
-        
-        if situacao:
-            queryset = queryset.filter(situacao=situacao)
-            
-        if ano_ingresso:
-            queryset = queryset.filter(ano_ingresso=ano_ingresso)
-            
-        if ano_conclusao:
-            queryset = queryset.filter(ano_conclusao=ano_conclusao)
+        # 3. Gestor (ou staff/admin): vê todos e pode filtrar
+        if role in ['gestor', 'admin'] or user.is_staff or user.is_superuser:
+            queryset = Resume.objects.all()
 
-        return queryset
+            # PEGAR PARÂMETROS DA URL (Ex: ?curso=Direito)
+            curso = self.request.query_params.get('curso')
+            situacao = self.request.query_params.get('situacao')
+            ano_ingresso = self.request.query_params.get('ano_ingresso')
+            ano_conclusao = self.request.query_params.get('ano_conclusao')
+
+            # APLICAR FILTROS (Se o parâmetro existir na URL)
+            if curso:
+                # icontains busca parte do nome e ignora maiúsculas/minúsculas
+                queryset = queryset.filter(curso__icontains=curso)
+
+            if situacao:
+                queryset = queryset.filter(situacao=situacao)
+
+            if ano_ingresso:
+                queryset = queryset.filter(ano_ingresso=ano_ingresso)
+
+            if ano_conclusao:
+                queryset = queryset.filter(ano_conclusao=ano_conclusao)
+
+            return queryset
+
+        # 4. Qualquer outro papel: nada.
+        return Resume.objects.none()
 
     # --- MÉTODO CREATE CUSTOMIZADO (Com a sua mensagem) ---
     def create(self, request, *args, **kwargs):

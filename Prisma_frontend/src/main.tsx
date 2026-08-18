@@ -5,11 +5,11 @@ import { AuthProvider } from "./context/Authcontext";
 import AppRoutes from "./routes/AppRoutes";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
+  <StrictMode>  
     <AuthProvider>
       <BrowserRouter>
         <AppRoutes />
       </BrowserRouter>
     </AuthProvider>
-  </StrictMode>
+  </StrictMode>,
 );

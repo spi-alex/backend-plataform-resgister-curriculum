@@ -22,6 +22,14 @@ class IsCandidate(BasePermission):
         print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
         return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'candidate')
 
+class IsGestor(BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(
+            user and user.is_authenticated and
+            (getattr(user, 'role', '') == 'gestor' or user.is_staff or user.is_superuser)
+        )
+
 # --------------------------------------------------------------------------
 
 class JobViewSet(viewsets.ModelViewSet):
@@ -37,6 +45,8 @@ class JobViewSet(viewsets.ModelViewSet):
             return [IsCompany()]
         if self.action == 'apply':
             return [IsCandidate()]
+        if self.action == 'submit_resumes':
+            return [IsGestor()]
         return [permissions.IsAuthenticatedOrReadOnly()]
 
     # BLINDAGEM 1: Apenas o dono da empresa pode editar/deletar suas próprias vagas é a regra de negocio
@@ -52,12 +62,12 @@ class JobViewSet(viewsets.ModelViewSet):
         if getattr(user, 'role', '') == 'company':
             return queryset.filter(company__owner=user)
 
-        # Se for Aluno/Candidato ou Administrador, vê todas as vagas ativas normalmente
+        # Aluno/Candidato só pode ver e se candidatar a vagas ativas
         if getattr(user, 'role', '') == 'candidate':
             return queryset.filter(is_active=True)
-        #mesma coisa do anterior mas pro gestor e admin
+        # Gestor/Admin acompanham TODAS as vagas, incluindo encerradas
         if getattr(user, 'role', '') in ['admin', 'gestor']:
-            return queryset.filter(is_active=True)
+            return queryset
 
         return queryset
 
@@ -179,8 +189,51 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # 3. Registra a candidatura (get_or_create evita duplicidade)
         application, created = Application.objects.get_or_create(job=job, resume=resume)
-        
+
         if not created:
             return Response({"message": "Você já está inscrito nesta vaga."}, status=status.HTTP_200_OK)
 
         return Response({"message": "Candidatura enviada com sucesso!"}, status=status.HTTP_201_CREATED)
+
+    # --- SUBMETER CURRÍCULOS PARA UMA VAGA (GESTOR) ---
+    # Funcionalidade descrita nas seções 4.3 e 5.6.2 do documento de
+    # funcionalidades ("submeter currículos de alunos para vagas... enviar
+    # múltiplos currículos simultaneamente") e que não existia no backend.
+    #
+    # O gestor já navega pelos currículos cadastrados na plataforma (tela
+    # de Currículos, endpoint `users/gestor/resumes/`); aqui ele escolhe
+    # um ou mais desses currículos e uma vaga, e o sistema registra a
+    # candidatura em nome do aluno — o mesmo efeito de "encaminhar
+    # candidatos diretamente para oportunidades disponíveis" que o
+    # documento descreve.
+    @action(detail=True, methods=['post'], url_path='submit-resumes')
+    def submit_resumes(self, request, pk=None):
+        from resumes.models import Resume
+
+        job = self.get_object()
+        resume_ids = request.data.get('resume_ids', [])
+
+        if not isinstance(resume_ids, list) or not resume_ids:
+            return Response(
+                {"error": "Informe ao menos um currículo em 'resume_ids'."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        resumes = {r.id: r for r in Resume.objects.filter(id__in=resume_ids)}
+
+        enviados, ja_candidatados, nao_encontrados = [], [], []
+        for resume_id in resume_ids:
+            resume = resumes.get(resume_id)
+            if not resume:
+                nao_encontrados.append(resume_id)
+                continue
+
+            application, created = Application.objects.get_or_create(job=job, resume=resume)
+            (enviados if created else ja_candidatados).append(resume_id)
+
+        return Response({
+            "message": f"{len(enviados)} currículo(s) submetido(s) para a vaga '{job.title}'.",
+            "enviados": enviados,
+            "ja_candidatados": ja_candidatados,
+            "nao_encontrados": nao_encontrados,
+        }, status=status.HTTP_200_OK)

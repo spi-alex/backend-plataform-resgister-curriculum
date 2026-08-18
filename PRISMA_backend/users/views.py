@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .serializers import MyTokenObtainPairSerializer
+from .serializers import MyTokenObtainPairSerializer, ProfileSerializer
 # Importações dos seus modelos
 from .models import Profile
 from companies.models import Company
@@ -23,6 +23,26 @@ from .emails import enviar_email_async
 
 from rest_framework_simplejwt.views import TokenObtainPairView
 User = get_user_model()
+
+
+def _to_int(value):
+    """Converte para int com segurança; devolve None se vazio/ inválido."""
+    try:
+        return int(value) if value not in (None, '', 'null') else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _to_date(value):
+    """Converte string 'YYYY-MM-DD' para date; devolve None se vazio/inválida."""
+    if not value:
+        return None
+    try:
+        from datetime import datetime
+        return datetime.strptime(value, '%Y-%m-%d').date()
+    except (TypeError, ValueError):
+        return None
+
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -69,30 +89,77 @@ def register_user(request):
         
         user.save()
 
-        # 6. Criação Automática do Profile
-        Profile.objects.create(
+        perfil_raw = data.get('perfil', {}) or {}
+
+        # 6. Garante o Profile (o sinal post_save de users/signals.py já cria/
+        # sincroniza automaticamente; update_or_create evita erro de duplicidade
+        # caso o sinal já tenha criado o registro).
+        #
+        # Antes, só o campo `type` era preenchido aqui — CPF, telefone, data
+        # de nascimento, instituição, curso, situação e endereço eram
+        # coletados pelo formulário (StudentRegistration.tsx) e descartados
+        # silenciosamente, porque nada os lia nem o model tinha coluna para
+        # eles. Persistimos tudo agora.
+        profile_defaults = {'type': user.role}
+        if role_solicitada not in ['company', 'empresa']:
+            profile_defaults.update({
+                'cpf': perfil_raw.get('cpf') or None,
+                'telefone': perfil_raw.get('telefone') or None,
+                'data_nascimento': _to_date(perfil_raw.get('nascimento')),
+                'instituicao': perfil_raw.get('instituicao') or None,
+                'curso': perfil_raw.get('curso') or None,
+                'situacao_academica': perfil_raw.get('situacao') or None,
+                'ano_inicio': _to_int(perfil_raw.get('ano_inicio')),
+                'previsao_conclusao': perfil_raw.get('previsao_conclusao') or None,
+                'ano_conclusao': _to_int(perfil_raw.get('ano_conclusao')),
+                'cep': perfil_raw.get('cep') or None,
+                'rua': perfil_raw.get('rua') or None,
+                'numero': perfil_raw.get('numero') or None,
+                'bairro': perfil_raw.get('bairro') or None,
+                'cidade': perfil_raw.get('cidade') or None,
+                'estado': perfil_raw.get('estado') or None,
+            })
+
+        Profile.objects.update_or_create(
             user=user,
-            type=user.role
+            defaults=profile_defaults,
         )
 
         # 7. Lógica Específica para Empresa (Com trava de segurança para CNPJ)
         if role_solicitada in ['company', 'empresa']:
-            from companies.models import Company 
-            
+            from companies.models import Company
+
             cnpj_enviado = data.get('cnpj')
-            
+
             # Validação: Se o CNPJ já existir, interrompe para não dar erro 500
             if cnpj_enviado and Company.objects.filter(cnpj=cnpj_enviado).exists():
                 user.delete() # Remove o user criado para permitir tentar de novo com o mesmo e-mail
                 return Response({"error": "Este CNPJ já está cadastrado no sistema."}, status=400)
 
+            # Mesmo caso do Profile: área de atuação, dados do responsável e
+            # endereço eram pedidos pelo documento de especificação e
+            # descartados por falta de coluna. Agora persistimos o que o
+            # formulário mandar dentro de `perfil`.
             Company.objects.create(
                 owner=user,
                 name=user.first_name,
                 # Se não vier CNPJ, gera um temporário para não violar a unicidade do banco
                 cnpj=cnpj_enviado or f"TEMP-{uuid.uuid4().hex[:10]}",
                 description=data.get('description', ''),
-                website=data.get('website', '')
+                website=data.get('website', ''),
+                nome_fantasia=perfil_raw.get('nome_fantasia') or None,
+                area_atuacao=perfil_raw.get('area_atuacao') or None,
+                telefone=perfil_raw.get('telefone') or None,
+                responsavel_nome=perfil_raw.get('responsavel_nome') or None,
+                responsavel_cpf=perfil_raw.get('responsavel_cpf') or None,
+                responsavel_cargo=perfil_raw.get('responsavel_cargo') or None,
+                responsavel_telefone=perfil_raw.get('responsavel_telefone') or None,
+                cep=perfil_raw.get('cep') or None,
+                rua=perfil_raw.get('rua') or None,
+                numero=perfil_raw.get('numero') or None,
+                bairro=perfil_raw.get('bairro') or None,
+                cidade=perfil_raw.get('cidade') or None,
+                estado=perfil_raw.get('estado') or None,
             )
 
         # 8. Envio de E-mail Assíncrono com PIN
@@ -161,9 +228,14 @@ def list_all_resumes(request):
     # Trava de segurança: apenas gestor
     if request.user.role.lower() != 'gestor':
         return Response({"error": "Acesso negado."}, status=403)
-    
-    # Busca todos os currículos (ajuste o nome do modelo se necessário)
-    resumes = Resume.objects.all().values('id', 'user__username', 'title', 'content', 'created_at')
+
+    # Busca todos os currículos. 'content' é o JSON livre preenchido pelo
+    # aluno (nome, telefone, formação etc); os demais campos ficam no
+    # próprio model Resume e são usados para os filtros do gestor.
+    resumes = Resume.objects.all().values(
+        'id', 'user__username', 'user__email', 'title', 'content',
+        'curso', 'ano_ingresso', 'ano_conclusao', 'situacao', 'created_at',
+    )
     return Response(resumes)
 
 @api_view(['GET'])
@@ -181,17 +253,19 @@ def list_all_companies(request):
 def list_all_jobs(request):
     if request.user.role.lower() != 'gestor':
         return Response({'error': 'Acesso negado. '} , status=403)
-    
+
     jobss = Job.objects.all().values(
-        'company',  
+        'id',
+        'company',
+        'company__name',
         'title',
         'description',
-        'requirements', 
+        'requirements',
         'salary',
-        'is_active', 
-        'created_at', 
+        'is_active',
+        'created_at',
         'updated_at',
-    )
+    ).annotate(total_candidaturas=Count('applications'))
 
     return Response(jobss)
 
@@ -267,3 +341,25 @@ def password_reset_confirm_pin(request):
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def my_profile(request):
+    """
+    Perfil do usuário logado: dados pessoais/acadêmicos/endereço coletados
+    no cadastro (antes descartados) e agora consultáveis/editáveis aqui.
+    Cada usuário só acessa o próprio perfil — não recebe nenhum `pk` na URL.
+    """
+    profile, _ = Profile.objects.get_or_create(
+        user=request.user, defaults={'type': request.user.role}
+    )
+
+    if request.method == 'PATCH':
+        serializer = ProfileSerializer(profile, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
+
+    serializer = ProfileSerializer(profile)
+    return Response(serializer.data)

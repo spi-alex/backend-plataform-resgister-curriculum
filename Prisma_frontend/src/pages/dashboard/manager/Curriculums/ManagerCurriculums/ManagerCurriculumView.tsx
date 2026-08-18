@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   User,
@@ -8,16 +9,53 @@ import {
   Phone,
 } from "lucide-react";
 
-import { mockCurriculums } from "../Mocks/mockCurriculums";
+import api from "../../../../../services/api";
+import type { ParsedResume } from "../../../../../utils/resume";
+import { parseResume, downloadResumePdf } from "../../../../../utils/resume";
 import "./ManagerCurriculumView.css";
 
 export default function ManagerCurriculumView() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const curriculum = mockCurriculums.find(
-    (cv) => String(cv.id) === String(id)
-  );
+  const [curriculum, setCurriculum] = useState<ParsedResume | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchResume() {
+      try {
+        setLoading(true);
+        const response = await api.get(`/resumes/${id}/`);
+        setCurriculum(parseResume(response.data));
+      } catch (error) {
+        console.error("Erro ao buscar currículo:", error);
+        setCurriculum(null);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchResume();
+  }, [id]);
+
+  async function handleDownload() {
+    if (!curriculum) return;
+    try {
+      await downloadResumePdf(curriculum.id, `curriculo_${curriculum.fullName || "aluno"}.pdf`);
+    } catch {
+      alert("Não foi possível baixar o PDF.");
+    }
+  }
+
+  if (loading) {
+    return (
+      <main className="cv-container">
+        <p>Carregando currículo...</p>
+      </main>
+    );
+  }
 
   if (!curriculum) {
     return (
@@ -43,22 +81,17 @@ export default function ManagerCurriculumView() {
         </button>
 
         <div className="cv-actions">
-          <button
-            className="cv-btn-outline"
-            onClick={() =>
-              navigate(
-                `/dashboard/gestor/curriculos/${curriculum.id}/preview`
-              )
-            }
-          >
+          <button className="cv-btn-outline" onClick={handleDownload}>
             <Download size={16} />
             Baixar PDF
           </button>
 
-          <button className="cv-btn-primary">
-            <Mail size={16} />
-            Entrar em Contato
-          </button>
+          {curriculum.email && (
+            <a className="cv-btn-primary" href={`mailto:${curriculum.email}`}>
+              <Mail size={16} />
+              Entrar em Contato
+            </a>
+          )}
         </div>
       </div>
 
@@ -66,25 +99,35 @@ export default function ManagerCurriculumView() {
       <section className="cv-profile-card">
         <div className="cv-profile-left">
           <div className="cv-photo">
-            <User size={48} />
+            {curriculum.photo ? (
+              <img
+                src={curriculum.photo}
+                alt="Foto de perfil"
+                style={{ width: "100%", height: "100%", borderRadius: "50%", objectFit: "cover" }}
+              />
+            ) : (
+              <User size={48} />
+            )}
           </div>
 
           <div>
-            <h2>{curriculum.name}</h2>
-            <p className="cv-course">
-              {curriculum.education.course}
-            </p>
+            <h2>{curriculum.fullName || curriculum.username || "Nome não informado"}</h2>
+            <p className="cv-course">{curriculum.curso || curriculum.area || "Curso não informado"}</p>
 
             <div className="cv-meta">
-              <span>
-                <MapPin size={14} />
-                {curriculum.city}
-              </span>
+              {curriculum.location && (
+                <span>
+                  <MapPin size={14} />
+                  {curriculum.location}
+                </span>
+              )}
 
-              <span>
-                <Phone size={14} />
-                {curriculum.phone}
-              </span>
+              {curriculum.phone && (
+                <span>
+                  <Phone size={14} />
+                  {curriculum.phone}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -97,91 +140,75 @@ export default function ManagerCurriculumView() {
           {/* Formação */}
           <section className="cv-card">
             <h3>Formação</h3>
-            <p>
-              <strong>{curriculum.education.course}</strong>
-            </p>
-            <p>{curriculum.education.institution}</p>
-            <p className="cv-description">
-              {curriculum.education.description}
-            </p>
+            {curriculum.education && curriculum.education.length > 0 ? (
+              curriculum.education.map((edu, index) => (
+                <div key={index} style={{ marginBottom: "12px" }}>
+                  <p><strong>{edu.course}</strong></p>
+                  <p>{edu.institution}</p>
+                  {edu.description && <p className="cv-description">{edu.description}</p>}
+                </div>
+              ))
+            ) : (
+              <p className="cv-empty">Nenhuma formação acadêmica informada.</p>
+            )}
           </section>
 
           {/* Experiências */}
           <section className="cv-card">
             <h3>Experiências</h3>
-
-            {curriculum.experiences.map((exp, index) => (
-              <div key={index} className="cv-timeline-item">
-                <h4>{exp.role}</h4>
-                <span className="cv-period">{exp.period}</span>
-                <p>{exp.company}</p>
-                <p className="cv-description">
-                  {exp.description}
-                </p>
-              </div>
-            ))}
+            {curriculum.experiences && curriculum.experiences.length > 0 ? (
+              curriculum.experiences.map((exp, index) => (
+                <div key={index} className="cv-timeline-item">
+                  <h4>{exp.role}</h4>
+                  <span className="cv-period">{exp.period}</span>
+                  <p>{exp.company}</p>
+                  {exp.description && <p className="cv-description">{exp.description}</p>}
+                </div>
+              ))
+            ) : (
+              <p className="cv-empty">Nenhuma experiência cadastrada.</p>
+            )}
           </section>
 
           {/* Projetos Acadêmicos */}
           <section className="cv-card">
             <h3>Projetos Acadêmicos</h3>
-
             {curriculum.projects && curriculum.projects.length > 0 ? (
               curriculum.projects.map((project, index) => (
                 <div key={index} className="cv-project-item">
                   <h4>{project.title}</h4>
-
-                  {project.technologies && (
-                    <span className="cv-project-tech">
-                      {project.technologies}
-                    </span>
-                  )}
-
                   {project.description && (
-                    <p className="cv-description">
-                      {project.description}
-                    </p>
+                    <p className="cv-description">{project.description}</p>
                   )}
                 </div>
               ))
             ) : (
-              <p className="cv-empty">
-                Nenhum projeto acadêmico cadastrado.
-              </p>
+              <p className="cv-empty">Nenhum projeto acadêmico cadastrado.</p>
             )}
           </section>
         </div>
 
         {/* RIGHT */}
         <div className="cv-side">
-          {/* Habilidades */}
           <section className="cv-card">
             <h4>Habilidades</h4>
-            <ul className="cv-tag-list">
-              {curriculum.skills.map((skill, index) => (
-                <li key={index}>{skill}</li>
-              ))}
-            </ul>
+            <p className="cv-description" style={{ whiteSpace: "pre-line" }}>
+              {curriculum.skills || "Nenhuma habilidade listada."}
+            </p>
           </section>
 
-          {/* Idiomas */}
           <section className="cv-card">
             <h4>Idiomas</h4>
-            <ul className="cv-tag-list">
-              {curriculum.languages.map((lang, index) => (
-                <li key={index}>{lang}</li>
-              ))}
-            </ul>
+            <p className="cv-description" style={{ whiteSpace: "pre-line" }}>
+              {curriculum.languages || "Nenhum idioma listado."}
+            </p>
           </section>
 
-          {/* Cursos Extras */}
           <section className="cv-card">
             <h4>Cursos Extras</h4>
-            <ul className="cv-list">
-              {curriculum.extraCourses.map((course, index) => (
-                <li key={index}>{course}</li>
-              ))}
-            </ul>
+            <p className="cv-description" style={{ whiteSpace: "pre-line" }}>
+              {curriculum.courses || "Nenhum curso extra listado."}
+            </p>
           </section>
         </div>
       </div>

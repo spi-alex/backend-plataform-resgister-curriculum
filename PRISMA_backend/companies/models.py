@@ -9,10 +9,31 @@ class Company(models.Model):
         on_delete=models.CASCADE, 
         related_name='company'
     ) 
-    name = models.CharField(max_length=255) 
+    name = models.CharField(max_length=255)  # usado hoje como razão social
     cnpj = models.CharField(max_length=18, unique=True)
     description = models.TextField()
     website = models.URLField(blank=True)
+
+    # --- Dados institucionais ---
+    # Coletados (ou a coletar) no cadastro de empresa e antes descartados
+    # pelo backend — ver CompanyRegistration.tsx e register_user().
+    nome_fantasia = models.CharField(max_length=255, blank=True, null=True)
+    area_atuacao = models.CharField(max_length=150, blank=True, null=True)
+    telefone = models.CharField(max_length=20, blank=True, null=True)
+
+    # --- Dados do responsável pelo cadastro ---
+    responsavel_nome = models.CharField(max_length=255, blank=True, null=True)
+    responsavel_cpf = models.CharField(max_length=14, blank=True, null=True)
+    responsavel_cargo = models.CharField(max_length=100, blank=True, null=True)
+    responsavel_telefone = models.CharField(max_length=20, blank=True, null=True)
+
+    # --- Endereço ---
+    cep = models.CharField(max_length=9, blank=True, null=True)
+    rua = models.CharField(max_length=255, blank=True, null=True)
+    numero = models.CharField(max_length=20, blank=True, null=True)
+    bairro = models.CharField(max_length=100, blank=True, null=True)
+    cidade = models.CharField(max_length=100, blank=True, null=True)
+    estado = models.CharField(max_length=2, blank=True, null=True)
 
     class Meta:
         verbose_name = "Company"

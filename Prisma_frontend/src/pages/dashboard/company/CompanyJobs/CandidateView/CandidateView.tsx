@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { View, User, ChevronLeft, ChevronRight } from "lucide-react";
 // Tente com 5 níveis. Se o VS Code ainda sublinhar, tente 4 ou 6.
 import api from "../../../../../services/api";
+import { downloadResumePdf } from "../../../../../utils/resume";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -91,6 +92,14 @@ export default function CompanyJobCandidates() {
     currentPage * ITEMS_PER_PAGE,
   );
 
+  async function handleViewResume(candidate: Candidate) {
+    try {
+      await downloadResumePdf(Number(candidate.id), `curriculo_${candidate.name}.pdf`);
+    } catch {
+      alert("Não foi possível baixar o currículo deste candidato.");
+    }
+  }
+
   if (loading) return <div className="loading">Carregando candidatos...</div>;
 
   return (
@@ -164,12 +173,7 @@ export default function CompanyJobCandidates() {
                   <td>{cv.course}</td>
                   <td>{cv.email}</td>
                   <td className="actions">
-                    <button
-                      title="Ver Currículo"
-                      onClick={() =>
-                        navigate(`/dashboard/empresa/curriculo/${cv.id}`)
-                      }
-                    >
+                    <button title="Baixar Currículo (PDF)" onClick={() => handleViewResume(cv)}>
                       <User size={18} />
                     </button>
                     <button

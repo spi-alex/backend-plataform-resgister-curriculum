@@ -40,4 +40,6 @@ Equipe de Recrutamento.
                 [candidato_email],
                 fail_silently=False,
             )
-            print(f"✅ E-mail simulado enviado para: {candidato_email}")
+            # Sem emoji no print: o console do Windows (cp1252) não sabe
+            # codificar "✅" e derrubava a requisição inteira com 500.
+            print(f"E-mail simulado enviado para: {candidato_email}")

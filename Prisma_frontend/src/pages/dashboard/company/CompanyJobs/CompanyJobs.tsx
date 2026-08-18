@@ -100,7 +100,9 @@ export default function CompanyJobs() {
                   <td className="actions">
                     <button
                       onClick={() =>
-                        navigate(`/dashboard/empresa/vagas/${job.id}`)
+                        navigate(
+                          `/dashboard/empresa/vagas/${job.id}/candidatos`,
+                        )
                       }
                     >
                       Ver candidatos

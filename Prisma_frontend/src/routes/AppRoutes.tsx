@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "../components/ProtectedRoute";
+import CompanyJobCandidates from "../pages/dashboard/company/CompanyJobs/CandidateView/CandidateView"; // Importe a tela de candidatos (ajuste o caminho conforme necessário)
 
 /* ========================= */
 /* Inicial e Auth */
@@ -19,11 +20,12 @@ import StudentLayout from "../pages/dashboard/student/layout/StudentLayout";
 import StudentHome from "../pages/dashboard/student/home/StudentHome";
 import StudentCurriculumCreate from "../pages/dashboard/student/curriculums/StudentCurriculumCreate";
 import StudentCurriculumView from "../pages/dashboard/student/curriculums/StudentCurriculumView";
+import StudentJobs from "../pages/dashboard/student/jobs/studentJobs";
+import StudentJobDetails from "../pages/dashboard/student/jobs/studentJobsDetails";
 
 /* ========================= */
 /* Dashboard Gestor */
 /* ========================= */
-// CORREÇÃO: Verifique se o nome é ManagerLayout mesmo. Ajustei o caminho abaixo:
 import ManagerLayout from "../pages/dashboard/manager/layout/ManagerLayout";
 import ManagerDashboard from "../pages/dashboard/manager/Home/ManagerHome";
 import ManagerJobs from "../pages/dashboard/manager/jobs/ManagerJobs";
@@ -31,16 +33,21 @@ import ManagerCurriculumList from "../pages/dashboard/manager/Curriculums/Manage
 import ManagerCurriculumView from "../pages/dashboard/manager/Curriculums/ManagerCurriculums/ManagerCurriculumView";
 import CurriculumPreview from "../pages/dashboard/manager/Curriculums/CurriculumPreview/curriculumPreview";
 import ManagerReports from "../pages/dashboard/manager/reports/ManagerReports";
+import ManagerJobDetails from "../pages/dashboard/manager/jobs/ManagerJobsDetails/JobDetails";
 
 /* ========================= */
 /* Dashboard Empresa */
 /* ========================= */
 import CompanyLayout from "../pages/dashboard/company/layout/CompanyLayout";
 import CompanyHome from "../pages/dashboard/company/home/CompanyHome";
-// CORREÇÃO: Removido o .tsx do final do import
 import CompanyJobs from "../pages/dashboard/company/CompanyJobs/CompanyJobs";
 import CompanyJobCreate from "../pages/dashboard/company/CompanyCreateJob/CompanyCreateJob";
 import CompanyProfile from "../pages/dashboard/company/CompanyProfile/CompanyProfile";
+
+// NOVO: Importando a tela de Edição e a tela de Candidatos (Ajuste o caminho se sua pasta de candidatos tiver outro nome)
+import CompanyJobUpdate from "../pages/dashboard/company/CompanyUpdateJob/UpdateJob";
+import CompanyJobDetails from "../pages/dashboard/company/CompanyJobs/CompanyJobsDetails";
+import CompanyCandidateProfile from "../pages/dashboard/company/CompanyJobs/CandidateView/CandidateViewProfile";
 
 export default function AppRoutes() {
   return (
@@ -59,6 +66,8 @@ export default function AppRoutes() {
           <Route index element={<StudentHome />} />
           <Route path="curriculo" element={<StudentCurriculumCreate />} />
           <Route path="curriculo/view" element={<StudentCurriculumView />} />
+          <Route path="vagas" element={<StudentJobs />} />
+          <Route path="vagas/:id" element={<StudentJobDetails />} />
         </Route>
       </Route>
 
@@ -67,6 +76,7 @@ export default function AppRoutes() {
         <Route path="/dashboard/gestor" element={<ManagerLayout />}>
           <Route index element={<ManagerDashboard />} />
           <Route path="vagas" element={<ManagerJobs />} />
+          <Route path="vagas/:id" element={<ManagerJobDetails />} />
           <Route path="curriculos" element={<ManagerCurriculumList />} />
           <Route path="curriculo/:id" element={<ManagerCurriculumView />} />
           <Route
@@ -84,6 +94,17 @@ export default function AppRoutes() {
           <Route path="vagas" element={<CompanyJobs />} />
           <Route path="vagas/nova" element={<CompanyJobCreate />} />
           <Route path="perfil" element={<CompanyProfile />} />
+          <Route path="vagas/:id" element={<CompanyJobDetails />} />
+          <Route
+            path="vagas/:id/candidatos"
+            element={<CompanyJobCandidates />}
+          />
+          <Route
+            path="vagas/:jobId/candidatos/:appId"
+            element={<CompanyCandidateProfile />}
+          />
+          {/* ADICIONADO: Rotas dinâmicas com parâmetros de ID para Editar e ver Candidatos */}
+          <Route path="vagas/editar/:id" element={<CompanyJobUpdate />} />
         </Route>
       </Route>
 

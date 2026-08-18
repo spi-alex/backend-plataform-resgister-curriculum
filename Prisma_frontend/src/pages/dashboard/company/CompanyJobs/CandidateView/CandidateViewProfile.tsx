@@ -1,122 +1,177 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   User,
   Download,
   Mail,
-  MapPin,
-  Phone,
+  GraduationCap,
 } from "lucide-react";
 
+import api from "../../../../../services/api";
+import { downloadResumePdf } from "../../../../../utils/resume";
 
-import { mockCurriculums } from "../../../manager/Curriculums/Mocks/mockCurriculums";
+interface ResumeDetails {
+  full_name: string;
+  contact_email: string;
+  course: string;
+  institution: string | null;
+}
 
+interface Candidate {
+  id: number; // id da candidatura (Application)
+  resume_id: number;
+  status: string;
+  status_label: string;
+  resume_details: ResumeDetails;
+}
+
+const STATUS_ACTIONS: Record<string, string> = {
+  approve: "APROVADO",
+  reject: "REPROVADO",
+};
 
 export default function CompanyCurriculumView() {
-  const { id } = useParams();
+  const { jobId, appId } = useParams();
   const navigate = useNavigate();
 
+  const [candidate, setCandidate] = useState<Candidate | null>(null);
+  const [jobTitle, setJobTitle] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
 
-  const curriculum = mockCurriculums.find(
-    (cv) => String(cv.id) === String(id)
-  );
+  useEffect(() => {
+    if (!jobId || !appId) return;
 
+    async function fetchCandidate() {
+      try {
+        setLoading(true);
+        // Não existe endpoint de detalhe único de candidatura, então
+        // reaproveitamos a listagem de candidatos da vaga e filtramos.
+        const response = await api.get(`jobs/${jobId}/candidates/`);
+        setJobTitle(response.data.vaga);
 
-  function handleApprove() {
-    const confirmAction = window.confirm("Aprovar este candidato?");
-    if (!confirmAction) return;
+        const found = response.data.candidatos.find(
+          (app: Candidate) => String(app.id) === String(appId),
+        );
+        setCandidate(found ?? null);
+      } catch (error) {
+        console.error("Erro ao buscar candidato:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
 
+    fetchCandidate();
+  }, [jobId, appId]);
 
-    console.log("Candidato aprovado:", id);
+  async function updateStatus(action: "approve" | "reject") {
+    if (!jobId || !appId || !candidate) return;
 
+    const label = action === "approve" ? "Aprovar" : "Reprovar";
+    if (!window.confirm(`${label} este candidato?`)) return;
 
-    // Backend futuro
-    /*
-    await api.post(`/candidates/${id}/approve`);
-    */
+    setUpdating(true);
+    try {
+      const response = await api.patch(
+        `jobs/${jobId}/update-status/${appId}/`,
+        { status: STATUS_ACTIONS[action] },
+      );
+      setCandidate((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: STATUS_ACTIONS[action],
+              status_label: response.data.novo_status,
+            }
+          : prev,
+      );
+      alert(response.data.message || "Status atualizado com sucesso!");
+    } catch (error) {
+      console.error("Erro ao atualizar status:", error);
+      alert("Não foi possível atualizar o status do candidato.");
+    } finally {
+      setUpdating(false);
+    }
   }
 
-
-  function handleReject() {
-    const confirmAction = window.confirm("Reprovar este candidato?");
-    if (!confirmAction) return;
-
-
-    console.log("Candidato reprovado:", id);
-
-
-    // Backend futuro
-    /*
-    await api.post(`/candidates/${id}/reject`);
-    */
+  async function handleDownload() {
+    if (!candidate) return;
+    try {
+      await downloadResumePdf(
+        candidate.resume_id,
+        `curriculo_${candidate.resume_details.full_name}.pdf`,
+      );
+    } catch {
+      alert("Não foi possível baixar o currículo.");
+    }
   }
 
-
-  if (!curriculum) {
+  if (loading) {
     return (
       <main className="cv-container">
-        <p>Currículo não encontrado.</p>
-        <button onClick={() => navigate("/dashboard/empresa/vagas")}>
-          Voltar
-        </button>
+        <p>Carregando candidato...</p>
       </main>
     );
   }
 
+  if (!candidate) {
+    return (
+      <main className="cv-container">
+        <p>Candidato não encontrado.</p>
+        <button onClick={() => navigate(-1)}>Voltar</button>
+      </main>
+    );
+  }
+
+  const { resume_details } = candidate;
 
   return (
     <main className="cv-container">
       {/* HEADER */}
       <div className="cv-header">
-        <button
-          className="cv-back"
-          onClick={() => navigate(-1)}
-        >
+        <button className="cv-back" onClick={() => navigate(-1)}>
           <ArrowLeft size={18} />
           Voltar
         </button>
 
-
         <div className="cv-actions">
-          <button
-            className="cv-btn-outline"
-            onClick={() =>
-              navigate(
-                `/dashboard/empresa/curriculos/${curriculum.id}/preview`
-              )
-            }
-          >
+          <button className="cv-btn-outline" onClick={handleDownload}>
             <Download size={16} />
             Baixar PDF
           </button>
 
-
-          <button className="cv-btn-primary">
+          <a className="cv-btn-primary" href={`mailto:${resume_details.contact_email}`}>
             <Mail size={16} />
             Entrar em Contato
-          </button>
+          </a>
         </div>
       </div>
 
+      {/* STATUS ATUAL */}
+      <p className="cv-course">
+        Vaga: <strong>{jobTitle}</strong> — Status atual:{" "}
+        <strong>{candidate.status_label || candidate.status}</strong>
+      </p>
 
       {/* BOTÕES DE DECISÃO */}
       <div className="cv-decision-actions">
         <button
           className="cv-btn-approve"
-          onClick={handleApprove}
+          disabled={updating}
+          onClick={() => updateStatus("approve")}
         >
           Aprovar
         </button>
 
-
         <button
           className="cv-btn-reject"
-          onClick={handleReject}
+          disabled={updating}
+          onClick={() => updateStatus("reject")}
         >
           Reprovar
         </button>
       </div>
-
 
       {/* PROFILE CARD */}
       <section className="cv-profile-card">
@@ -125,127 +180,30 @@ export default function CompanyCurriculumView() {
             <User size={48} />
           </div>
 
-
           <div>
-            <h2>{curriculum.name}</h2>
+            <h2>{resume_details.full_name}</h2>
             <p className="cv-course">
-              {curriculum.education.course}
+              <GraduationCap size={14} /> {resume_details.course || "Curso não informado"}
             </p>
-
 
             <div className="cv-meta">
               <span>
-                <MapPin size={14} />
-                {curriculum.city}
+                <Mail size={14} />
+                {resume_details.contact_email}
               </span>
 
-
-              <span>
-                <Phone size={14} />
-                {curriculum.phone}
-              </span>
+              {resume_details.institution && (
+                <span>{resume_details.institution}</span>
+              )}
             </div>
           </div>
         </div>
       </section>
 
-
-      {/* GRID */}
-      <div className="cv-grid">
-        <div className="cv-main">
-          <section className="cv-card">
-            <h3>Formação</h3>
-            <p>
-              <strong>{curriculum.education.course}</strong>
-            </p>
-            <p>{curriculum.education.institution}</p>
-            <p className="cv-description">
-              {curriculum.education.description}
-            </p>
-          </section>
-
-
-          <section className="cv-card">
-            <h3>Experiências</h3>
-
-
-            {curriculum.experiences.map((exp, index) => (
-              <div key={index} className="cv-timeline-item">
-                <h4>{exp.role}</h4>
-                <span className="cv-period">{exp.period}</span>
-                <p>{exp.company}</p>
-                <p className="cv-description">
-                  {exp.description}
-                </p>
-              </div>
-            ))}
-          </section>
-
-
-          <section className="cv-card">
-            <h3>Projetos Acadêmicos</h3>
-
-
-            {curriculum.projects && curriculum.projects.length > 0 ? (
-              curriculum.projects.map((project, index) => (
-                <div key={index} className="cv-project-item">
-                  <h4>{project.title}</h4>
-
-
-                  {project.technologies && (
-                    <span className="cv-project-tech">
-                      {project.technologies}
-                    </span>
-                  )}
-
-
-                  {project.description && (
-                    <p className="cv-description">
-                      {project.description}
-                    </p>
-                  )}
-                </div>
-              ))
-            ) : (
-              <p className="cv-empty">
-                Nenhum projeto acadêmico cadastrado.
-              </p>
-            )}
-          </section>
-        </div>
-
-
-        <div className="cv-side">
-          <section className="cv-card">
-            <h4>Habilidades</h4>
-            <ul className="cv-tag-list">
-              {curriculum.skills.map((skill, index) => (
-                <li key={index}>{skill}</li>
-              ))}
-            </ul>
-          </section>
-
-
-          <section className="cv-card">
-            <h4>Idiomas</h4>
-            <ul className="cv-tag-list">
-              {curriculum.languages.map((lang, index) => (
-                <li key={index}>{lang}</li>
-              ))}
-            </ul>
-          </section>
-
-
-          <section className="cv-card">
-            <h4>Cursos Extras</h4>
-            <ul className="cv-list">
-              {curriculum.extraCourses.map((course, index) => (
-                <li key={index}>{course}</li>
-              ))}
-            </ul>
-          </section>
-        </div>
-      </div>
+      <p className="cv-empty">
+        Para ver o currículo completo (formação, experiências e habilidades),
+        baixe o PDF acima.
+      </p>
     </main>
   );
 }
