@@ -6,10 +6,7 @@ interface HeaderProps {
   toggleSidebar: () => void;
 }
 
-export default function StudentHeader({
-  sidebarOpen,
-  toggleSidebar,
-}: HeaderProps) {
+export default function StudentHeader({ toggleSidebar }: HeaderProps) {
   const { user } = useAuth();
 
   return (

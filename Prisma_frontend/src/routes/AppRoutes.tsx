@@ -22,6 +22,7 @@ import StudentCurriculumCreate from "../pages/dashboard/student/curriculums/Stud
 import StudentCurriculumView from "../pages/dashboard/student/curriculums/StudentCurriculumView";
 import StudentJobs from "../pages/dashboard/student/jobs/studentJobs";
 import StudentJobDetails from "../pages/dashboard/student/jobs/studentJobsDetails";
+import StudentApplications from "../pages/dashboard/student/applications/StudentApplications";
 
 /* ========================= */
 /* Dashboard Gestor */
@@ -68,6 +69,7 @@ export default function AppRoutes() {
           <Route path="curriculo/view" element={<StudentCurriculumView />} />
           <Route path="vagas" element={<StudentJobs />} />
           <Route path="vagas/:id" element={<StudentJobDetails />} />
+          <Route path="candidaturas" element={<StudentApplications />} />
         </Route>
       </Route>
 

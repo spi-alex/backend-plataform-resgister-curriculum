@@ -29,7 +29,24 @@ export default function StudentJobDetails() {
       }
     }
 
+    // Sem isto, reabrir uma vaga em que o aluno já se candidatou sempre
+    // mostrava "Candidatar-se" de novo (o estado `applied` só nascia true
+    // depois de clicar), então o botão nunca refletia o que já tinha
+    // acontecido antes desta visita à página.
+    async function checkAlreadyApplied() {
+      try {
+        const response = await api.get("jobs/my-applications/");
+        const jaSeCandidatou = (response.data as { job: number }[]).some(
+          (application) => String(application.job) === id,
+        );
+        if (jaSeCandidatou) setApplied(true);
+      } catch (error) {
+        console.error("Erro ao verificar candidaturas existentes:", error);
+      }
+    }
+
     fetchJob();
+    checkAlreadyApplied();
   }, [id]);
 
   async function handleApply() {

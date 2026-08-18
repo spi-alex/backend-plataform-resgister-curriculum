@@ -20,7 +20,14 @@ class IsCompany(BasePermission):
 class IsCandidate(BasePermission):
     def has_permission(self, request, view):
         print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
-        return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'candidate')
+        # BUG CORRIGIDO: só aceitava role=='candidate'. Quem se cadastra
+        # informando "situação = aluno" (StudentRegistration.tsx) recebe
+        # role='aluno', não 'candidate' — com a checagem antiga, esse aluno
+        # tomava 403 ao tentar se candidatar a qualquer vaga.
+        return bool(
+            request.user and request.user.is_authenticated and
+            getattr(request.user, 'role', '') in ['candidate', 'aluno']
+        )
 
 class IsGestor(BasePermission):
     def has_permission(self, request, view):
@@ -43,7 +50,7 @@ class JobViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['create', 'update', 'partial_update', 'destroy', 'update_status', 'dashboard', 'candidates']:
             return [IsCompany()]
-        if self.action == 'apply':
+        if self.action in ['apply', 'my_applications']:
             return [IsCandidate()]
         if self.action == 'submit_resumes':
             return [IsGestor()]
@@ -62,8 +69,21 @@ class JobViewSet(viewsets.ModelViewSet):
         if getattr(user, 'role', '') == 'company':
             return queryset.filter(company__owner=user)
 
-        # Aluno/Candidato só pode ver e se candidatar a vagas ativas
-        if getattr(user, 'role', '') == 'candidate':
+        # Aluno/Candidato só pode ver e se candidatar a vagas ativas.
+        # Mesmo bug do IsCandidate: faltava 'aluno' aqui, então um usuário
+        # com esse role caía no "return queryset" genérico lá embaixo e via
+        # até vagas encerradas de outras empresas na própria listagem.
+        if getattr(user, 'role', '') in ['candidate', 'aluno']:
+            # Exceção: ao abrir o DETALHE de uma vaga específica (usado por
+            # "Minhas Candidaturas" -> "Ver vaga"), o aluno continua
+            # enxergando a vaga mesmo que a empresa já tenha encerrado —
+            # sem isto, uma vaga fechada depois da candidatura virava um
+            # "Vaga não encontrada" para quem já tinha se candidatado a ela.
+            # A listagem (`list`) continua só com vagas ativas.
+            if self.action == 'retrieve':
+                return queryset.filter(
+                    Q(is_active=True) | Q(applications__resume__user=user)
+                ).distinct()
             return queryset.filter(is_active=True)
         # Gestor/Admin acompanham TODAS as vagas, incluindo encerradas
         if getattr(user, 'role', '') in ['admin', 'gestor']:
@@ -194,6 +214,23 @@ class JobViewSet(viewsets.ModelViewSet):
             return Response({"message": "Você já está inscrito nesta vaga."}, status=status.HTTP_200_OK)
 
         return Response({"message": "Candidatura enviada com sucesso!"}, status=status.HTTP_201_CREATED)
+
+    # --- MINHAS CANDIDATURAS (ALUNO/CANDIDATO) ---
+    # O backend já guardava o status de cada candidatura (PENDENTE, ANALISE,
+    # ENTREVISTA, APROVADO, REPROVADO) e disparava e-mail quando ele mudava,
+    # mas não existia nenhuma rota para o próprio aluno consultar isso —
+    # ele nunca sabia, dentro do sistema, como suas candidaturas estavam.
+    @action(detail=False, methods=['get'], url_path='my-applications')
+    def my_applications(self, request):
+        from resumes.models import Resume
+
+        resume = Resume.objects.filter(user=request.user).first()
+        if not resume:
+            return Response([])
+
+        applications = Application.objects.filter(resume=resume).select_related('job', 'job__company')
+        serializer = ApplicationSerializer(applications, many=True, context={'request': request})
+        return Response(serializer.data)
 
     # --- SUBMETER CURRÍCULOS PARA UMA VAGA (GESTOR) ---
     # Funcionalidade descrita nas seções 4.3 e 5.6.2 do documento de

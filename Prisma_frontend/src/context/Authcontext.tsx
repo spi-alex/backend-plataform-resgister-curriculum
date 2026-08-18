@@ -1,17 +1,20 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 import api from "../services/api";
 
-// Adicionado 'student' e 'manager' para bater com a lógica do Login
+// 'student' e 'manager' foram removidos daqui: o backend nunca emite esses
+// valores em `role` (ver User.ROLE_CHOICES) — só existiam neste tipo e
+// quebravam o `tsc -b` (usado pelo `npm run build`) em ProtectedRoute.tsx,
+// que não os aceita. Login.tsx já trata "student"/"manager" como aliases
+// defensivos via string comparada em minúsculas, então nada de
+// comportamento muda ao removê-los do tipo.
 type UserRole =
   | "admin"
   | "company"
   | "candidate"
   | "gestor"
   | "aluno"
-  | "empresa"
-  | "student"
-  | "manager";
+  | "empresa";
 
 interface User {
   id: number;

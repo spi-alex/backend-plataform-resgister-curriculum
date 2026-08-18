@@ -52,20 +52,9 @@ export default function Login() {
 
       <div className="login-container">
         <h1 className="text-info">Login</h1>
-        <Input
-          label="Email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
-        <Input
-          label="Senha"
-          type="password"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
-        <Button title="Entrar" onClick={handleLogin} />
-
+        {/* BUG CORRIGIDO: os campos de e-mail/senha e o botão "Entrar"
+            estavam duplicados na tela — dois pares de inputs escrevendo no
+            mesmo estado e dois botões disparando o mesmo handler. */}
         <Input
           label="Email"
           type="email"

@@ -1,4 +1,4 @@
-import { useState, ChangeEvent, useEffect } from "react";
+import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
 import "./StudentCurriculumCreate.css";
@@ -219,12 +219,19 @@ export default function StudentCurriculumCreate() {
         content: JSON.stringify(formData),
       };
 
-      if (!resumeId) {
+      const isNewResume = !resumeId;
+
+      if (isNewResume) {
         // Criar Novo
+        // BUG CORRIGIDO: o POST de criação (resumes/views.py) não devolve o
+        // currículo direto — devolve { message, data: {...} }. Lendo
+        // "saveResponse.data.id" (sem o "data" do meio) sempre dava
+        // undefined, e a geração do PDF logo após criar o 1º currículo
+        // falhava com "Erro ao identificar o currículo" para todo aluno.
         const saveResponse = await api.post("/resumes/", payload, config);
-        resumeId = saveResponse.data.id;
+        resumeId = saveResponse.data?.data?.id ?? saveResponse.data?.id ?? null;
       } else {
-        // Atualizar Existente
+        // Atualizar Existente (o PUT já devolve o objeto direto, sem wrapper)
         await api.put(`/resumes/${resumeId}/`, payload, config);
       }
 
@@ -251,7 +258,11 @@ export default function StudentCurriculumCreate() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
 
-      alert("Currículo atualizado e PDF gerado com sucesso!");
+      alert(
+        isNewResume
+          ? "Currículo criado e PDF gerado com sucesso!"
+          : "Currículo atualizado e PDF gerado com sucesso!",
+      );
       navigate("/dashboard/aluno");
     } catch {
       alert("Erro na comunicação com o servidor ao salvar.");
