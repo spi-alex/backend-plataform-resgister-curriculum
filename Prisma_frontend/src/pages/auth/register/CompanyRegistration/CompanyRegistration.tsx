@@ -181,8 +181,11 @@ export default function CompanyRegistration() {
 
       if (response.status === 201 || response.status === 200) {
         setShowSuccessMessage(true);
+        // A conta nasce 'pendente' agora (precisa confirmar o PIN enviado
+        // por e-mail antes de conseguir logar) — leva para a tela de
+        // confirmação em vez do login direto.
         setTimeout(() => {
-          window.location.replace("/login");
+          window.location.replace("/confirmar-cadastro");
         }, 1500);
       }
     } catch (error: unknown) {
@@ -216,7 +219,8 @@ export default function CompanyRegistration() {
     <div className="register-page">
       {showSuccessMessage && (
         <div className="success-banner">
-          Cadastro realizado com sucesso! Redirecionando...
+          Cadastro recebido! Verifique seu e-mail para confirmar o PIN e
+          ativar sua conta.
         </div>
       )}
 

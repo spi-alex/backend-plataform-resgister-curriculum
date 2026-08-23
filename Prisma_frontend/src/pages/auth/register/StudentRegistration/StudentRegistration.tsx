@@ -181,9 +181,11 @@ export default function StudentRegistration() {
       // Ativa a mensagem visual em vez do alert bloqueante
       setShowSuccessMessage(true);
 
-      // Redireciona automaticamente após 2 segundos
+      // A conta nasce 'pendente' agora (precisa confirmar o PIN enviado por
+      // e-mail antes de conseguir logar) — leva para a tela de confirmação
+      // em vez do login direto.
       setTimeout(() => {
-        navigate("/login");
+        navigate("/confirmar-cadastro", { state: { email: form.email } });
       }, 2000);
     } catch (error) {
       const apiError = error as ApiError;
@@ -201,7 +203,8 @@ export default function StudentRegistration() {
       {/* Banner de sucesso renderizado condicionalmente */}
       {showSuccessMessage && (
         <div className="success-banner">
-          Cadastro realizado com sucesso! Redirecionando...
+          Cadastro recebido! Verifique seu e-mail para confirmar o PIN e
+          ativar sua conta.
         </div>
       )}
 

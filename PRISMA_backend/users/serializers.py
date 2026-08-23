@@ -1,5 +1,3 @@
-import requests
-from django.conf import settings
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -34,60 +32,31 @@ class ProfileSerializer(serializers.ModelSerializer):
         full_name = obj.user.get_full_name()
         return full_name if full_name else obj.user.username
 
-class UserRegisterSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
-    # Campo extra para receber o token do Google vindo do Front
-    captcha_token = serializers.CharField(write_only=True)
-
-    class Meta:
-        model = User
-        fields = ['username', 'email', 'password', 'first_name', 'last_name', 'captcha_token']
-
-    def validate_captcha_token(self, value):
-        """
-        Valida o token do captcha junto à API do Google.
-        """
-        # Se você estiver em modo de desenvolvimento e não quiser validar agora, 
-        # pode apenas dar um 'return value'.
-        response = requests.post(
-            'https://www.google.com/recaptcha/api/siteverify',
-            data={
-                'secret': settings.RECAPTCHA_PRIVATE_KEY,
-                'response': value
-            }
-        )
-        result = response.json()
-
-        if not result.get('success'):
-            raise serializers.ValidationError("Falha na verificação do reCAPTCHA. Tente novamente.")
-        
-        return value
-
-    def create(self, validated_data):
-        # Removemos o captcha_token antes de criar o usuário, pois o modelo User não tem esse campo
-        validated_data.pop('captcha_token', None)
-        
-        user = User.objects.create_user(
-            username=validated_data['username'],
-            email=validated_data['email'],
-            password=validated_data['password'],
-            first_name=validated_data.get('first_name', ''),
-            last_name=validated_data.get('last_name', '')
-        )
-        return user
-
-
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
-        # O validate retorna o que vai no corpo da resposta (JSON)
+        # O validate retorna o que vai no corpo da resposta (JSON). Chamamos
+        # o super() PRIMEIRO — ele já confirma e-mail/PIN + senha via
+        # EmailOrPinBackend — para só então checar o status da conta. Fazer
+        # nessa ordem evita vazar "essa conta está pendente" para quem nem
+        # acertou a senha; a mensagem de credencial inválida do SimpleJWT
+        # continua genérica para esse caso.
         data = super().validate(attrs)
-        
+
+        if self.user.status == 'pendente':
+            raise serializers.ValidationError(
+                {"error": "Confirme seu cadastro antes de entrar. Verifique o PIN enviado por e-mail e use a tela de confirmação de cadastro."}
+            )
+        if self.user.status == 'inativo':
+            raise serializers.ValidationError(
+                {"error": "Esta conta está inativa. Entre em contato com o suporte."}
+            )
+
         # Adiciona os dados do usuário na resposta do JSON para o React
         data['role'] = self.user.role
         data['name'] = f"{self.user.first_name} {self.user.last_name}".strip() or self.user.username
         data['id'] = self.user.id
         data['email'] = self.user.email
-        
+
         return data
 
     @classmethod

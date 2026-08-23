@@ -1,3 +1,5 @@
+import threading
+
 from rest_framework import viewsets, status, permissions, filters
 from rest_framework.response import Response
 from rest_framework.decorators import action
@@ -5,8 +7,8 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.permissions import IsAuthenticated, BasePermission
 from rest_framework.exceptions import PermissionDenied, ValidationError, NotFound
 from django.db.models import Count, Q
-from django.core.mail import send_mail
 
+from users.emails import enviar_email_async
 from .models import Job, Application
 from .serializers import JobSerializer, ApplicationSerializer
 
@@ -173,14 +175,21 @@ class JobViewSet(viewsets.ModelViewSet):
         application.status = novo_status
         application.save()
 
-        # Envio de e-mail (Seguro)
-        try:
-            subject = f"Atualização: Sua candidatura para {job.title}"
-            destinatario = getattr(application.resume, 'contact_email', application.resume.user.email)
-            message = f"Olá!\n\nO status da sua candidatura para '{job.title}' foi atualizado para: {application.get_status_display()}."
-            send_mail(subject, message, "noreply@prisma.com", [destinatario], fail_silently=True)
-        except Exception as e:
-            print(f"Erro e-mail: {e}")
+        # Envio de e-mail (Seguro) — antes usava o send_mail() nativo do
+        # Django, que cai no EMAIL_BACKEND de console (settings.py) e nunca
+        # chegava ao candidato de verdade. Trocado para o mesmo caminho
+        # (Resend) usado pelo resto do app.
+        subject = f"Atualização: Sua candidatura para {job.title}"
+        destinatario = getattr(application.resume, 'contact_email', application.resume.user.email)
+        message = f"Olá!\n\nO status da sua candidatura para '{job.title}' foi atualizado para: {application.get_status_display()}."
+
+        def enviar():
+            try:
+                enviar_email_async(subject, message, destinatario)
+            except Exception as e:
+                print(f"Erro e-mail: {e}")
+
+        threading.Thread(target=enviar).start()
 
         return Response({"message": "Status atualizado!", "novo_status": application.get_status_display()})
 

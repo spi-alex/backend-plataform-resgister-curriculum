@@ -7,12 +7,27 @@ class User(AbstractUser):
         ('admin', 'Admin'),
         ('company', 'Empresa'),
         ('candidate', 'Candidato'),
-        ('gestor', 'Gestor'),  
-        ('aluno', 'Aluno'),    
+        ('gestor', 'Gestor'),
+        ('aluno', 'Aluno'),
     )
-    
+
+    # Status da conta pedido pela especificação de integração (ativo /
+    # pendente / inativo). Antes não existia — toda conta nascia ativa e
+    # logava na hora, sem confirmação de e-mail. Default 'ativo' preserva o
+    # comportamento atual para contas já existentes e para quem é
+    # provisionado manualmente (gestor/admin via fixture ou createsuperuser);
+    # `register_user` sobrescreve para 'pendente' no autocadastro de
+    # aluno/empresa, e `confirm_registration` promove para 'ativo' quando o
+    # PIN enviado por e-mail é confirmado.
+    STATUS_CHOICES = (
+        ('pendente', 'Pendente'),
+        ('ativo', 'Ativo'),
+        ('inativo', 'Inativo'),
+    )
+
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='candidate')
     pin = models.CharField(max_length=10, unique=True, null=True, blank=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ativo')
 
     def save(self, *args, **kwargs):
         # Lógica para gerar PIN automático apenas na criação (se não existir)

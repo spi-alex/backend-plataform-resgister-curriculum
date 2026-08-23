@@ -1,13 +1,8 @@
 import threading
 import uuid
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes
 from django.db.models import Count
-from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
-from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -15,9 +10,16 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import MyTokenObtainPairSerializer, ProfileSerializer
 # Importações dos seus modelos
 from .models import Profile
+from .throttles import (
+    LoginRateThrottle,
+    RegisterRateThrottle,
+    PasswordResetRateThrottle,
+    PasswordResetConfirmRateThrottle,
+    ConfirmRegistrationRateThrottle,
+)
 from companies.models import Company
 from jobs.models import Job, Application
-from captcha.models import CaptchaStore 
+from captcha.models import CaptchaStore
 from resumes.models import Resume
 from .emails import enviar_email_async
 
@@ -44,36 +46,55 @@ def _to_date(value):
         return None
 
 
+# Papéis que qualquer visitante pode se autoatribuir neste endpoint público.
+# 'gestor' e 'admin' ficam de fora de propósito — são provisionados
+# manualmente (fixture/admin), como a especificação de integração descreve.
+SELF_REGISTER_ROLES = {'candidate', 'aluno', 'company', 'empresa'}
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([RegisterRateThrottle])
 def register_user(request):
     data = request.data
-    
+
     # 1. Validação do Captcha
-    captcha_key = data.get('captcha_0') 
+    captcha_key = data.get('captcha_0')
     captcha_value = data.get('captcha_1')
     try:
         captcha = CaptchaStore.objects.get(hashkey=captcha_key)
         if captcha.response.lower() != str(captcha_value).lower():
             return Response({"error": "Captcha incorreto."}, status=400)
-        captcha.delete()    
+        captcha.delete()
     except Exception:
         return Response({"error": "Erro na validação do Captcha."}, status=400)
 
     try:
-        # 2. Definição da Role
+        # 2. Definição da Role — MASS ASSIGNMENT CORRIGIDO: antes qualquer
+        # string enviada em `role` era aceita sem checagem nenhuma, então um
+        # POST direto na API com `role: "gestor"` criava uma conta de gestor
+        # sem nenhuma validação. Agora só os papéis de autocadastro são
+        # aceitos; qualquer outro valor (gestor, admin, ou lixo) cai no
+        # default seguro 'candidate'.
         role_solicitada = data.get('role', 'candidate').lower()
-        
+        if role_solicitada not in SELF_REGISTER_ROLES:
+            role_solicitada = 'candidate'
+
         # 3. Garantia de Username (Evita erro 500 se o React não enviar 'username')
         # Tenta pegar username, se não existir usa o email, se não gera um aleatório
         username_final = data.get('username') or data.get('email') or f"user_{uuid.uuid4().hex[:8]}"
 
-        # 4. Criação do Usuário Base
+        # 4. Criação do Usuário Base — status 'pendente' até confirmar o PIN
+        # enviado por e-mail (passo 8 abaixo). Antes toda conta nascia
+        # 'ativa' (valor default do model) e já recebia token de sessão na
+        # resposta deste próprio cadastro, sem nenhuma confirmação de posse
+        # do e-mail.
         user = User.objects.create_user(
             username=username_final,
             email=data.get('email'),
             password=data.get('password'),
-            role=role_solicitada
+            role=role_solicitada,
+            status='pendente',
         )
 
         # 5. Tratamento de Nome (Diferencia Empresa de Pessoa Física)
@@ -162,10 +183,15 @@ def register_user(request):
                 estado=perfil_raw.get('estado') or None,
             )
 
-        # 8. Envio de E-mail Assíncrono com PIN
-        assunto = 'Bem-vindo ao PRISMA'
-        mensagem = f"Olá {user.first_name}, seu PIN de acesso é: {user.pin}"
-        
+        # 8. Envio de E-mail Assíncrono com PIN — esse mesmo PIN agora também
+        # é o que confirma a conta em `confirm_registration` (passo 9).
+        assunto = 'Bem-vindo ao PRISMA — confirme seu cadastro'
+        mensagem = (
+            f"Olá {user.first_name}, seu PIN de acesso é: {user.pin}\n\n"
+            f"Use esse PIN junto com seu e-mail na tela de confirmação de "
+            f"cadastro para ativar sua conta."
+        )
+
         def enviar_email_seguro():
             try:
                 enviar_email_async(assunto, mensagem, user.email)
@@ -174,14 +200,16 @@ def register_user(request):
 
         threading.Thread(target=enviar_email_seguro).start()
 
-        # 9. Geração de Tokens JWT
-        refresh = RefreshToken.for_user(user)
+        # 9. SEM emissão de token aqui — a conta nasce 'pendente' (passo 4) e
+        # só passa a existir para login depois que `confirm_registration`
+        # validar o PIN enviado por e-mail. Antes o próprio cadastro já
+        # devolvia `access`/`refresh` JWT, ou seja, dava para logar sem
+        # nunca confirmar posse do e-mail.
         return Response({
-            "message": f"Cadastro de {role_solicitada} realizado com sucesso!",
-            "tokens": {
-                "refresh": str(refresh), 
-                "access": str(refresh.access_token)
-            }
+            "message": (
+                f"Cadastro de {role_solicitada} recebido! Verifique seu "
+                f"e-mail e confirme o PIN para ativar a conta antes de entrar."
+            ),
         }, status=201)
 
     except Exception as e:
@@ -243,9 +271,17 @@ def list_all_resumes(request):
 def list_all_companies(request):
     if request.user.role.lower() != 'gestor':
         return Response({"error": "Acesso negado."}, status=403)
-        
-    # Busca todas as empresas
-    companies = Company.objects.all().values('id', 'name', 'cnpj', 'description','website')
+
+    # Antes só devolvia name/cnpj/description/website — os campos
+    # institucionais adicionados a Company (área de atuação, responsável,
+    # endereço) existiam no banco mas não apareciam nesta listagem do
+    # gestor, só no perfil da própria empresa.
+    companies = Company.objects.all().values(
+        'id', 'name', 'cnpj', 'description', 'website',
+        'nome_fantasia', 'area_atuacao', 'telefone',
+        'responsavel_nome', 'responsavel_cpf', 'responsavel_cargo', 'responsavel_telefone',
+        'cep', 'rua', 'numero', 'bairro', 'cidade', 'estado',
+    )
     return Response(companies)
 
 @api_view(['GET'])
@@ -271,6 +307,7 @@ def list_all_jobs(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetRateThrottle])
 def password_reset_request(request):
     """
     Passo 1: Recebe o e-mail e envia o PIN que já existe no banco.
@@ -303,10 +340,15 @@ def password_reset_request(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([PasswordResetConfirmRateThrottle])
 def password_reset_confirm_pin(request):
     """
     Passo 2: Recebe Email, PIN e Nova Senha.
     Valida se o PIN pertence àquele e-mail e altera a senha.
+
+    Throttle dedicado aqui é o que mais importa dos dois: é o endpoint que
+    de fato tenta o PIN de 6 dígitos (900 mil combinações) contra um e-mail
+    conhecido — sem limite de tentativas, força-bruta era viável.
     """
     email = request.data.get('email', '').strip()
     pin_enviado = request.data.get('pin', '').strip()
@@ -336,11 +378,48 @@ def password_reset_confirm_pin(request):
         ).start()
 
         return Response({"message": "Senha alterada com sucesso!"}, status=200)
-    
+
     return Response({"error": "Código PIN inválido ou e-mail incorreto."}, status=400)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@throttle_classes([ConfirmRegistrationRateThrottle])
+def confirm_registration(request):
+    """
+    Confirma a posse do e-mail usando o mesmo PIN enviado no cadastro
+    (register_user, passo 8) e promove a conta de 'pendente' para 'ativo'.
+    Sem essa confirmação, `MyTokenObtainPairSerializer` recusa o login
+    (ver serializers.py). Devolve tokens de sessão já na confirmação, para
+    o usuário não precisar logar de novo logo em seguida.
+    """
+    email = request.data.get('email', '').strip()
+    pin_enviado = request.data.get('pin', '').strip()
+
+    user = User.objects.filter(email__iexact=email, pin=pin_enviado).first()
+    if not user:
+        return Response({"error": "E-mail ou PIN inválido."}, status=400)
+
+    if user.status == 'inativo':
+        return Response({"error": "Esta conta está inativa. Entre em contato com o suporte."}, status=400)
+
+    if user.status != 'ativo':
+        user.status = 'ativo'
+        user.save(update_fields=['status'])
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        "message": "Cadastro confirmado com sucesso! Sua conta já está ativa.",
+        "tokens": {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+        },
+    }, status=200)
+
 
 class MyTokenObtainPairView(TokenObtainPairView):
     serializer_class = MyTokenObtainPairSerializer
+    throttle_classes = [LoginRateThrottle]
 
 
 @api_view(['GET', 'PATCH'])

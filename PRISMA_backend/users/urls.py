@@ -5,6 +5,7 @@ from .views import MyTokenObtainPairView
 urlpatterns = [
     # Rota de Registro (Agora aponta para a função nova)
     path('register/', views.register_user, name='register'),
+    path('confirm/', views.confirm_registration, name='confirm-registration'),
     path('me/', views.my_profile, name='my-profile'),
 
     # Rotas de Login (JWT) - Mantenha se você já tinha

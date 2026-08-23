@@ -15,7 +15,12 @@ export default function ManagerHeader({
   return (
     <header className="manager-header">
       <div className="header-left">
-        <button className="toggle-sidebar" onClick={toggleSidebar}>
+        <button
+          className="toggle-sidebar"
+          onClick={toggleSidebar}
+          aria-expanded={sidebarOpen}
+          aria-label="Alternar menu lateral"
+        >
           <Menu size={20} />
         </button>
         <h1>PRISMA</h1>

@@ -13,6 +13,7 @@ api.interceptors.request.use((config) => {
 
   const publicRoutes = [
     "users/register/",
+    "users/confirm/",
     "login/",
     "captcha/refresh/",
     "users/token/refresh/",

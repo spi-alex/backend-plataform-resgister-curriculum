@@ -1,4 +1,4 @@
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet } from "react-router-dom";
 import { useState } from "react";
 
 import CompanySidebar from "../components/CompanySidebar";
@@ -9,16 +9,14 @@ import "./CompanyLayout.css";
 export default function CompanyLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  const location = useLocation();
-  const email = location.state?.email || "empresa@prisma.com";
-  const userName = email.split("@")[0];
-
   return (
     <div className="company-dashboard">
+      {/* CompanyHeader já lê o nome do usuário logado via useAuth() — o
+          `userName` derivado de location.state (que quase nunca vem
+          preenchido) não era um prop que o componente sequer aceitava. */}
       <CompanyHeader
         sidebarOpen={sidebarOpen}
         toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
-        userName={userName}
       />
 
       <div className="company-layout">

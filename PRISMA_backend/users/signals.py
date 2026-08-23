@@ -1,10 +1,11 @@
-from django.conf import settings
+import threading
+
 from django.db.models.signals import post_save
 from django.contrib.auth import get_user_model
 from django.dispatch import receiver
 from .models import Profile
+from .emails import enviar_email_async
 from django.contrib.auth.signals import user_logged_in
-from django.core.mail import send_mail
 from django.utils import timezone
 
 # IMPORTANTE: o projeto usa AUTH_USER_MODEL = 'users.User' (custom user).
@@ -39,13 +40,22 @@ print("SINAL CARREGADO COM SUCESSO!")
 
 @receiver(user_logged_in)
 def notify_user_login(sender, request, user, **kwargs):
+    # Antes usava o send_mail() nativo do Django, que cai no EMAIL_BACKEND
+    # de console (settings.py) — ou seja, o aviso nunca saía de verdade para
+    # o usuário. Trocado para o mesmo caminho (Resend) usado pelo resto do
+    # app, e disparado em thread separada para não travar a resposta do
+    # login.
     subject = 'Novo Login Detectado - PRISMA'
-    message = f'Olá {user.username},\n\nUm novo login foi realizado na sua conta em {timezone.now()}.\nSe não foi você, mude sua senha imediatamente.'
-    from_email = 'security@prisma.com'
-    recipient_list = [user.email]
-    print(f"DEBUG: E-mail de login enviado para {user.email}")
-    try:
-        send_mail(subject, message, from_email, recipient_list)
-        print(f"DEBUG: E-mail de login enviado para {user.email}")
-    except Exception as e:
-        print(f"Erro ao enviar e-mail: {e}")
+    message = (
+        f'Olá {user.username},\n\n'
+        f'Um novo login foi realizado na sua conta em {timezone.now()}.\n'
+        f'Se não foi você, mude sua senha imediatamente.'
+    )
+
+    def enviar():
+        try:
+            enviar_email_async(subject, message, user.email)
+        except Exception as e:
+            print(f"Erro ao enviar e-mail de login: {e}")
+
+    threading.Thread(target=enviar).start()

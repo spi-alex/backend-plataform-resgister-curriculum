@@ -12,6 +12,7 @@ import StudentRegistration from "../pages/auth/register/StudentRegistration/Stud
 import CompanyRegistration from "../pages/auth/register/CompanyRegistration/CompanyRegistration";
 import RequestPasswordReset from "../pages/auth/password/RequestReset/RequestReset";
 import { ResetPassword } from "../pages/auth/password/ResetPassword/ResetPassword";
+import ConfirmAccount from "../pages/auth/confirm/ConfirmAccount";
 
 /* ========================= */
 /* Dashboard Aluno */
@@ -60,6 +61,7 @@ export default function AppRoutes() {
       <Route path="/cadastro/empresa" element={<CompanyRegistration />} />
       <Route path="/esqueci-senha" element={<RequestPasswordReset />} />
       <Route path="/redefinir-senha" element={<ResetPassword />} />
+      <Route path="/confirmar-cadastro" element={<ConfirmAccount />} />
 
       {/* ÁREA DO ALUNO */}
       <Route element={<ProtectedRoute allowedRoles={["candidate", "aluno"]} />}>

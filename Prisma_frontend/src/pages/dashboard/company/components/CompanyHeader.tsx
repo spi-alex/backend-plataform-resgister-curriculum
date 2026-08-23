@@ -12,12 +12,15 @@ export default function CompanyHeader({
 }: HeaderProps) {
   const { user } = useAuth();
 
-  console.log("USER NO HEADER:", user);
-
   return (
     <header className="company-header">
       <div className="header-left">
-        <button className="toggle-sidebar" onClick={toggleSidebar}>
+        <button
+          className="toggle-sidebar"
+          onClick={toggleSidebar}
+          aria-expanded={sidebarOpen}
+          aria-label="Alternar menu lateral"
+        >
           <Menu size={20} />
         </button>
         <h1>PRISMA</h1>

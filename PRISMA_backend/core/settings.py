@@ -28,9 +28,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Antes vinha hardcoded True e ALLOWED_HOSTS vazio — ou seja, mesmo o .env
+# já tendo DEBUG e ALLOWED_HOSTS prontos para produção, settings.py nunca os
+# lia. Agora os dois vêm do ambiente; sem as variáveis definidas, o padrão é
+# o mais seguro (DEBUG=False, nenhum host liberado), não o mais permissivo.
+DEBUG = os.getenv('DEBUG', 'False').strip().lower() == 'true'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h.strip() for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h.strip()]
 
 
 # Application definition
@@ -152,14 +156,14 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Traduções
 LOCALE_PATHS = [BASE_DIR / 'locale']
 
-# CONFIGURAÇÃO DE E-MAIL (DESCOMENTE A VERSÃO QUE DESEJAR)
-# mostrar e-mails no terminal (VS Code)
-#DEFAULT_FROM_EMAIL = 'sistema@prisma.com' 
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-
-# MODO REAL (Para quando quiser enviar e-mails de verdade)
-RESEND_API_KEY = os.getenv("RESEND_API_KEY") # Não é a senha normal, é a "Senha de App"
-
+# CONFIGURAÇÃO DE E-MAIL
+# O app não usa mais o `send_mail()` nativo do Django para nada que o
+# usuário precisa receber — os dois lugares que ainda usavam (aviso de novo
+# login em users/signals.py, mudança de status de candidatura em
+# jobs/views.py) foram migrados para `enviar_email_async` (Resend), a mesma
+# função já usada pelo restante do app. EMAIL_BACKEND fica no console só
+# como fallback inerte do Django (nada relevante passa por ele hoje).
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
@@ -179,6 +183,18 @@ REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+    # Limites de tentativas por IP nas rotas AllowAny mais sensíveis (login,
+    # cadastro, reset e confirmação de conta por PIN). Cada rota usa sua
+    # própria throttle class (ver users/throttles.py) com esta 'scope'.
+    # Antes não existia nenhum limite — o PIN de 6 dígitos ficava exposto a
+    # força-bruta sem nenhuma fricção.
+    'DEFAULT_THROTTLE_RATES': {
+        'login': '10/min',
+        'register': '5/min',
+        'password_reset': '5/min',
+        'password_reset_confirm': '5/min',
+        'confirm_registration': '5/min',
+    },
 }
 
 SIMPLE_JWT = {
@@ -187,14 +203,6 @@ SIMPLE_JWT = {
     'CHECK_REVOCATION': False,
     'UPDATE_LAST_LOGIN': True,
 }
-# Configuração de E-mail para Desenvolvimento (mostra no terminal)
-#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-#DEFAULT_FROM_EMAIL = 'sistema-egressos@suauniversidade.edu.br'
-# Chaves de teste do Google (funcionam em qualquer localhost)
-RECAPTCHA_PUBLIC_KEY = os.getenv('RECAPTCHA_PUBLIC_KEY')
-RECAPTCHA_PRIVATE_KEY = os.getenv('RECAPTCHA_PRIVATE_KEY')
-
-RECAPTCHA_LANGUAGE = 'pt-BR'
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -217,3 +225,15 @@ CORS_ALLOW_HEADERS = [
     "x-csrftoken",
     "x-requested-with",
 ]
+
+# Endurecimento de transporte — só entra em vigor quando DEBUG=False (ou
+# seja, nunca no dev local, onde não há HTTPS). Sem isso, um deploy fora do
+# localhost sairia sem HSTS/redirect para HTTPS/cookies seguros por padrão.
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30  # 30 dias
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
