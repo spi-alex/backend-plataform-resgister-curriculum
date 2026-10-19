@@ -5,7 +5,7 @@ import type { Job } from "../../../../../utils/job";
 import { formatSalary } from "../../../../../utils/job";
 import type { RawResume } from "../../../../../utils/resume";
 import { parseResume } from "../../../../../utils/resume";
-import "./JobsDetails.css";
+import "../../../../../styles/jobDetails.css";
 
 interface ResumeOption {
   id: number;

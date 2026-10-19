@@ -29,7 +29,12 @@ export default function Login() {
     }
   }, []);
 
-  const handleLogin = async () => {
+  // Recebe o evento porque agora é o `onSubmit` de um <form>: sem o
+  // preventDefault o navegador recarregaria a página inteira e o POST do
+  // login nunca chegaria a sair pelo axios.
+  const handleLogin = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
     if (!email.trim() || !senha.trim()) return;
 
     setErro("");
@@ -77,29 +82,47 @@ export default function Login() {
         {/* BUG CORRIGIDO: os campos de e-mail/senha e o botão "Entrar"
             estavam duplicados na tela — dois pares de inputs escrevendo no
             mesmo estado e dois botões disparando o mesmo handler. */}
-        <Input
-          label="Email"
-          type="email"
-          placeholder="Digite seu email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+        {/* Os campos ficavam soltos numa <div>, com o "Entrar" disparando
+            por onClick. Sem <form>:
+              - Enter não enviava — o usuário digitava a senha, apertava
+                Enter e nada acontecia;
+              - no celular o teclado mostrava "Enter" comum em vez do botão
+                de confirmar (o "Ir"/"Go" verde só aparece dentro de form);
+              - o gerenciador de senhas do navegador não identificava o par
+                usuário/senha, então não oferecia salvar nem preencher. */}
+        <form onSubmit={handleLogin} noValidate>
+          <Input
+            label="Email"
+            name="email"
+            type="email"
+            placeholder="Digite seu email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            autoComplete="username"
+          />
 
-        <Input
-          label="Senha"
-          type="password"
-          placeholder="Digite sua senha"
-          value={senha}
-          onChange={(e) => setSenha(e.target.value)}
-        />
+          <Input
+            label="Senha"
+            name="senha"
+            type="password"
+            placeholder="Digite sua senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            autoComplete="current-password"
+          />
 
-        {erro && (
-          <p className="login-error" style={{ color: "#f87171", marginTop: "-8px" }}>
-            {erro}
-          </p>
-        )}
+          {erro && (
+            <p
+              className="login-error"
+              role="alert"
+              style={{ color: "#f87171", marginTop: "-8px" }}
+            >
+              {erro}
+            </p>
+          )}
 
-        <Button title="Entrar" onClick={handleLogin} />
+          <Button title="Entrar" type="submit" />
+        </form>
 
         <div className="login-links">
           <Link to="/cadastro">Cadastrar</Link>

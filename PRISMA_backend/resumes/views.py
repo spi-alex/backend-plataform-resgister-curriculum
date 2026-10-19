@@ -8,8 +8,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from .models import Resume
 from .serializers import ResumeSerializer
-from pdf.views import gerar_pdf_puro
-from pdf.views import gerar_pdf_bytes
+from pdf.views import gerar_pdf_puro, nome_arquivo_seguro
 class ResumeViewSet(viewsets.ModelViewSet):
     serializer_class = ResumeSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -110,17 +109,31 @@ def export_resumes_zip(request):
     # Cria um buffer na memória para o arquivo ZIP
     zip_buffer = io.BytesIO()
 
+    # `id__in` com lixo no meio (strings, None) estoura ValueError -> 500.
+    # Filtramos para inteiros antes de consultar.
+    ids_validos = []
+    for rid in resume_ids if isinstance(resume_ids, list) else []:
+        try:
+            ids_validos.append(int(rid))
+        except (TypeError, ValueError):
+            continue
+
+    if not ids_validos:
+        return Response({"error": "Nenhum currículo válido selecionado."}, status=400)
+
     with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-        resumes = Resume.objects.filter(id__in=resume_ids)
-        print(resumes)
+        resumes = Resume.objects.filter(id__in=ids_validos)
         for resume in resumes:
             # 1. Gerar o PDF para este currículo específico
             # Substitua pela sua função real de PDF. Ela deve retornar bytes.
             pdf_content = gerar_pdf_puro(resume, request)
-            
-            # 2. Nome do arquivo dentro do ZIP (ex: curriculo_joao.pdf)
-            filename = f"curriculo_{resume.user.username}_{resume.id}.pdf"
-            
+
+            # 2. Nome do arquivo dentro do ZIP, saneado — o `username` é o
+            # e-mail digitado no cadastro, texto controlado pelo usuário;
+            # com `/` ou `..` dava para escrever fora da pasta na hora de
+            # descompactar (path traversal). Ver pdf/views.py.
+            filename = nome_arquivo_seguro(resume)
+
             # 3. Adiciona o PDF ao ZIP
             zip_file.writestr(filename, pdf_content)
 

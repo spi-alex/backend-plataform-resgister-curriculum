@@ -1,0 +1,17 @@
+# Fallback de SPA — OBRIGATÓRIO para este projeto.
+#
+# O PRISMA usa `BrowserRouter` (URLs limpas, sem `#`). O servidor só tem um
+# arquivo HTML: `index.html`. Sem a regra abaixo, abrir
+# https://seu-dominio/login DIRETO (link colado no WhatsApp, favorito,
+# recarregar a página com F5) faz o host procurar um arquivo `/login` que
+# não existe e devolver o 404 DELE — não a tela 404 do PRISMA. O usuário vê
+# a página de erro genérica da hospedagem.
+#
+# Como o 404 real do app é uma rota React (`path="*"`), toda URL precisa
+# entregar o index.html com status 200 e deixar o roteador decidir.
+#
+# Formato reconhecido por Netlify e Cloudflare Pages. Em outros hosts, veja
+# docs/CHECKLIST_PUBLICACAO.md (tem os equivalentes para nginx, Apache,
+# Vercel e Render).
+
+/*    /index.html   200

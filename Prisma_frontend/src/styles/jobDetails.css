@@ -1,3 +1,22 @@
+/* =========================================================================
+   DETALHE DA VAGA (classes `jd-*`)
+
+   Folha ÚNICA das três telas que mostram uma vaga aberta:
+
+     - aluno   -> pages/dashboard/student/jobs/studentJobsDetails.tsx
+     - gestor  -> pages/dashboard/manager/jobs/ManagerJobsDetails/JobDetails.tsx
+     - empresa -> pages/dashboard/company/CompanyJobs/CompanyJobsDetails.tsx
+
+   Antes isto era `ManagerJobsDetails/JobsDetails.css`, importado só pela
+   tela do GESTOR. As outras duas usam exatamente as mesmas classes e não
+   importavam CSS nenhum — e como o Vite divide o bundle por rota, o
+   arquivo do gestor nunca chegava a um aluno nem a uma empresa. Mesmo
+   defeito que havia em `cv-*` (ver styles/curriculumView.css).
+
+   Faltavam também `.jd-left` e `.jd-right`, usadas pelas três telas mas
+   definidas em lugar nenhum: são as duas colunas dentro de `.jd-grid`.
+   ========================================================================= */
+
 /* ===== CONTAINER PRINCIPAL ===== */
 .jobdetails-container {
   max-width: 1100px;
@@ -6,7 +25,6 @@
   background-color: #f8fafc;
   min-height: 100vh;
 }
-
 
 /* ================= BREADCRUMB ================= */
 .jd-breadcrumb {
@@ -18,22 +36,18 @@
   color: #64748b;
 }
 
-
 .jd-breadcrumb span {
   cursor: pointer;
 }
-
 
 .jd-breadcrumb .active {
   font-weight: 600;
   color: #065f46;
 }
 
-
 .arrow {
   font-size: 18px;
 }
-
 
 /* ================= HERO CARD ================= */
 .jd-hero {
@@ -45,14 +59,12 @@
   position: relative;
 }
 
-
 /* Título */
 .jd-hero-left h1 {
   font-size: 34px;
   margin: 16px 0 12px 0;
   color: #111827;
 }
-
 
 /* Subtítulo */
 .jd-subtitle {
@@ -61,14 +73,12 @@
   margin-bottom: 20px;
 }
 
-
 /* Badges */
 .jd-badges {
   display: flex;
   gap: 12px;
   margin-bottom: 10px;
 }
-
 
 .jd-status {
   padding: 8px 16px;
@@ -77,25 +87,21 @@
   font-weight: 700;
 }
 
-
 .jd-status.aberta {
   background: #dcfce7;
   color: #166534;
 }
-
 
 .jd-status.encerrada {
   background: #fee2e2;
   color: #991b1b;
 }
 
-
 .jd-contract {
   font-size: 12px;
   color: #64748b;
   align-self: center;
 }
-
 
 /* Publicação */
 .jd-hero-right {
@@ -105,7 +111,6 @@
   text-align: right;
 }
 
-
 .jd-deadline-label {
   font-size: 12px;
   text-transform: uppercase;
@@ -114,13 +119,11 @@
   margin-bottom: 4px;
 }
 
-
 .jd-deadline-date {
   font-weight: 700;
   color: #059669;
   font-size: 15px;
 }
-
 
 /* ================= BOTÕES ================= */
 .jd-hero-actions {
@@ -129,7 +132,6 @@
   gap: 16px;
   flex-wrap: wrap;
 }
-
 
 .jd-primary-btn {
   background: #059669;
@@ -142,11 +144,9 @@
   transition: 0.2s ease;
 }
 
-
 .jd-primary-btn:hover {
   background: #047857;
 }
-
 
 .jd-secondary-btn {
   background: #f1f5f9;
@@ -157,7 +157,6 @@
   font-weight: 500;
 }
 
-
 .jd-outline-btn {
   border: 1px solid #e2e8f0;
   background: white;
@@ -166,7 +165,6 @@
   cursor: pointer;
 }
 
-
 /* ================= GRID ================= */
 .jd-grid {
   display: grid;
@@ -174,6 +172,18 @@
   gap: 40px;
 }
 
+/* As duas colunas dentro de `.jd-grid`. `min-width: 0` impede que uma
+   descrição longa sem espaços estoure a coluna do grid. */
+.jd-left,
+.jd-right {
+  min-width: 0;
+}
+
+.jd-right {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
 
 /* ================= CARDS ================= */
 .jd-card {
@@ -184,13 +194,11 @@
   margin-bottom: 30px;
 }
 
-
 .jd-card h3 {
   font-size: 20px;
   margin-bottom: 20px;
   color: #111827;
 }
-
 
 .jd-card p {
   line-height: 1.7;
@@ -198,12 +206,10 @@
   color: #475569;
 }
 
-
 /* Lista */
 .jd-card ul {
   padding-left: 18px;
 }
-
 
 .jd-card li {
   margin-bottom: 12px;
@@ -211,12 +217,10 @@
   line-height: 1.6;
 }
 
-
 /* ================= INFO BLOCK ================= */
 .jd-info-block {
   margin-bottom: 22px;
 }
-
 
 .jd-info-block span {
   font-size: 11px;
@@ -226,12 +230,10 @@
   margin-bottom: 6px;
 }
 
-
 .jd-info-block strong {
   font-size: 15px;
   color: #111827;
 }
-
 
 /* Linha lateral */
 .jd-info-row {
@@ -241,12 +243,10 @@
   font-size: 14px;
 }
 
-
 /* ================= SUBMETER CURRÍCULOS ================= */
 .jd-submit-resumes {
   margin-top: 10px;
 }
-
 
 .jd-submit-hint {
   color: #64748b;
@@ -254,7 +254,6 @@
   margin-top: -8px;
   margin-bottom: 18px;
 }
-
 
 .jd-submit-search {
   width: 100%;
@@ -265,7 +264,6 @@
   margin-bottom: 16px;
 }
 
-
 .jd-submit-list {
   max-height: 320px;
   overflow-y: auto;
@@ -273,7 +271,6 @@
   border-radius: 14px;
   padding: 6px;
 }
-
 
 .jd-submit-row {
   display: flex;
@@ -284,11 +281,9 @@
   cursor: pointer;
 }
 
-
 .jd-submit-row:hover {
   background: #f8fafc;
 }
-
 
 .jd-submit-row input[type="checkbox"] {
   width: 16px;
@@ -296,19 +291,16 @@
   flex: none;
 }
 
-
 .jd-submit-row strong {
   display: block;
   font-size: 14px;
   color: #111827;
 }
 
-
 .jd-submit-row span {
   font-size: 12px;
   color: #94a3b8;
 }
-
 
 .jd-submit-empty {
   padding: 20px;
@@ -317,7 +309,6 @@
   font-size: 14px;
 }
 
-
 .jd-submit-actions {
   display: flex;
   align-items: center;
@@ -325,12 +316,10 @@
   margin-top: 18px;
 }
 
-
 .jd-submit-count {
   font-size: 13px;
   color: #64748b;
 }
-
 
 .jd-submit-btn {
   background: #059669;
@@ -342,19 +331,16 @@
   cursor: pointer;
 }
 
-
 .jd-submit-btn:disabled {
   background: #cbd5e1;
   cursor: not-allowed;
 }
-
 
 .jd-submit-feedback {
   margin-top: 14px;
   font-size: 14px;
   color: #065f46;
 }
-
 
 /* ================= RESPONSIVO ================= */
 @media (max-width: 900px) {
@@ -363,11 +349,9 @@
     gap: 30px;
   }
 
-
   .jd-hero {
     padding: 28px;
   }
-
 
   .jd-hero-right {
     position: static;
@@ -375,14 +359,11 @@
     text-align: left;
   }
 
-
   .jd-hero-left h1 {
     font-size: 26px;
   }
-
 
   .jd-card {
     padding: 24px;
   }
 }
-

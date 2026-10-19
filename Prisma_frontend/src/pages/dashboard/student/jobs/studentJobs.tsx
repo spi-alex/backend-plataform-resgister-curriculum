@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
 import type { Job } from "../../../../utils/job";
 import { formatSalary } from "../../../../utils/job";
+import "./studentJobs.css";
 
 export default function StudentJobs() {
   const navigate = useNavigate();

@@ -4,6 +4,7 @@ import { View, User, ChevronLeft, ChevronRight } from "lucide-react";
 // Tente com 5 níveis. Se o VS Code ainda sublinhar, tente 4 ou 6.
 import api from "../../../../../services/api";
 import { downloadResumePdf } from "../../../../../utils/resume";
+import "../../../../../styles/curriculumList.css";
 
 const ITEMS_PER_PAGE = 10;
 

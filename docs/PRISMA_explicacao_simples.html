@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PRISMA — O que foi arrumado, explicado bem devagar</title>
+<style>
+  @page {
+    size: A4;
+    /* Só documental: as margens efetivas do PDF vêm do parâmetro `margin`
+       do Chromium (ver gerar_pdf.py), que sobrescreve esta regra. */
+    margin: 16mm 17mm 18mm 17mm;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --verde-escuro: #12340f;
+    --verde-medio: #6f965f;
+    --verde-claro: #9ed98b;
+    --salvia: #b0c2ab;
+    --papel: #ffffff;
+    --texto: #1f2418;
+    --cinza: #5c6357;
+    --alerta: #7c2d12;
+    --alerta-fundo: #fdf1e7;
+  }
+
+  body {
+    font-family: "Segoe UI", Calibri, Arial, sans-serif;
+    color: var(--texto);
+    font-size: 11.2pt;
+    line-height: 1.65;
+    background: var(--papel);
+  }
+
+  /* ---------- CAPA ---------- */
+  .capa {
+    /* A4 tem 297mm; com 16mm de margem em cima e 18mm embaixo sobram
+       263mm de área útil. 250mm cabe com folga e mantém a capa centrada
+       sem empurrar conteúdo para uma segunda página. */
+    height: 250mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    page-break-after: always;
+  }
+
+  .capa .marca {
+    margin: 0 auto 26px;
+    width: 96px;
+    height: 96px;
+  }
+
+  .capa h1 {
+    font-size: 40pt;
+    letter-spacing: 6px;
+    color: var(--verde-escuro);
+    line-height: 1;
+    margin-bottom: 14px;
+  }
+
+  .capa .sub {
+    font-size: 15pt;
+    color: var(--verde-medio);
+    font-weight: 600;
+    margin-bottom: 34px;
+  }
+
+  .capa .explica {
+    max-width: 118mm;
+    margin: 0 auto 40px;
+    font-size: 12pt;
+    color: var(--cinza);
+  }
+
+  .capa .data {
+    font-size: 10pt;
+    color: var(--cinza);
+    border-top: 2px solid var(--salvia);
+    padding-top: 14px;
+    width: 80mm;
+    margin: 0 auto;
+  }
+
+  /* ---------- TÍTULOS ---------- */
+  h2 {
+    font-size: 17pt;
+    color: var(--verde-escuro);
+    margin: 26px 0 4px;
+    padding-bottom: 6px;
+    border-bottom: 3px solid var(--verde-claro);
+    page-break-after: avoid;
+  }
+
+  h2 .num {
+    display: inline-block;
+    background: var(--verde-escuro);
+    color: #fff;
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 12pt;
+    margin-right: 10px;
+    vertical-align: 2px;
+  }
+
+  h3 {
+    font-size: 12.5pt;
+    color: var(--verde-escuro);
+    margin: 20px 0 6px;
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 9px; }
+
+  strong { color: var(--verde-escuro); }
+
+  /* ---------- CAIXAS ---------- */
+  .caixa {
+    border-radius: 10px;
+    padding: 13px 16px;
+    margin: 12px 0 16px;
+    page-break-inside: avoid;
+  }
+
+  .imagine {
+    background: #f2f6f0;
+    border-left: 5px solid var(--verde-medio);
+  }
+
+  .imagine .rotulo {
+    display: block;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--verde-medio);
+    margin-bottom: 5px;
+  }
+
+  .problema {
+    background: var(--alerta-fundo);
+    border-left: 5px solid var(--alerta);
+  }
+
+  .problema .rotulo {
+    display: block;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--alerta);
+    margin-bottom: 5px;
+  }
+
+  .destaque {
+    background: var(--verde-escuro);
+    color: #fff;
+  }
+
+  .destaque strong { color: var(--verde-claro); }
+
+  .destaque .rotulo {
+    display: block;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--verde-claro);
+    margin-bottom: 5px;
+  }
+
+  /* ---------- LISTAS ---------- */
+  ul, ol { margin: 0 0 10px 20px; }
+  li { margin-bottom: 5px; }
+
+  .passos { list-style: none; margin-left: 0; }
+
+  .passos li {
+    position: relative;
+    padding-left: 26px;
+    margin-bottom: 8px;
+  }
+
+  .passos li::before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--verde-medio);
+    font-weight: 700;
+  }
+
+  .falta { list-style: none; margin-left: 0; }
+
+  .falta li {
+    position: relative;
+    padding-left: 26px;
+    margin-bottom: 10px;
+  }
+
+  .falta li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: var(--alerta);
+    font-weight: 700;
+  }
+
+  /* ---------- TABELA ---------- */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 18px;
+    font-size: 10pt;
+  }
+
+  /* A tabela do resumo tem 19 linhas e não cabe numa página. Deixar
+     `page-break-inside: avoid` na tabela inteira jogaria tudo para a
+     página seguinte e deixaria uma folha em branco. Corta entre linhas,
+     nunca no meio de uma. */
+  tr { page-break-inside: avoid; }
+
+  thead { display: table-header-group; }
+
+  th {
+    background: var(--verde-escuro);
+    color: #fff;
+    text-align: left;
+    padding: 8px 10px;
+    font-size: 9.5pt;
+    letter-spacing: 0.4px;
+  }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid #dfe6db;
+    vertical-align: top;
+  }
+
+  tr:nth-child(even) td { background: #f6f9f5; }
+
+  .ok { color: #2f6d24; font-weight: 700; white-space: nowrap; }
+  .voce { color: var(--alerta); font-weight: 700; white-space: nowrap; }
+
+  /* ---------- ANTES / DEPOIS ---------- */
+  .comparacao {
+    display: flex;
+    gap: 12px;
+    margin: 12px 0 18px;
+    page-break-inside: avoid;
+  }
+
+  .comparacao > div {
+    flex: 1;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+
+  .antes { background: var(--alerta-fundo); border: 2px solid #e8c4a8; }
+  .depois { background: #eef6ea; border: 2px solid var(--verde-claro); }
+
+  .comparacao .rotulo {
+    display: block;
+    font-size: 8.5pt;
+    font-weight: 700;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .antes .rotulo { color: var(--alerta); }
+  .depois .rotulo { color: #2f6d24; }
+
+  .comparacao .numero {
+    font-size: 19pt;
+    font-weight: 700;
+    line-height: 1.1;
+    display: block;
+  }
+
+  .antes .numero { color: var(--alerta); }
+  .depois .numero { color: #2f6d24; }
+
+  .comparacao small { color: var(--cinza); font-size: 9pt; }
+
+  code {
+    font-family: Consolas, "Courier New", monospace;
+    font-size: 9.6pt;
+    background: #eef1ec;
+    border-radius: 3px;
+    padding: 1px 4px;
+    color: #33452c;
+  }
+
+  /* Sem `page-break-before` forçado: ele criava páginas com uma caixinha
+     no topo e o resto em branco. O controle de quebra fica só em
+     `page-break-inside: avoid` (não corte a caixa no meio) e
+     `page-break-after: avoid` (não deixe título órfão no pé da página). */
+
+  /* Evita que uma linha solta de parágrafo fique separada do resto. */
+  p, li { orphans: 3; widows: 3; }
+
+  .rodape-doc {
+    margin-top: 30px;
+    padding-top: 14px;
+    border-top: 2px solid var(--salvia);
+    font-size: 9.5pt;
+    color: var(--cinza);
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================ CAPA ============================ -->
+<section class="capa">
+  <svg class="marca" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+    <rect width="64" height="64" rx="14" fill="#12340f"/>
+    <path d="M32 14 L50 46 H14 Z" fill="none" stroke="#9ed98b" stroke-width="3.5" stroke-linejoin="round"/>
+    <rect x="4" y="30.2" width="14" height="3.2" fill="#ffffff"/>
+    <rect x="46" y="26.5" width="16" height="2.6" fill="#9ed98b"/>
+    <rect x="46" y="31" width="16" height="2.6" fill="#6f965f"/>
+    <rect x="46" y="35.5" width="16" height="2.6" fill="#b0c2ab"/>
+  </svg>
+
+  <h1>PRISMA</h1>
+  <p class="sub">O que foi arrumado antes de o site ir para o ar</p>
+
+  <p class="explica">
+    Este documento conta, bem devagar e sem palavra difícil, tudo o que foi
+    verificado e consertado no site. Cada parte começa com uma comparação do
+    dia a dia, para você entender <em>por que</em> aquilo importava — e só
+    depois diz o que foi feito.
+  </p>
+
+  <p class="data">
+    6 de setembro de 2026<br>
+    19 itens verificados · 0 problemas restantes no que dependia do código
+  </p>
+</section>
+
+<!-- ============================ INTRO ============================ -->
+<h2><span class="num">0</span>Primeiro: o que é isso tudo?</h2>
+
+<p>
+  O <strong>PRISMA</strong> é um site com três portas. Pela primeira entram
+  os <strong>alunos</strong>, que montam o currículo. Pela segunda entram as
+  <strong>empresas</strong>, que publicam vagas. Pela terceira entra o
+  <strong>gestor</strong>, que acompanha tudo.
+</p>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Colocar um site no ar é como abrir uma loja. Antes de destrancar a porta,
+    alguém precisa dar uma volta e conferir: a placa está com o nome certo?
+    A campainha funciona? Se um cliente entrar na sala errada, alguém avisa
+    ou ele fica perdido? A porta tem tranca?
+  </p>
+  <p>
+    A sua lista de 19 itens é justamente essa volta de conferência. Foi ela
+    que eu percorri, item por item.
+  </p>
+</div>
+
+<p>
+  E eu não fui só olhando o código. Eu <strong>liguei o site de verdade</strong>,
+  abri num navegador de mentirinha que finge ser um celular, preenchi os
+  formulários, apertei as teclas e cliquei nos links — igual a uma pessoa faria.
+  Foi assim que os problemas apareceram.
+</p>
+
+<!-- ============================ ITEM 1 ============================ -->
+<h2><span class="num">1</span>O problema mais grave: o endereço errado</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Você faz um convite de festa e, no lugar do endereço, escreve
+    <em>"é na minha casa"</em>. Para você faz todo sentido. Mas quem recebe o
+    convite lê "minha casa" e vai para a <strong>casa dela mesma</strong> —
+    e lá não tem festa nenhuma.
+  </p>
+</div>
+
+<p>
+  Era exatamente isso que estava escrito na tela de cadastro. Para provar que
+  não é um robô, a pessoa precisa digitar um código que aparece numa
+  imagenzinha embaçada (o <em>captcha</em>). O endereço dessa imagem estava
+  anotado como <code>127.0.0.1</code>, que em linguagem de computador significa
+  exatamente <strong>"aqui, nesta máquina"</strong>.
+</p>
+
+<div class="caixa problema">
+  <span class="rotulo">O que ia acontecer</span>
+  <p>
+    No computador de quem programou, funcionava — porque o site estava
+    ali mesmo. Mas no celular de um aluno, "aqui, nesta máquina" é o
+    <em>celular dele</em>. A imagem nunca ia carregar.
+  </p>
+  <p>
+    Pior: sites de verdade usam cadeado (o <em>https</em>). O endereço estava
+    escrito sem cadeado. O navegador tem uma regra de segurança que diz: "página
+    com cadeado não pode buscar coisa sem cadeado". Ele ia
+    <strong>bloquear o pedido</strong> antes mesmo de tentar.
+  </p>
+  <p>
+    Resultado: <strong>ninguém conseguiria criar uma conta.</strong> E o pior é
+    que a tela não mostraria erro nenhum — só ficaria ali, sem funcionar,
+    sem ninguém entender por quê.
+  </p>
+</div>
+
+<p>
+  <strong>O que eu fiz:</strong> em vez de deixar o endereço escrito à mão, o
+  site agora <em>pergunta</em> qual é o endereço certo, uma única vez, e usa a
+  resposta em todo lugar. É a diferença entre escrever "minha casa" no convite
+  e escrever a rua e o número de verdade.
+</p>
+
+<!-- ============================ ITEM 2 ============================ -->
+<h2><span class="num">2</span>O site no celular</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Você faz um desenho numa folha grande e depois tenta colar essa folha
+    dentro de um caderninho pequeno. Ela não cabe: sobra desenho para fora,
+    e você tem que arrastar a folha para os lados para ver o resto.
+  </p>
+</div>
+
+<p>
+  Era isso que acontecia. Algumas partes do site tinham um tamanho
+  <strong>fixo</strong>, cravado no código — como uma folha que não sabe
+  encolher. Num celular comum a tela é mais estreita que essa folha, então o
+  site abria torto, com uma barra para arrastar de lado.
+</p>
+
+<p>Encontrei quatro lugares assim e arrumei todos:</p>
+
+<ul class="passos">
+  <li>
+    <strong>A primeira tela do site</strong> — a pior de todas, porque é a
+    primeira coisa que alguém vê. A caixa verde tinha tamanho fixo e o
+    arquivo não tinha <em>nenhuma</em> regra para telas pequenas.
+  </li>
+  <li>
+    <strong>A tela de login</strong> — a caixa tinha altura fixa. Quando
+    aparecia uma mensagem de erro, o texto <em>transbordava</em> para fora da
+    caixa, como água em copo cheio. E os três links de baixo ficavam colados:
+    lia-se "CadastrarEsqueci minha senha", tudo junto.
+  </li>
+  <li>
+    <strong>A tela de cadastro</strong> — o botão de trocar a imagem do
+    captcha ficava para fora da tela. Existia, mas ninguém alcançava.
+  </li>
+  <li>
+    <strong>A prévia do currículo</strong> — estava do tamanho exato de uma
+    folha de papel A4. Faz sentido para <em>imprimir</em>, mas não para ver no
+    celular. Agora ela encolhe na tela e volta ao tamanho de folha só quando
+    vai para a impressora.
+  </li>
+</ul>
+
+<div class="caixa destaque">
+  <span class="rotulo">Como sei que funcionou</span>
+  <p>
+    Abri as 8 telas públicas numa tela de <strong>360 pontos de largura</strong>
+    (o tamanho de um celular bem comum) e medi quanto o conteúdo passava da
+    borda. Antes passava. Agora o excesso é de <strong>zero</strong> em todas as 8.
+  </p>
+</div>
+
+<!-- ============================ ITEM 3 ============================ -->
+<h2><span class="num">3</span>Os formulários: a campainha sem fio</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Você instala uma campainha bonita na porta. Ela tem botão, tem luzinha,
+    parece perfeita. Mas ninguém ligou o fio dela na casa. Quem aperta o botão
+    acha que chamou — e lá dentro não toca nada.
+  </p>
+</div>
+
+<p>
+  Nas telas de entrar e de se cadastrar, os campos de digitar estavam
+  <strong>soltos</strong>. Em páginas de internet existe uma "caixinha
+  especial" que agrupa campos e diz ao navegador: <em>"isto aqui é um
+  formulário"</em>. Essa caixinha não estava lá em <strong>nenhuma</strong> das
+  6 telas. Isso causava três coisas:
+</p>
+
+<ul>
+  <li>
+    <strong>Apertar Enter não fazia nada.</strong> A pessoa digitava a senha,
+    apertava Enter — porque é o que todo mundo faz — e ficava esperando.
+  </li>
+  <li>
+    <strong>No celular, o teclado não ajudava.</strong> Quando o navegador
+    reconhece um formulário, ele troca a tecla Enter por um botão de
+    "confirmar". Sem a caixinha, essa tecla nunca aparecia.
+  </li>
+  <li>
+    <strong>O navegador não oferecia guardar a senha.</strong> Ele não entendia
+    que aquilo era um login, então nunca perguntava "quer que eu lembre sua
+    senha?". E no cadastro, nunca oferecia criar uma senha forte.
+  </li>
+</ul>
+
+<p>
+  <strong>O que eu fiz:</strong> coloquei a caixinha nas 6 telas e avisei o
+  navegador o que é cada campo — "este é o e-mail", "esta é a senha atual",
+  "esta é uma senha nova", "este é um código que chegou por e-mail". Nos
+  campos de código, o celular agora abre direto o <strong>teclado de
+  números</strong>, em vez de o de letras.
+</p>
+
+<div class="caixa destaque">
+  <span class="rotulo">Como sei que funcionou</span>
+  <p>
+    Preenchi o login no navegador e apertei <strong>só o Enter</strong>, sem
+    clicar em botão nenhum. O pedido saiu para o servidor, e a mensagem
+    "Email ou senha inválidos." apareceu na tela — que é exatamente o que
+    tinha que acontecer.
+  </p>
+</div>
+
+<h3>De brinde: os rótulos que não apontavam para nada</h3>
+
+<p>
+  Achei outra coisa no caminho. Em cima de cada campo tem uma palavrinha:
+  "Email", "Senha". Essa palavrinha deveria estar <em>amarrada</em> ao campo,
+  de forma que clicar nela já coloque o cursor lá dentro. A amarração estava
+  quebrada. Duas consequências: clicar em "Email" não fazia nada, e — mais
+  sério — o programa que lê a tela em voz alta para pessoas cegas anunciava
+  "campo de texto", sem dizer <em>qual</em> campo. Arrumado.
+</p>
+
+<!-- ============================ ITEM 4 ============================ -->
+<h2><span class="num">4</span>Quando a pessoa se perde: a página 404</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Você entra num prédio procurando a sala 12. A sala 12 não existe. Aí um
+    funcionário, <strong>sem falar nada</strong>, pega você pelo braço e te
+    coloca de volta na portaria. Você não sabe se errou o número, se a sala
+    mudou, ou se o prédio é o errado. Você só sabe que "não deu".
+  </p>
+</div>
+
+<p>
+  Era assim que o site tratava endereço errado: mandava a pessoa de volta para
+  a primeira tela, calado. E o caso mais provável de isso acontecer é o mais
+  chato: o link de confirmação de cadastro chegando quebrado no e-mail.
+</p>
+
+<p>
+  Tinha um segundo problema, invisível. O Google, ao visitar qualquer endereço
+  errado, recebia a primeira tela e um recado de "está tudo certo aqui". Ele
+  então achava que existiam dezenas de páginas iguais no site. Isso atrapalha
+  o site a aparecer nas buscas.
+</p>
+
+<p>
+  <strong>O que eu fiz:</strong> criei uma tela de verdade. Ela mostra um
+  "404" grande, diz <em>qual</em> endereço não existe, e oferece as saídas
+  certas: voltar ao início, entrar na conta, ou — para o caso do link
+  quebrado — pedir um código novo. E ela <strong>não</strong> troca o endereço
+  na barra do navegador, para a pessoa poder ver o que digitou errado.
+</p>
+
+<!-- ============================ ITEM 5 ============================ -->
+<h2><span class="num">5</span>A velocidade: a caixa de brinquedos inteira</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Uma criança quer brincar com um carrinho. Mas, para chegar ao carrinho,
+    ela tem que carregar a <strong>caixa de brinquedos inteira</strong> da
+    sala até o quarto — com a bola, o quebra-cabeça, os bonecos, tudo. Só
+    depois de arrastar tudo é que ela pega o carrinho.
+  </p>
+</div>
+
+<p>
+  O site fazia isso. Quem abria só a tela de <em>login</em> baixava, junto e
+  antes de ver qualquer coisa, as telas de aluno, de empresa e de gestor — e
+  dentro delas um programa pesado que desenha <strong>gráficos</strong>. Só o
+  gestor vê gráfico. Um aluno nunca vê nenhum. E mesmo assim baixava.
+</p>
+
+<p>
+  <strong>O que eu fiz:</strong> separei os brinquedos em caixinhas. Agora cada
+  tela só é baixada no momento em que a pessoa realmente vai até ela. A tela de
+  início e o login continuam vindo na hora — porque são a porta de entrada, e
+  atrasá-los faria a espera piorar, não melhorar.
+</p>
+
+<div class="comparacao">
+  <div class="antes">
+    <span class="rotulo">Antes</span>
+    <span class="numero">231 kB</span>
+    <small>baixados só para ver a tela de login</small>
+  </div>
+  <div class="depois">
+    <span class="rotulo">Depois</span>
+    <span class="numero">95 kB</span>
+    <small>59% menos coisa para carregar</small>
+  </div>
+</div>
+
+<p>
+  Achei ainda um detalhe escondido. Uma peça grande e que <em>nunca muda</em>
+  (a base do site) estava misturada com a parte que muda a cada atualização.
+  Como estavam juntas, toda atualização obrigava o visitante a baixar as duas
+  de novo. Separei: a parte que muda caiu de <strong>200 kB para 22 kB</strong>.
+  Quem já visitou o site uma vez sente isso na segunda visita.
+</p>
+
+<!-- ============================ ITEM 6 ============================ -->
+<h2><span class="num">6</span>A cara do site: nome, foto e crachá</h2>
+
+<h3>O crachá emprestado (favicon)</h3>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    É aquele desenhinho minúsculo que aparece na abinha do navegador, do lado
+    do nome do site. É o crachá dele. O do PRISMA estava com o crachá de
+    <strong>outra empresa</strong> — o logo da ferramenta que os programadores
+    usaram para construir o site, que veio de fábrica e ninguém trocou.
+  </p>
+</div>
+
+<p>
+  Desenhei um crachá do PRISMA: um prisma de vidro em triângulo, com um raio
+  de luz branco entrando de um lado e saindo do outro separado em cores. É a
+  ideia do nome. Ele também aparece se alguém salvar o site na tela inicial do
+  celular.
+</p>
+
+<h3>O presente sem papel de embrulho (imagem de compartilhamento)</h3>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Quando você manda um link no WhatsApp, geralmente aparece um quadradinho
+    bonito com foto e título. Esse quadradinho não é mágica: o site tem que
+    <em>preparar</em> a foto e deixar avisado. O PRISMA não tinha nada
+    preparado — o link chegava como <strong>texto cru</strong>, sem foto e sem
+    título, com cara de coisa suspeita.
+  </p>
+</div>
+
+<p>
+  Criei essa imagem no tamanho exato que o WhatsApp, o LinkedIn e o Facebook
+  esperam (1200 × 630), com a marca e a explicação do que é o PRISMA. Depois
+  reduzi o peso dela pela metade sem perder nada da qualidade — de 33 kB para
+  <strong>15 kB</strong>.
+</p>
+
+<h3>Todos os livros com o mesmo título</h3>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Uma estante com 25 livros diferentes, e <em>todos</em> com o mesmo título
+    escrito na lombada. Para achar um, você tem que abrir cada um.
+  </p>
+</div>
+
+<p>
+  Era o caso das abas do navegador. As 25 telas do site tinham o mesmo nome na
+  abinha. O gestor, que abre vários currículos ao mesmo tempo para comparar,
+  ficava com uma fileira de abas idênticas — impossível saber qual era qual.
+</p>
+
+<p>
+  <strong>O que eu fiz:</strong> cada tela ganhou nome próprio ("Minhas
+  candidaturas", "Publicar vaga", "Currículo do aluno"...). E as telas
+  públicas ganharam também um resumo de uma frase, que é o textinho que
+  aparece embaixo do título nos resultados do Google. Antes não existia
+  resumo nenhum, então o Google inventava um pegando a primeira frase que
+  encontrava na tela — que era "Selecione seu tipo de usuário".
+</p>
+
+<p>
+  Um detalhe pequeno e engraçado: o site estava declarado como sendo
+  <strong>em inglês</strong>, apesar de todo o texto estar em português. Quem
+  usa leitor de tela ouvia as palavras portuguesas pronunciadas com sotaque
+  de inglês. Corrigido.
+</p>
+
+<!-- ============================ ITEM 7 ============================ -->
+<h2><span class="num">7</span>Falando com o Google: o aviso e o mapa</h2>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    O Google é um bibliotecário que passa no seu prédio para anotar o que tem
+    lá dentro e depois indicar às pessoas. Ele precisa de duas coisas na
+    portaria: um <strong>aviso</strong> dizendo em quais salas ele pode entrar,
+    e um <strong>mapa</strong> das salas que valem a visita.
+  </p>
+</div>
+
+<p>Nenhum dos dois existia. Criei os dois:</p>
+
+<ul class="passos">
+  <li>
+    <strong>O aviso</strong> libera a área pública e pede para o bibliotecário
+    <em>não</em> anotar as telas de dentro — as que têm currículo, CPF e
+    endereço de aluno.
+  </li>
+  <li>
+    <strong>O mapa</strong> lista as 5 telas públicas. As telas de dentro
+    ficam de fora de propósito: precisam de senha e não têm nada para o
+    Google mostrar.
+  </li>
+</ul>
+
+<div class="caixa problema">
+  <span class="rotulo">Atenção, para não confundir</span>
+  <p>
+    Esse aviso <strong>não é uma tranca</strong>. É só um pedido de boa
+    educação para o bibliotecário. Quem realmente tranca as telas de dentro é
+    a senha e a checagem de permissão do sistema — e essas já estavam
+    funcionando. O aviso só evita que os endereços apareçam na busca.
+  </p>
+</div>
+
+<!-- ============================ ITEM 8 ============================ -->
+<h2><span class="num">8</span>As trancas: segurança</h2>
+
+<p>
+  O site tem duas metades que moram em servidores diferentes: a
+  <strong>parte de dentro</strong> (que guarda os dados) e a
+  <strong>parte de fora</strong> (as telas que você vê). Elas precisam de
+  trancas separadas.
+</p>
+
+<h3>A parte de dentro</h3>
+
+<p>
+  Rodei a verificação de segurança oficial que já vem com a ferramenta usada
+  no projeto. Resultado: <strong>nenhum problema</strong>. E não confiei de
+  primeira — rodei de novo, de propósito, com uma configuração insegura, para
+  ver se a verificação realmente reclamava. Ela reclamou de 5 coisas. Ou seja:
+  o resultado limpo era de verdade, não estava desligado.
+</p>
+
+<h3>A parte de fora</h3>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Alguém mal-intencionado pode pegar o seu site e colocá-lo dentro de uma
+    <em>moldura</em> num site falso, com um botão invisível por cima. A pessoa
+    acha que está clicando em "Confirmar cadastro" no PRISMA, mas está
+    clicando em outra coisa.
+  </p>
+</div>
+
+<p>
+  Escrevi um arquivo de trancas para a parte de fora. Ele diz, entre outras
+  coisas: o site não pode ser colocado dentro de moldura nenhuma; só pode
+  buscar informação nos endereços que a gente autorizou; e o navegador deve
+  sempre usar o cadeado, mesmo que a pessoa digite o endereço sem ele. Também
+  desliguei o acesso a câmera, microfone e localização — o site não usa nada
+  disso, e desligar significa que nem um invasor conseguiria pedir.
+</p>
+
+<h3>A tranca que era obrigatória e faltava</h3>
+
+<div class="caixa problema">
+  <span class="rotulo">Isto ia quebrar no primeiro dia</span>
+  <p>
+    O PRISMA é um site de um único arquivo, que se transforma por dentro
+    conforme você navega. Se a pessoa digitar <code>/login</code>
+    <strong>direto</strong> na barra do navegador — ou apertar F5, ou abrir um
+    link salvo — o servidor vai procurar um arquivo chamado "login", não vai
+    achar, e vai mostrar a <strong>página de erro da hospedagem</strong>. Nem
+    a nossa tela 404 bonitinha.
+  </p>
+  <p>
+    Escrevi a regra que resolve: "para qualquer endereço, entregue o arquivo
+    único e deixe o site decidir o que mostrar".
+  </p>
+</div>
+
+<!-- ============================ ITEM 9 ============================ -->
+<h2><span class="num">9</span>Os biscoitinhos e a etiqueta</h2>
+
+<h3>Cookies: boa notícia</h3>
+
+<div class="caixa imagine">
+  <span class="rotulo">Imagine assim</span>
+  <p>
+    Cookie é um papelzinho que o site guarda no seu navegador. Tem dois tipos.
+    Um é a <strong>senha do guarda-volumes</strong>: sem ele, você tem que
+    provar quem é a cada passo. O outro é o <strong>espião</strong>: fica
+    anotando por onde você andou para depois te mostrar propaganda.
+  </p>
+</div>
+
+<p>
+  Fui olhar o que o PRISMA guarda. Ele guarda <strong>só o primeiro tipo</strong>
+  — a senha do guarda-volumes, para você não ter que digitar sua senha a cada
+  clique. Nenhum espião.
+</p>
+
+<p>
+  Isso é uma boa notícia legal: aquele aviso chato de "aceite os cookies"
+  <strong>não é obrigatório</strong> quando o site só usa o tipo necessário.
+  O que a lei pede nesse caso é apenas explicar direito o que é guardado —
+  e isso agora está escrito no pé da página.
+</p>
+
+<h3>A etiqueta que não existia (rodapé)</h3>
+
+<div class="caixa problema">
+  <span class="rotulo">Por que isso importa de verdade</span>
+  <p>
+    O PRISMA pede <strong>CPF, endereço e currículo completo</strong> de
+    alunos. E não dizia em lugar nenhum de quem era o site, nem com quem
+    falar. Uma tela que pede CPF sem se identificar tem exatamente a cara de
+    um site de golpe — mesmo sendo honesta.
+  </p>
+  <p>
+    E não é só aparência: a Lei Geral de Proteção de Dados (a LGPD)
+    <strong>obriga</strong> a informar quem cuida dos dados e um jeito de
+    entrar em contato.
+  </p>
+</div>
+
+<p>
+  Criei o rodapé com três blocos: quem é a instituição (nome, CNPJ, endereço);
+  como falar com ela (e-mail, telefone, WhatsApp); e o que é feito com os
+  dados, com o contato de quem responde por eles. Ele aparece só nas telas
+  públicas — nas telas de dentro, cada área já tem o layout dela.
+</p>
+
+<p>
+  <strong>Só que ele está com os dados em branco</strong>, marcados como
+  <code>[PREENCHER]</code>. Isso foi de propósito: colocar um nome inventado
+  seria pior que não colocar nada, porque pareceria verdadeiro. Enquanto
+  estiver em branco, aparece um aviso vermelho na tela dos programadores — e
+  esse aviso desaparece automaticamente na versão que vai para o público.
+</p>
+
+<!-- ============================ RESUMO ============================ -->
+<h2><span class="num">10</span>O resumo de tudo</h2>
+
+<table>
+  <thead>
+  <tr>
+    <th style="width:6%">#</th>
+    <th style="width:32%">Item da sua lista</th>
+    <th style="width:14%">Situação</th>
+    <th style="width:48%">Em uma frase</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr><td>1</td><td>Abrir no celular</td><td class="ok">Feito</td><td>4 telas não cabiam no celular; agora todas cabem</td></tr>
+  <tr><td>2</td><td>Testar formulário</td><td class="ok">Feito</td><td>Enter não enviava em nenhuma tela; agora envia</td></tr>
+  <tr><td>3</td><td>Clicar no WhatsApp</td><td class="voce">Falta você</td><td>Estrutura pronta, falta o número</td></tr>
+  <tr><td>4</td><td>Página 404</td><td class="ok">Feito</td><td>Tela de verdade, no lugar do empurrão silencioso</td></tr>
+  <tr><td>5</td><td>Domínio próprio</td><td class="voce">Falta você</td><td>Registrar e rodar um comando que eu deixei pronto</td></tr>
+  <tr><td>6</td><td>HTTPS (cadeado)</td><td class="ok">Metade</td><td>Código pronto; falta o certificado no servidor</td></tr>
+  <tr><td>7</td><td>PageSpeed</td><td class="ok">Feito</td><td>59% mais leve; falta medir com o site no ar</td></tr>
+  <tr><td>8</td><td>Comprimir imagens</td><td class="ok">Feito</td><td>Não havia imagem nenhuma; a que criei ficou 56% menor</td></tr>
+  <tr><td>9</td><td>Favicon</td><td class="ok">Feito</td><td>Era o crachá de outra empresa</td></tr>
+  <tr><td>10</td><td>Imagem de compartilhamento</td><td class="ok">Feito</td><td>Link no WhatsApp saía sem foto nem título</td></tr>
+  <tr><td>11</td><td>Sitemap (o mapa)</td><td class="ok">Feito</td><td>Não existia</td></tr>
+  <tr><td>12</td><td>Google Analytics</td><td class="voce">Decisão sua</td><td>Muda a regra dos cookies — explico na página seguinte</td></tr>
+  <tr><td>13</td><td>Cookies</td><td class="ok">Feito</td><td>Só o necessário; aviso obrigatório não é preciso</td></tr>
+  <tr><td>14</td><td>Dados no rodapé</td><td class="voce">Falta você</td><td>Rodapé criado, dados em branco</td></tr>
+  <tr><td>15</td><td>Robots (o aviso)</td><td class="ok">Feito</td><td>Não existia</td></tr>
+  <tr><td>16</td><td>Títulos</td><td class="ok">Feito</td><td>25 telas tinham o mesmo nome de aba</td></tr>
+  <tr><td>17</td><td>Resumos para o Google</td><td class="ok">Feito</td><td>Nenhuma tela tinha resumo</td></tr>
+  <tr><td>18</td><td>Clicar nos links</td><td class="ok">Feito</td><td>24 links conferidos, nenhum quebrado</td></tr>
+  <tr><td>19</td><td>Segurança</td><td class="ok">Feito</td><td>Verificação oficial limpa + trancas na parte de fora</td></tr>
+  </tbody>
+</table>
+
+<div class="caixa destaque">
+  <span class="rotulo">Em números</span>
+  <p>
+    <strong>7 itens</strong> estavam quebrados ou faltando de um jeito que só
+    apareceria <em>depois</em> de publicar — quando já teria gente tentando usar.
+    <strong>4 itens</strong> dependem de informação que só você tem.
+    Os outros <strong>8</strong> estavam certos e eu confirmei um por um.
+  </p>
+</div>
+
+<!-- ============================ O QUE FALTA ============================ -->
+<h2><span class="num">11</span>O que só você pode fazer</h2>
+
+<p>
+  São quatro coisas, em ordem. A primeira destrava as outras.
+</p>
+
+<ul class="falta">
+  <li>
+    <p>
+      <strong>1. Registrar o endereço do site (o domínio).</strong>
+      Algo como <code>prisma.suaescola.br</code>. Depois de registrar, você
+      roda <strong>um comando</strong> que eu deixei pronto e ele espalha o
+      endereço nos 15 lugares onde ele precisa aparecer:
+    </p>
+    <p style="margin-left:2px">
+      <code>npm run definir-dominio prisma.suaescola.br</code>
+    </p>
+    <p>
+      Fiz esse comando porque trocar à mão em 15 lugares quase garante
+      esquecer um — e cada esquecimento quebra uma coisa diferente,
+      silenciosamente. Um deles, se ficar errado, <strong>impede o login de
+      funcionar</strong>.
+    </p>
+  </li>
+
+  <li>
+    <p>
+      <strong>2. Preencher os dados do rodapé.</strong> É um arquivo só. Nome
+      da instituição, CNPJ, endereço, e-mail de suporte, e o e-mail de quem
+      responde pelos dados dos alunos (esse é o que a LGPD exige). Se você
+      colocar também o número do WhatsApp, o link aparece sozinho — e isso
+      resolve o item 3 da sua lista.
+    </p>
+    <p>
+      Depois de preencher, vale abrir no celular e conferir se o link do
+      WhatsApp abre a conversa certa.
+    </p>
+  </li>
+
+  <li>
+    <p>
+      <strong>3. Ligar o cadeado (HTTPS) na hospedagem.</strong> O código já
+      está pronto. Falta pedir o certificado — que é de graça, e nos serviços
+      mais comuns de hospedagem é automático. Depois de publicar, dá para
+      conferir a nota num site de teste; a meta é <strong>A</strong>.
+    </p>
+  </li>
+
+  <li>
+    <p>
+      <strong>4. Decidir sobre o Google Analytics.</strong> Não instalei de
+      propósito, e vale você decidir com calma, porque <em>muda a situação
+      legal do site</em>.
+    </p>
+    <p>
+      Hoje o PRISMA não tem nenhum cookie espião. No momento em que o
+      Analytics entra, passa a ser <strong>obrigatório</strong> aquele aviso de
+      cookies — e não um aviso qualquer: um que <em>bloqueie</em> o
+      rastreamento até a pessoa clicar em "aceito". Num sistema que guarda CPF
+      e currículo de aluno, isso merece uma escolha consciente:
+    </p>
+    <ul>
+      <li>
+        <strong>Se você quer saber quantas pessoas usam o sistema</strong>, o
+        próprio PRISMA já tem esse número por dentro (cadastros, logins,
+        candidaturas) — sem cookie nenhum e sem mandar dado de aluno para
+        fora.
+      </li>
+      <li>
+        <strong>Se você quer saber de onde vêm os visitantes</strong> (para
+        medir divulgação), aí o Analytics faz sentido. Me avise e eu instalo
+        junto com o aviso de cookies funcionando de verdade.
+      </li>
+    </ul>
+  </li>
+</ul>
+
+<!-- ============================ FECHAMENTO ============================ -->
+<h2><span class="num">12</span>Como eu sei que não quebrei nada</h2>
+
+<p>
+  Mexer em código sempre tem risco de consertar uma coisa e quebrar outra.
+  Então, no fim, rodei tudo de novo:
+</p>
+
+<ul class="passos">
+  <li>
+    <strong>80 testes automáticos</strong> da parte de dentro do sistema
+    (cadastro, confirmação de conta, login, troca de senha, permissões):
+    <strong>80 passaram, 0 falharam</strong>.
+  </li>
+  <li>
+    <strong>18 verificações no navegador</strong> (celular, formulário, 404,
+    crachá, imagem de compartilhamento, títulos, links):
+    <strong>0 falhas</strong>.
+  </li>
+  <li>
+    <strong>Verificação oficial de segurança</strong>: nenhum problema.
+  </li>
+  <li>
+    <strong>Verificação de erros de escrita no código</strong> e montagem da
+    versão final: tudo limpo.
+  </li>
+</ul>
+
+<p>
+  E deixei essas 18 verificações do navegador guardadas dentro do projeto,
+  em <code>tests/checklist_publicacao.py</code>, para você ou qualquer pessoa
+  da equipe rodar de novo quando quiser — antes de cada publicação, por
+  exemplo. Ele avisa na hora se alguma coisa voltou a quebrar.
+</p>
+
+<div class="caixa destaque">
+  <span class="rotulo">Se você lembrar de uma coisa só deste documento</span>
+  <p>
+    Lembre do <strong>endereço errado no captcha</strong>. Aquele
+    <code>127.0.0.1</code> significava "aqui, nesta máquina". Se o site
+    tivesse ido para o ar como estava, <strong>nenhum aluno conseguiria criar
+    uma conta</strong> — e a tela não daria nenhuma pista do motivo. Era o
+    tipo de problema que funciona perfeitamente no computador de quem
+    programou e só aparece quando é gente de verdade tentando usar.
+  </p>
+</div>
+
+<p class="rodape-doc">
+  Documento gerado em 6 de setembro de 2026, sobre a branch
+  <code>teste-integracao-front</code>.<br>
+  A versão técnica deste mesmo relatório, com nomes de arquivo, números e
+  comandos, está em <code>docs/CHECKLIST_PUBLICACAO.md</code>.
+</p>
+
+</body>
+</html>

@@ -27,7 +27,10 @@ export default function ConfirmAccount() {
   const [sucesso, setSucesso] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleConfirmar = async () => {
+  // `onSubmit` do <form>: sem preventDefault o navegador recarrega a página.
+  const handleConfirmar = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
     if (!email.trim() || pin.trim().length < 4) return;
 
     setLoading(true);
@@ -43,7 +46,7 @@ export default function ConfirmAccount() {
       const error = err as DjangoError;
       setMensagem(
         error.response?.data?.error ||
-          "Não foi possível confirmar o cadastro. Verifique o e-mail e o PIN.",
+          "Não foi possível confirmar o cadastro. Verifique o e-mail e o código.",
       );
     } finally {
       setLoading(false);
@@ -56,36 +59,53 @@ export default function ConfirmAccount() {
         <h1>CONFIRMAR CADASTRO</h1>
         <div className="confirm-inner">
           <p className="confirm-hint">
-            Enviamos um PIN de 6 dígitos para o seu e-mail no momento do
-            cadastro. Informe-o abaixo para ativar sua conta e poder entrar.
+            Enviamos um <strong>código de confirmação</strong> de 6 dígitos
+            para o seu e-mail. Ele vale por 15 minutos e só pode ser usado uma
+            vez. Informe-o abaixo para ativar sua conta.
+          </p>
+          <p className="confirm-hint">
+            Atenção: este código <strong>não</strong> é a sua matrícula. A
+            matrícula também vem no mesmo e-mail, é permanente, e serve para
+            entrar no sistema no lugar do e-mail.
           </p>
 
-          <Input
-            label="Email"
-            type="email"
-            placeholder="Digite seu email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMensagem("");
-            }}
-          />
+          <form onSubmit={handleConfirmar} noValidate>
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setMensagem("");
+              }}
+              autoComplete="email"
+            />
 
-          <Input
-            label="Código PIN"
-            placeholder="Digite o código de 6 dígitos"
-            value={pin}
-            onChange={(e) => {
-              setPin(e.target.value);
-              setMensagem("");
-            }}
-          />
+            <Input
+              label="Código de confirmação"
+              name="pin"
+              placeholder="Digite o código de 6 dígitos"
+              value={pin}
+              onChange={(e) => {
+                setPin(e.target.value);
+                setMensagem("");
+              }}
+              /* `one-time-code` + `inputMode="numeric"`: no celular o teclado
+                 abre já numérico e o iOS/Android oferece colar o código do
+                 e-mail direto na barra de sugestões. */
+              autoComplete="one-time-code"
+              inputMode="numeric"
+              maxLength={6}
+            />
 
-          <Button
-            title={loading ? "Confirmando..." : "Confirmar"}
-            disabled={!email.trim() || pin.trim().length < 4 || loading}
-            onClick={handleConfirmar}
-          />
+            <Button
+              title={loading ? "Confirmando..." : "Confirmar"}
+              type="submit"
+              disabled={!email.trim() || pin.trim().length < 4 || loading}
+            />
+          </form>
 
           {mensagem && (
             <p

@@ -1,31 +1,26 @@
-.register-page {
+.register-student .register-page {
   min-height: 100vh;
   background-color: #f0f4f2;
   padding: 60px 20px;
 }
-
-.register-wrapper {
+.register-student .register-wrapper {
   max-width: 1000px;
   margin: 0 auto;
 }
-
-.register-header {
+.register-student .register-header {
   margin-bottom: 40px;
 }
-
-.register-header h1 {
+.register-student .register-header h1 {
   font-size: 32px;
   font-weight: 800;
   color: #0f172a;
   margin-bottom: 8px;
 }
-
-.register-header p {
+.register-student .register-header p {
   color: #64748b;
   font-size: 16px;
 }
-
-.register-card {
+.register-student .register-card {
   background: #ffffff;
   padding: 32px;
   border-radius: 16px;
@@ -34,104 +29,89 @@
   border-top: 6px solid #14532d;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
-
-.register-card h2 {
+.register-student .register-card h2 {
   font-size: 20px;
   font-weight: 700;
   color: #14532d;
   margin-bottom: 24px;
 }
-
-.form-grid {
+.register-student .register-page .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-
-.select-group {
+.register-student .select-group {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-
-.select-group label {
+.register-student .select-group label {
   font-weight: 600;
   font-size: 14px;
   color: #334155;
 }
-
-.select-group select {
+.register-student .select-group select {
   height: 44px;
   border-radius: 10px;
   border: 1px solid #cbd5e1;
   padding: 0 12px;
   font-size: 14px;
 }
-
-.error {
+.register-student .error {
   font-size: 12px;
   color: #dc2626;
 }
-
-.form-actions {
+.register-student .register-page .form-actions {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
 }
-
-.terms-container {
+.register-student .terms-container {
   margin-top: 20px;
 }
-
-.terms-label {
+.register-student .terms-label {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: #334155;
 }
-
-.terms-label input {
+.register-student .terms-label input {
   width: 16px;
   height: 16px;
 }
-
-.error {
+.register-student .error {
   font-size: 12px;
   color: #dc2626;
   margin-top: 4px;
 }
-
-.terms-container {
+.register-student .terms-container {
   margin-top: 20px;
 }
-
-.terms-label {
+.register-student .terms-label {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 14px;
   color: #334155;
 }
-
-.terms-label input {
+.register-student .terms-label input {
   width: 16px;
   height: 16px;
 }
 /* Verde escuro apenas no botão do cadastro */
-.cadastro-button .btn {
+.register-student .register-page .cadastro-button .btn {
   background-color: #14532d; /* verde escuro */
 }
-
-.cadastro-button .btn:hover {
+.register-student .register-page .cadastro-button .btn:hover {
   background-color: #166534;
 }
 @media (max-width: 768px) {
-  .form-grid {
+  .register-student .register-page .form-grid {
     grid-template-columns: 1fr;
   }
 }
-.success-banner {
+.register-student .success-banner {
   position: fixed;
   top: 20px;
   left: 50%;
@@ -141,13 +121,54 @@
   padding: 1rem 2rem;
   border-radius: 8px;
   border-bottom: 3px solid #a89060; /* Toque dourado Ivy League */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
   z-index: 9999;
   font-weight: bold;
   animation: fadeInDown 0.4s ease-out;
 }
 
 @keyframes fadeInDown {
-  from { opacity: 0; transform: translate(-50%, -20px); }
-  to { opacity: 1; transform: translate(-50%, 0); }
+  from {
+    opacity: 0;
+    transform: translate(-50%, -20px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ================= CAPTCHA (responsivo) =================
+   A linha do captcha (imagem + campo de código + botão 🔄) era um flex
+   declarado inline no JSX, sem `flex-wrap`. Em 360 px de tela os três itens
+   somavam ~400 px e o botão 🔄 vazava para fora da viewport, criando
+   rolagem horizontal na página de cadastro — e o cadastro é justamente
+   onde o usuário passa mais tempo no celular. */
+.register-student .captcha-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Deixa o botão descer para a linha de baixo em vez de estourar. */
+  flex-wrap: wrap;
+}
+.register-student .captcha-container img {
+  /* A imagem do captcha vem do backend com largura própria; sem isto ela
+     também podia estourar em telas muito estreitas. */
+  max-width: 100%;
+  height: 40px;
+  border-radius: 4px;
+}
+.register-student .register-page .captcha-container .input-wrapper {
+  /* Permite o campo encolher: sem `min-width: 0` um item flex se recusa a
+     ficar menor que o próprio conteúdo. */
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+/* Regra de senha do backend, exibida abaixo dos dois campos de senha. */
+.register-student .dica-senha {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
 }

@@ -7,12 +7,13 @@ import {
   Mail,
   MapPin,
   Phone,
+  Loader2,
 } from "lucide-react";
 
 import api from "../../../../../services/api";
 import type { ParsedResume } from "../../../../../utils/resume";
 import { parseResume, downloadResumePdf } from "../../../../../utils/resume";
-import "./ManagerCurriculumView.css";
+import "../../../../../styles/curriculumView.css";
 
 export default function ManagerCurriculumView() {
   const { id } = useParams();
@@ -52,7 +53,10 @@ export default function ManagerCurriculumView() {
   if (loading) {
     return (
       <main className="cv-container">
-        <p>Carregando currículo...</p>
+        <div className="cv-state">
+          <Loader2 className="cv-spinner" size={32} />
+          <p>Carregando currículo...</p>
+        </div>
       </main>
     );
   }
@@ -60,10 +64,16 @@ export default function ManagerCurriculumView() {
   if (!curriculum) {
     return (
       <main className="cv-container">
-        <p>Currículo não encontrado.</p>
-        <button onClick={() => navigate("/dashboard/gestor/curriculos")}>
-          Voltar
-        </button>
+        <div className="cv-state">
+          <p>Currículo não encontrado.</p>
+          <button
+            className="cv-back"
+            onClick={() => navigate("/dashboard/gestor/curriculos")}
+          >
+            <ArrowLeft size={18} />
+            Voltar
+          </button>
+        </div>
       </main>
     );
   }

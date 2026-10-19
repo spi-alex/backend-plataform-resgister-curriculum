@@ -1,0 +1,148 @@
+PRISMA - O QUE FALTA PARA PUBLICAR
+Levantado em 15/09/2026, conferindo o estado real dos arquivos
+(complementa docs/CHECKLIST_PUBLICACAO.md)
+
+Tudo da Parte 1 do checklist continua aplicado. O que falta sao os 4 itens
+que dependem de dados/contas suas, mais as conferencias que so existem com
+o site no ar.
+
+
+=====================================================================
+A) DEPENDE DE VOCE - em ordem de dependencia
+=====================================================================
+
+1. DOMINIO PROPRIO (item 5)
+---------------------------
+O placeholder "SEU-DOMINIO.com.br" ainda esta presente, 14 ocorrencias
+em 4 arquivos:
+
+    index.html ............. 5 ocorrencias
+    public/sitemap.xml ..... 6 ocorrencias
+    public/_headers ........ 2 ocorrencias
+    public/robots.txt ...... 1 ocorrencia
+
+Um comando resolve os quatro de uma vez:
+
+    cd Prisma_frontend
+    npm run definir-dominio prisma.seudominio.br api.prisma.seudominio.br
+
+(Se front e API ficarem no mesmo dominio, passe so o primeiro argumento.)
+
+Por que nao trocar na mao: cada esquecimento falha de um jeito silencioso
+e diferente - og:image errada = link sem imagem no WhatsApp; canonical
+errada = Google indexa o dominio errado; sitemap errado = Search Console
+rejeita o arquivo inteiro; CSP errada = O LOGIN PARA DE FUNCIONAR.
+
+
+2. VARIAVEIS DE AMBIENTE - ainda em modo desenvolvimento
+--------------------------------------------------------
+Estado atual:
+
+    Prisma_frontend/.env
+        VITE_API_URL=http://localhost:8000/api/
+
+    PRISMA_backend/.env
+        DEBUG=True
+        ALLOWED_HOSTS=localhost,127.0.0.1
+        CORS_ALLOWED_ORIGINS  -> NAO ESTA DEFINIDO
+                                 (cai no default de core/settings.py:271)
+
+Precisa virar:
+
+    Prisma_frontend/.env
+        VITE_API_URL=https://api.prisma.seudominio.br/api/
+
+    PRISMA_backend/.env
+        DEBUG=False
+        ALLOWED_HOSTS=api.prisma.seudominio.br
+        CORS_ALLOWED_ORIGINS=https://prisma.seudominio.br
+
+ATENCAO ao cookie de refresh: se front e API ficarem em DOMINIOS
+DIFERENTES, e preciso definir REFRESH_COOKIE_SAMESITE=None - e "None" so
+funciona com HTTPS. Hoje o default em core/settings.py:259 e "Lax", que e
+o correto apenas se front e API estiverem no mesmo dominio. Errar isso
+derruba a sessao a cada F5.
+
+
+3. RODAPE (item 14) + WHATSAPP (item 3)
+----------------------------------------
+Arquivo unico a editar:
+Prisma_frontend/src/components/Layout/SiteFooter/dadosInstitucionais.ts
+
+Faltam 5 campos com "[PREENCHER: ...]" e 2 campos em null:
+
+    instituicao ............ nome da mantenedora, como consta no registro
+    cnpj ................... CNPJ (ou null)
+    endereco ............... rua, numero, bairro, cidade/UF (ou null)
+    emailSuporte ........... e-mail de suporte ao usuario
+    emailEncarregadoLgpd ... canal do encarregado - EXIGIDO pela LGPD art. 41
+    telefone ............... hoje null - telefone de contato (ou null)
+    whatsapp ............... hoje null - formato internacional so digitos,
+                             ex.: "5585999998888" (ou null para esconder)
+
+Enquanto houver "[PREENCHER", o rodape mostra um aviso vermelho em
+desenvolvimento. Depois de preencher, conferir no celular que o link do
+WhatsApp abre a conversa certa.
+
+Base legal (nao e enfeite): LGPD art. 41 (indicar encarregado e canal de
+contato) e Marco Civil art. 7 (informacao clara sobre coleta e uso). O
+PRISMA guarda CPF, endereco e curriculo completo de aluno.
+
+
+4. CERTIFICADO HTTPS (item 6)
+------------------------------
+O codigo ja esta pronto. Falta emitir o certificado:
+  - Netlify, Vercel e Cloudflare Pages fazem isso sozinhos;
+  - nginx: Let's Encrypt via Certbot, mais o bloco de configuracao que
+    esta em docs/CHECKLIST_PUBLICACAO.md (fallback de SPA, cache de
+    assets e os headers de seguranca).
+
+Se o host NAO for Netlify/Cloudflare Pages, os arquivos public/_headers e
+public/_redirects sao ignorados e e preciso o equivalente na config do
+servidor.
+
+
+5. GOOGLE ANALYTICS (item 12) - decisao sua
+--------------------------------------------
+Nao foi instalado de proposito. Alem do ID de medicao (G-XXXXXXXXXX), a
+decisao MUDA A SITUACAO LEGAL do item 13: hoje o PRISMA so tem cookie
+estritamente necessario e por isso esta dispensado de banner. Com o GA,
+passa a ser obrigatorio um banner de consentimento que BLOQUEIE o script
+ate o usuario aceitar - nao basta aviso informativo.
+
+  - Se o objetivo e saber quantas pessoas usam o sistema, o backend ja tem
+    esses dados (cadastros, logins, candidaturas), sem cookie e sem mandar
+    dado de aluno para terceiro.
+  - Se o objetivo e medir divulgacao (de onde vem quem chega na home), o
+    GA faz sentido - e ai instalar junto com o banner funcionando.
+
+
+=====================================================================
+B) SO DA PARA CONFERIR COM O SITE NO AR
+=====================================================================
+
+[ ] PageSpeed na aba MOBILE (https://pagespeed.web.dev/) - e a que conta
+    para o ranking do Google.
+
+[ ] Compressao no servidor: os 288 kB do primeiro carregamento so viram
+    95 kB se o host servir gzip ou brotli. Netlify/Vercel/Cloudflare fazem
+    por padrao; nginx precisa de "gzip on" (ou "brotli on") explicito.
+
+[ ] SSL Labs (https://www.ssllabs.com/ssltest/) - meta: nota A.
+
+[ ] Colar o link do site no WhatsApp e ver se o preview aparece com titulo
+    e a OG image.
+
+[ ] Abrir /login direto pela URL - valida o fallback de SPA. Sem ele, o
+    servidor devolve 404 proprio em vez de carregar o app.
+
+[ ] Fazer um login real em producao - e o teste que exercita CSP e cookie
+    de sessao juntos, que e onde mora a maioria das quebras pos-deploy.
+
+
+=====================================================================
+RESUMO
+=====================================================================
+Bloqueadores reais antes de publicar: itens 1, 2, 3 e 4 acima.
+O item 5 (Analytics) e opcional e pode ficar para depois.
+O bloco B so comeca depois que o site estiver no ar.

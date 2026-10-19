@@ -1,6 +1,7 @@
 import { useState, useEffect, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
+import { arquivoParaDataUrl, ErroDeImagem } from "../../../../utils/imagem";
 import "./StudentCurriculumCreate.css";
 
 // Interfaces para o TypeScript
@@ -41,53 +42,100 @@ interface FormData {
   languages: string;
 }
 
+const FORM_VAZIO: FormData = {
+  fullName: "",
+  location: "",
+  area: "",
+  email: "",
+  phone: "",
+  photo: null,
+  education: [{ course: "", institution: "", description: "" }],
+  experiences: [{ role: "", company: "", period: "", description: "" }],
+  projects: [
+    {
+      title: "",
+      startYear: "",
+      endYear: "",
+      institution: "",
+      advisor: "",
+      description: "",
+    },
+  ],
+  skills: "",
+  courses: "",
+  languages: "",
+};
+
+/**
+ * Junta o que veio do banco com o formulário vazio.
+ *
+ * BUG CORRIGIDO: antes o retorno da API era jogado direto no estado
+ * (`setFormData(existingData)`). `Resume.content` é um JSON LIVRE — nada no
+ * backend garante que ele tenha todas as chaves que este formulário espera.
+ * Bastava faltar `projects` (ou `education`, ou `experiences`) para o
+ * `.map()` correspondente rodar sobre `undefined`, e a tela inteira quebrava
+ * com "Cannot read properties of undefined (reading 'map')" — tela branca,
+ * sem mensagem, sem recuperação possível a não ser apagar o currículo.
+ *
+ * Acontece com qualquer currículo salvo por uma versão anterior do
+ * formulário, ou gravado pela API fora da tela.
+ */
+function normalizarCurriculo(bruto: unknown): FormData {
+  if (!bruto || typeof bruto !== "object" || Array.isArray(bruto)) {
+    return FORM_VAZIO;
+  }
+
+  const dados = bruto as Partial<FormData>;
+  const lista = <T,>(valor: unknown, padrao: T[]): T[] =>
+    Array.isArray(valor) && valor.length > 0 ? (valor as T[]) : padrao;
+  const texto = (valor: unknown): string =>
+    typeof valor === "string" ? valor : "";
+
+  return {
+    fullName: texto(dados.fullName),
+    location: texto(dados.location),
+    area: texto(dados.area),
+    email: texto(dados.email),
+    phone: texto(dados.phone),
+    photo: typeof dados.photo === "string" ? dados.photo : null,
+    education: lista<Education>(dados.education, FORM_VAZIO.education),
+    // Tolera o singular "experience": é a chave que o template do PDF no
+    // backend usa (pdf/templates/pdf/resume_pdf.html), então currículos
+    // criados por fora da tela costumam vir assim.
+    experiences: lista<Experience>(
+      dados.experiences ?? (dados as { experience?: unknown }).experience,
+      FORM_VAZIO.experiences,
+    ),
+    projects: lista<Project>(dados.projects, FORM_VAZIO.projects),
+    skills: texto(dados.skills),
+    courses: texto(dados.courses),
+    languages: texto(dados.languages),
+  };
+}
+
 export default function StudentCurriculumCreate() {
   const navigate = useNavigate();
   const [loadingData, setLoadingData] = useState(true);
 
-  const [formData, setFormData] = useState<FormData>({
-    fullName: "",
-    location: "",
-    area: "",
-    email: "",
-    phone: "",
-    photo: null,
-    education: [{ course: "", institution: "", description: "" }],
-    experiences: [{ role: "", company: "", period: "", description: "" }],
-    projects: [
-      {
-        title: "",
-        startYear: "",
-        endYear: "",
-        institution: "",
-        advisor: "",
-        description: "",
-      },
-    ],
-    skills: "",
-    courses: "",
-    languages: "",
-  });
+  const [formData, setFormData] = useState<FormData>(FORM_VAZIO);
+  const [erroFoto, setErroFoto] = useState("");
 
   // CARREGA DADOS EXISTENTES SE HOUVER
   useEffect(() => {
     async function loadExistingCurriculum() {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoadingData(false);
-        return;
-      }
-
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
+      // Authorization sai do interceptor de `api` (services/api.ts), que lê
+      // o token da memória — ele não vive mais em localStorage.
       try {
-        const response = await api.get("/resumes/", config);
+        const response = await api.get("/resumes/");
         if (response.data && response.data.length > 0) {
-          // Deserializa o JSON que está salvo na coluna content do Django
+          // Deserializa o JSON que está salvo na coluna content do Django e
+          // completa o que estiver faltando (ver normalizarCurriculo).
           const existingData = JSON.parse(response.data[0].content);
-          setFormData(existingData);
+          setFormData(normalizarCurriculo(existingData));
         }
       } catch (error) {
+        // `JSON.parse` de um content corrompido também cai aqui — o
+        // formulário continua utilizável, em branco, em vez de quebrar.
         console.error("Erro ao carregar currículo existente:", error);
       } finally {
         setLoadingData(false);
@@ -104,12 +152,33 @@ export default function StudentCurriculumCreate() {
     setFormData({ ...formData, [name]: value });
   }
 
-  function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
+  // A foto vira um data URL JPEG reduzido (utils/imagem.ts) em vez do
+  // `URL.createObjectURL(file)` que havia aqui. Aquele endereço `blob:` só
+  // valia dentro desta aba: sumia num F5 e não significava nada para o
+  // servidor, então a foto NUNCA era salva de fato — nem aparecia no PDF.
+  async function handlePhotoUpload(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setFormData({ ...formData, photo: imageUrl });
+    if (!file) return;
+
+    setErroFoto("");
+    try {
+      const dataUrl = await arquivoParaDataUrl(file);
+      setFormData((anterior) => ({ ...anterior, photo: dataUrl }));
+    } catch (erro) {
+      setErroFoto(
+        erro instanceof ErroDeImagem
+          ? erro.message
+          : "Não foi possível carregar a imagem.",
+      );
+      // Limpa o input para o mesmo arquivo poder ser escolhido de novo
+      // depois de o usuário corrigir o problema.
+      e.target.value = "";
     }
+  }
+
+  function removerFoto() {
+    setErroFoto("");
+    setFormData((anterior) => ({ ...anterior, photo: null }));
   }
 
   // --- Funções Auxiliares de Adição/Remoção ---
@@ -197,16 +266,12 @@ export default function StudentCurriculumCreate() {
 
   // ---------- SALVAR OU ATUALIZAR NO BACKEND ----------
   async function handleSaveCurriculum() {
-    const token = localStorage.getItem("access_token");
-    if (!token) return;
-
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-
+    // Authorization sai do interceptor de `api` (services/api.ts).
     try {
       let resumeId: number | null = null;
 
       try {
-        const listResponse = await api.get("/resumes/", config);
+        const listResponse = await api.get("/resumes/");
         if (listResponse.data && listResponse.data.length > 0) {
           resumeId = listResponse.data[0].id;
         }
@@ -228,11 +293,11 @@ export default function StudentCurriculumCreate() {
         // "saveResponse.data.id" (sem o "data" do meio) sempre dava
         // undefined, e a geração do PDF logo após criar o 1º currículo
         // falhava com "Erro ao identificar o currículo" para todo aluno.
-        const saveResponse = await api.post("/resumes/", payload, config);
+        const saveResponse = await api.post("/resumes/", payload);
         resumeId = saveResponse.data?.data?.id ?? saveResponse.data?.id ?? null;
       } else {
         // Atualizar Existente (o PUT já devolve o objeto direto, sem wrapper)
-        await api.put(`/resumes/${resumeId}/`, payload, config);
+        await api.put(`/resumes/${resumeId}/`, payload);
       }
 
       if (!resumeId) {
@@ -244,7 +309,6 @@ export default function StudentCurriculumCreate() {
 
       // Exportação do PDF
       const response = await api.get(`/pdf/export/${resumeId}/`, {
-        ...config,
         responseType: "blob",
       });
 
@@ -285,9 +349,17 @@ export default function StudentCurriculumCreate() {
       <section className="card">
         <h3>Foto</h3>
         <input type="file" accept="image/*" onChange={handlePhotoUpload} />
+        <small className="campo-ajuda">
+          JPG, PNG ou WEBP de até 8MB. A imagem é reduzida automaticamente
+          antes de ser salva e aparece no PDF do currículo.
+        </small>
+        {erroFoto && <p className="error">{erroFoto}</p>}
         {formData.photo && (
           <div className="photo-preview">
             <img src={formData.photo} alt="Preview" />
+            <button type="button" className="foto-remover" onClick={removerFoto}>
+              Remover foto
+            </button>
           </div>
         )}
       </section>

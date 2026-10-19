@@ -1,8 +1,10 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ValidationError as DjangoValidationError
+from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import Profile
+from .validators import validar_cpf
 
 User = get_user_model()
 
@@ -12,6 +14,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     Dados pessoais/acadêmicos/endereço do aluno-egresso (ou institucionais
     equivalentes), coletados no cadastro e agora persistidos de verdade.
     Usado pelo endpoint `GET/PATCH /api/users/me/`.
+
+    `pin` aqui é a matrícula do próprio usuário logado — a rota não recebe
+    `pk` nenhum, então ninguém lê a matrícula de outra pessoa por aqui. Desde
+    25 ago 2026 esse número deixou de ser também o token de recuperação de
+    senha (ver users/models.py::SecurityCode), então exibi-lo na tela de
+    perfil não tem mais nenhuma consequência de segurança.
     """
     name = serializers.SerializerMethodField()
     email = serializers.ReadOnlyField(source='user.email')
@@ -32,6 +40,20 @@ class ProfileSerializer(serializers.ModelSerializer):
         full_name = obj.user.get_full_name()
         return full_name if full_name else obj.user.username
 
+    def validate_cpf(self, value):
+        """
+        CPF editado pelo perfil passa pela mesma validação de dígito
+        verificador do cadastro — sem isto, dava para burlar a checagem
+        cadastrando sem CPF e preenchendo depois com qualquer coisa.
+        """
+        if not value:
+            return value
+        try:
+            return validar_cpf(value)
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages)
+
+
 class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         # O validate retorna o que vai no corpo da resposta (JSON). Chamamos
@@ -44,7 +66,7 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         if self.user.status == 'pendente':
             raise serializers.ValidationError(
-                {"error": "Confirme seu cadastro antes de entrar. Verifique o PIN enviado por e-mail e use a tela de confirmação de cadastro."}
+                {"error": "Confirme seu cadastro antes de entrar. Verifique o código enviado por e-mail e use a tela de confirmação de cadastro."}
             )
         if self.user.status == 'inativo':
             raise serializers.ValidationError(
@@ -61,7 +83,6 @@ class MyTokenObtainPairSerializer(TokenObtainPairSerializer):
 
     @classmethod
     def get_token(cls, user):
-        # Isso aqui mantém os dados dentro do Token (criptografado)
         token = super().get_token(user)
         token['role'] = user.role
         return token

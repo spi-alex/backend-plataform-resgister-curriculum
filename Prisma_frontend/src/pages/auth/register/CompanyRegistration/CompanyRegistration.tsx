@@ -1,8 +1,10 @@
-import api from "../../../../services/api";
+import api, { BACKEND_ORIGIN } from "../../../../services/api";
 import { useState, useEffect } from "react";
 import { Input } from "../../../../components/Input/Input";
 import { Button } from "../../../../components/Button/Button";
 import { PasswordInput } from "../../../../components/PasswordInput/PasswordInput";
+import { mensagemErroApi } from "../../../../utils/apiError";
+import { validarSenha, DICA_SENHA } from "../../../../utils/senha";
 import "./CompanyRegistration.css";
 
 export default function CompanyRegistration() {
@@ -37,13 +39,17 @@ export default function CompanyRegistration() {
 
   const fetchCaptcha = async () => {
     try {
-      const response = await api.get("http://127.0.0.1:8000/captcha/refresh/", {
+      const response = await api.get(`${BACKEND_ORIGIN}/captcha/refresh/`, {
+        // `baseURL: ""` porque a URL acima já é absoluta: sem isso o axios
+        // concatenaria com o baseURL (`.../api/`) e o pedido iria para
+        // `/api/http://.../captcha/refresh/`.
+        baseURL: "",
         headers: { "X-Requested-With": "XMLHttpRequest" },
       });
 
       if (response?.data) {
         setCaptchaData({
-          image_url: `http://127.0.0.1:8000${response.data.image_url}`,
+          image_url: `${BACKEND_ORIGIN}${response.data.image_url}`,
           hashkey: response.data.key,
         });
       }
@@ -106,7 +112,11 @@ export default function CompanyRegistration() {
     });
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: React.FormEvent) {
+    // Agora é o `onSubmit` do <form>: sem preventDefault o navegador
+    // recarrega a página e todos os campos preenchidos são perdidos.
+    e?.preventDefault();
+
     // Validação simples que não usa o estado 'errors' para não travar o ESLint
     if (
       !form.razaoSocial ||
@@ -129,17 +139,24 @@ export default function CompanyRegistration() {
       alert("As senhas não coincidem.");
       return;
     }
+    // Mesma política do backend (utils/senha.ts) — sem esta checagem uma
+    // senha curta só era recusada pela API, e a mensagem abaixo nunca
+    // chegava a dizer que o problema era a senha.
+    const erroSenha = validarSenha(form.senha);
+    if (erroSenha) {
+      alert(erroSenha + ".");
+      return;
+    }
     if (!form.termos) {
       alert("Você precisa aceitar os termos de uso.");
       return;
     }
 
     try {
-      // 1. Limpeza forçada do localStorage antes de enviar
-      // Isso remove tokens de sessões anteriores que possam estar causando o 401
-      localStorage.removeItem("access_token");
-      localStorage.removeItem("refresh_token");
-
+      // A limpeza manual de "access_token"/"refresh_token" que havia aqui
+      // não faz mais sentido: o token não vive em localStorage (está em
+      // memória, ver services/authToken.ts) e o interceptor já não manda
+      // Authorization nas rotas públicas, entre elas users/register/.
       const payload = {
         username: form.email,
         email: form.email,
@@ -189,25 +206,21 @@ export default function CompanyRegistration() {
         }, 1500);
       }
     } catch (error: unknown) {
-      // Tipagem correta para evitar o 'any'
-      const apiError = error as {
-        response?: { data?: { error?: string; detail?: string } };
-      };
-      const serverData = apiError.response?.data;
+      console.error("Erro do servidor:", error);
 
-      console.error("Erro do servidor:", serverData);
-
-      const errorMsg = JSON.stringify(serverData || {});
-
-      if (errorMsg.includes("cnpj")) {
-        alert("Este CNPJ já está cadastrado no sistema.");
-      } else if (errorMsg.includes("email") || errorMsg.includes("username")) {
-        alert("Este e-mail já está cadastrado.");
-      } else if (errorMsg.includes("Captcha")) {
-        alert("Código da imagem incorreto. Tente novamente.");
-      } else {
-        alert("Erro no cadastro. Verifique se os dados estão corretos.");
-      }
+      // A view `register_user` já responde com o motivo em português
+      // (`{"error": "..."}`): CNPJ duplicado, e-mail em uso, captcha errado
+      // ou a política de senha. Antes isto era decidido procurando os
+      // trechos "cnpj"/"email"/"Captcha" no JSON da resposta — como nenhuma
+      // mensagem de senha contém essas palavras, "Esta senha é muito
+      // curta..." caía no texto genérico do `else` e o motivo real nunca
+      // aparecia na tela.
+      alert(
+        mensagemErroApi(
+          error,
+          "Erro no cadastro. Verifique se os dados estão corretos.",
+        ),
+      );
 
       // Atualiza o captcha se der erro
       fetchCaptcha();
@@ -216,7 +229,7 @@ export default function CompanyRegistration() {
   }
 
   return (
-    <div className="register-page">
+    <div className="register-page register-company">
       {showSuccessMessage && (
         <div className="success-banner">
           Cadastro recebido! Verifique seu e-mail para confirmar o PIN e
@@ -229,6 +242,17 @@ export default function CompanyRegistration() {
           <h1>Cadastro de Empresa</h1>
         </div>
 
+        {/* Os ~20 campos ficavam soltos em <section>s, e o "Confirmar
+            cadastro" disparava por onClick. Sem um <form> de verdade:
+              - Enter em qualquer campo não fazia nada (num formulário
+                longo assim, é o reflexo natural de quem acabou de digitar
+                o último campo);
+              - no celular o teclado nunca mostrava o botão de confirmar;
+              - o navegador não reconhecia o conjunto como cadastro, então
+                não oferecia salvar a senha nova no gerenciador.
+            O botão 🔄 do captcha continua type="button" (padrão do
+            componente Button), então não envia o formulário. */}
+        <form onSubmit={handleSubmit} noValidate>
         <section className="register-card">
           <h2>Dados da Empresa</h2>
           <div className="form-grid">
@@ -356,26 +380,31 @@ export default function CompanyRegistration() {
               name="senha"
               value={form.senha}
               onChange={handleChange}
+              /* Faz o navegador oferecer GERAR uma senha forte,
+                 em vez de tentar preencher a senha antiga. */
+              autoComplete="new-password"
             />
             <PasswordInput
               label="Confirmar senha"
               name="confirmarSenha"
               value={form.confirmarSenha}
               onChange={handleChange}
+              /* Faz o navegador oferecer GERAR uma senha forte,
+                 em vez de tentar preencher a senha antiga. */
+              autoComplete="new-password"
             />
           </div>
+          {/* A regra é do backend; dizê-la antes evita o cadastro ser
+              recusado depois de o formulário inteiro estar preenchido. */}
+          <small className="dica-senha">{DICA_SENHA}</small>
         </section>
 
         <section className="register-card">
-          <div
-            className="captcha-container"
-            style={{ display: "flex", alignItems: "center", gap: "10px" }}
-          >
+          <div className="captcha-container">
             {captchaData.image_url && (
               <img
                 src={captchaData.image_url}
                 alt="captcha"
-                style={{ height: "40px", borderRadius: "4px" }}
               />
             )}
             <Input
@@ -384,7 +413,11 @@ export default function CompanyRegistration() {
               value={captchaValue}
               onChange={(e) => setCaptchaValue(e.target.value)}
             />
-            <Button title="🔄" onClick={fetchCaptcha} />
+            <Button
+              title="🔄"
+              ariaLabel="Gerar outra imagem de verificação"
+              onClick={fetchCaptcha}
+            />
           </div>
         </section>
 
@@ -401,8 +434,9 @@ export default function CompanyRegistration() {
         </div>
 
         <div className="form-actions">
-          <Button title="Confirmar cadastro" onClick={handleSubmit} />
+          <Button title="Confirmar cadastro" type="submit" />
         </div>
+        </form>
       </div>
     </div>
   );

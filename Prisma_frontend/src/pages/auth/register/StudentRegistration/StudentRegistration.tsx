@@ -1,17 +1,12 @@
-import api from "../../../../services/api";
+import api, { BACKEND_ORIGIN } from "../../../../services/api";
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Input } from "../../../../components/Input/Input";
 import { Button } from "../../../../components/Button/Button";
 import { PasswordInput } from "../../../../components/PasswordInput/PasswordInput";
+import { mensagemErroApi } from "../../../../utils/apiError";
+import { validarSenha, DICA_SENHA } from "../../../../utils/senha";
 import "./StudentRegistration.css";
-
-// Interface para evitar o uso de 'any' nos erros
-interface ApiError {
-  response?: {
-    data?: unknown;
-  };
-}
 
 export default function StudentRegistration() {
   const navigate = useNavigate();
@@ -51,7 +46,7 @@ export default function StudentRegistration() {
 
   const fetchCaptcha = useCallback(async () => {
     try {
-      const response = await api.get("http://127.0.0.1:8000/captcha/refresh/", {
+      const response = await api.get(`${BACKEND_ORIGIN}/captcha/refresh/`, {
         baseURL: "",
         headers: {
           "X-Requested-With": "XMLHttpRequest",
@@ -135,7 +130,12 @@ export default function StudentRegistration() {
     if (!form.numero) newErrors.numero = "Número obrigatório";
     if (!form.cidade) newErrors.cidade = "Cidade obrigatória";
     if (!form.estado) newErrors.estado = "Estado obrigatória";
-    if (!form.senha) newErrors.senha = "Senha obrigatória";
+    // Mesma política do backend (utils/senha.ts). Antes daqui só saía
+    // "Senha obrigatória": uma senha de 6 caracteres passava na validação
+    // do formulário e só era recusada pela API — cujo motivo a tela não
+    // mostrava, deixando o cadastro impossível de concluir.
+    const erroSenha = validarSenha(form.senha);
+    if (erroSenha) newErrors.senha = erroSenha;
     if (form.senha !== form.confirmarSenha)
       newErrors.confirmarSenha = "As senhas não coincidem";
     if (!form.termos) newErrors.termos = "Você precisa aceitar os termos";
@@ -144,7 +144,11 @@ export default function StudentRegistration() {
     return Object.keys(newErrors).length === 0;
   }
 
-  async function handleSubmit() {
+  async function handleSubmit(e?: React.FormEvent) {
+    // Agora é o `onSubmit` do <form>: sem preventDefault o navegador
+    // recarrega a página e todos os campos preenchidos são perdidos.
+    e?.preventDefault();
+
     if (!validate()) return;
 
     try {
@@ -188,10 +192,16 @@ export default function StudentRegistration() {
         navigate("/confirmar-cadastro", { state: { email: form.email } });
       }, 2000);
     } catch (error) {
-      const apiError = error as ApiError;
-      console.error("Erro ao cadastrar:", apiError.response?.data);
+      console.error("Erro ao cadastrar:", error);
+      // A mensagem do backend é exibida como veio. O texto fixo que havia
+      // aqui falava de captcha/dados duplicados mesmo quando a recusa era
+      // da política de senha ("Esta senha é muito curta...", "Esta senha é
+      // muito comum."), e o usuário não tinha como descobrir o motivo.
       alert(
-        "Erro ao cadastrar. Verifique o código da imagem ou se os dados já existem.",
+        mensagemErroApi(
+          error,
+          "Erro ao cadastrar. Verifique o código da imagem ou se os dados já existem.",
+        ),
       );
       await fetchCaptcha();
       setCaptchaValue("");
@@ -199,7 +209,7 @@ export default function StudentRegistration() {
   }
 
   return (
-    <div className="register-page">
+    <div className="register-page register-student">
       {/* Banner de sucesso renderizado condicionalmente */}
       {showSuccessMessage && (
         <div className="success-banner">
@@ -214,6 +224,17 @@ export default function StudentRegistration() {
           <p>Preencha os dados para criar sua conta no PRISMA</p>
         </div>
 
+        {/* Os ~20 campos ficavam soltos em <section>s, e o "Confirmar
+            cadastro" disparava por onClick. Sem um <form> de verdade:
+              - Enter em qualquer campo não fazia nada (num formulário
+                longo assim, é o reflexo natural de quem acabou de digitar
+                o último campo);
+              - no celular o teclado nunca mostrava o botão de confirmar;
+              - o navegador não reconhecia o conjunto como cadastro, então
+                não oferecia salvar a senha nova no gerenciador.
+            O botão 🔄 do captcha continua type="button" (padrão do
+            componente Button), então não envia o formulário. */}
+        <form onSubmit={handleSubmit} noValidate>
         <section className="register-card">
           <h2>Dados Pessoais</h2>
           <div className="form-grid">
@@ -374,6 +395,9 @@ export default function StudentRegistration() {
               name="senha"
               value={form.senha}
               onChange={handleChange}
+              /* Faz o navegador oferecer GERAR uma senha forte,
+                 em vez de tentar preencher a senha antiga. */
+              autoComplete="new-password"
               error={errors.senha}
             />
             <PasswordInput
@@ -381,20 +405,23 @@ export default function StudentRegistration() {
               name="confirmarSenha"
               value={form.confirmarSenha}
               onChange={handleChange}
+              /* Faz o navegador oferecer GERAR uma senha forte,
+                 em vez de tentar preencher a senha antiga. */
+              autoComplete="new-password"
               error={errors.confirmarSenha}
             />
           </div>
+          {/* A regra é do backend; dizê-la antes evita o cadastro ser
+              recusado depois de o formulário inteiro estar preenchido. */}
+          <small className="dica-senha">{DICA_SENHA}</small>
         </section>
 
         <section className="register-card">
           <h2>Verificação de Segurança</h2>
-          <div
-            className="captcha-container"
-            style={{ display: "flex", alignItems: "center", gap: "10px" }}
-          >
+          <div className="captcha-container">
             {captchaData.image_url && (
               <img
-                src={`http://127.0.0.1:8000${captchaData.image_url}`}
+                src={`${BACKEND_ORIGIN}${captchaData.image_url}`}
                 alt="captcha"
               />
             )}
@@ -404,7 +431,11 @@ export default function StudentRegistration() {
               value={captchaValue}
               onChange={(e) => setCaptchaValue(e.target.value)}
             />
-            <Button title="🔄" onClick={fetchCaptcha} />
+            <Button
+              title="🔄"
+              ariaLabel="Gerar outra imagem de verificação"
+              onClick={fetchCaptcha}
+            />
           </div>
         </section>
 
@@ -422,8 +453,9 @@ export default function StudentRegistration() {
         </div>
 
         <div className="form-actions cadastro-button">
-          <Button title="Confirmar cadastro" onClick={handleSubmit} />
+          <Button title="Confirmar cadastro" type="submit" />
         </div>
+        </form>
       </div>
     </div>
   );

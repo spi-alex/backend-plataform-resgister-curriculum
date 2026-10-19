@@ -1,30 +1,26 @@
 /* ===== BASE ===== */
-
 .student-home {
   flex: 1;
   padding: 48px 32px;
   background: #f3f4f6;
   min-height: 100%;
-  font-family: 'Manrope', sans-serif;
+  font-family: "Manrope", sans-serif;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 /* ===== HEADER ===== */
-
 .home-header {
   text-align: center;
   margin-bottom: 40px;
 }
-
 .home-header h1 {
   font-size: 28px;
   font-weight: 800;
   color: #0f172a;
   margin-bottom: 8px;
 }
-
 .home-header p {
   font-size: 16px;
   color: #64748b;
@@ -32,7 +28,6 @@
 }
 
 /* ===== EMPTY CARD ===== */
-
 .empty-card {
   width: 100%;
   max-width: 640px;
@@ -45,13 +40,11 @@
 }
 
 /* ===== ICON AREA ===== */
-
 .empty-icon {
   position: relative;
   display: inline-block;
   margin-bottom: 32px;
 }
-
 .icon-circle {
   width: 96px;
   height: 96px;
@@ -62,12 +55,10 @@
   justify-content: center;
   margin: 0 auto;
 }
-
 .icon-circle span {
   font-size: 56px;
   color: #d1d5db;
 }
-
 .icon-add {
   position: absolute;
   bottom: -6px;
@@ -81,7 +72,6 @@
   align-items: center;
   justify-content: center;
 }
-
 .icon-add span {
   font-size: 16px;
   color: #ffffff;
@@ -89,14 +79,12 @@
 }
 
 /* ===== TEXT ===== */
-
 .empty-card h2 {
   font-size: 22px;
   font-weight: 800;
   color: #1e293b;
   margin-bottom: 16px;
 }
-
 .empty-card p {
   font-size: 16px;
   color: #64748b;
@@ -106,7 +94,6 @@
 }
 
 /* ===== ACTIONS ===== */
-
 .empty-actions {
   display: flex;
   flex-direction: column;
@@ -115,8 +102,7 @@
 }
 
 /* PRIMARY BUTTON */
-
-.primary-btn {
+.student-home .primary-btn {
   background: #059669;
   color: #ffffff;
   padding: 16px 40px;
@@ -128,17 +114,14 @@
   box-shadow: 0 10px 20px rgba(5, 150, 105, 0.25);
   transition: all 0.2s ease;
 }
-
-.primary-btn:hover {
+.student-home .primary-btn:hover {
   background: #047857;
 }
-
-.primary-btn:active {
+.student-home .primary-btn:active {
   transform: scale(0.96);
 }
 
 /* SECONDARY LINK */
-
 .secondary-link {
   background: transparent;
   border: none;
@@ -148,7 +131,6 @@
   cursor: pointer;
   transition: 0.2s ease;
 }
-
 .secondary-link:hover {
   text-decoration: underline;
 }
@@ -159,15 +141,12 @@
   .student-home {
     padding: 32px 20px;
   }
-
   .empty-card {
     padding: 40px 24px;
   }
-
   .empty-card h2 {
     font-size: 20px;
   }
-
   .empty-card p {
     font-size: 15px;
   }

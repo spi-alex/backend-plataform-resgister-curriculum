@@ -1,100 +1,332 @@
-/* RESET */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: Arial, Helvetica, sans-serif;
-}
+/* =========================================================================
+   HOME (rota "/")
 
-/* FUNDO */
-body {
-  background-color: #b0c2ab;
-}
+   Tudo aqui está sob `.home-page`. A versão anterior deste arquivo tinha
+   uma regra `body { background-color: #b0c2ab }` solta: como a home é
+   importada ESTATICAMENTE no AppRoutes (é o primeiro paint), esse CSS
+   entra no bundle inicial e o fundo da home vazava para o site inteiro,
+   inclusive para dentro dos dashboards. As demais telas já definem o
+   próprio fundo, então a regra foi removida e o fundo passou a viver no
+   container da página.
+   ========================================================================= */
 
-/* CONTAINER PRINCIPAL */
-.container {
-  min-height: 100vh;
+.home-page {
+  /* ---- Paleta da área pública, num só lugar ----
+     Os valores são os mesmos do rodapé e das telas de login/cadastro; o
+     que mudou foi deixarem de estar repetidos em cada seletor. */
+  --home-fundo-topo: #c7d5c2;
+  --home-fundo-base: #a3b99d;
+
+  --home-tinta: #12340f; /* 7.3:1 sobre o fundo — título e marca */
+  --home-tinta-suave: #2a4425; /* 5.1:1 no ponto mais escuro do fundo */
+
+  --home-painel: #12340f;
+  --home-painel-borda: rgba(158, 217, 139, 0.18);
+
+  --home-destaque: #9ed98b; /* 8.5:1 sobre o painel */
+  --home-texto-painel: #ffffff;
+  --home-texto-painel-suave: #c3d6bc; /* 9:1 sobre o painel */
+
+  --home-raio: 24px;
+
+  position: relative;
+  isolation: isolate; /* prende o z-index do brilho a esta página */
+
+  /* `svh` em vez de `vh`: no celular, `100vh` conta a altura COM a barra de
+     endereço recolhida, então a tela "pula" quando a barra aparece. */
+  min-height: 100svh;
+
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
+  padding: clamp(24px, 6vw, 64px) 16px;
+
+  background-image: linear-gradient(
+    170deg,
+    var(--home-fundo-topo) 0%,
+    var(--home-fundo-base) 100%
+  );
+
+  color: var(--home-tinta);
+  font-family:
+    "Inter",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    Roboto,
+    Arial,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* TÍTULO */
-.container h1 {
-  color: #ffffff;
-  margin-bottom: 20px;
-  letter-spacing: 2px;
+/* Halo claro atrás do painel: dá profundidade sem imagem nenhuma. */
+.home__brilho {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(
+    60% 45% at 50% 30%,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
 }
 
-/* BOX CENTRAL */
-.container .box-container {
-  background-color: #12340f;
-  width: 420px;
-  padding: 40px 30px;
-  border-radius: 20px;
+.home__conteudo {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(24px, 5vw, 36px);
+}
 
+/* ================= HERO ================= */
+
+.home__hero {
+  text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
-/* SUBTÍTULO */
-.container .box-container h2 {
-  color: #ffffff;
-  font-size: 18px;
-  margin-bottom: 25px;
-  text-align: center;
+.home__logo {
+  width: clamp(52px, 12vw, 64px);
+  height: auto;
+  color: var(--home-tinta);
+  margin-bottom: 12px;
 }
 
-/* BOTÕES (LINKS) */
-.container .box-container a.card-select {
+.home__titulo {
+  /* `clamp` evita as duas media queries que só existiriam para diminuir a
+     fonte: o tamanho acompanha a largura da tela de forma contínua. */
+  font-size: clamp(2rem, 7vw, 2.75rem);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  line-height: 1.1;
+
+  /* O `letter-spacing` também é aplicado depois do último caractere, o que
+     desloca o texto centralizado meio espaço para a esquerda. */
+  text-indent: 0.12em;
+
+  color: var(--home-tinta);
+  margin: 0;
+}
+
+.home__linha-apoio {
+  margin: 10px 0 0;
+  max-width: 38ch; /* linha longa demais cansa a leitura */
+  font-size: clamp(0.95rem, 2.6vw, 1.0625rem);
+  line-height: 1.55;
+  color: var(--home-tinta-suave);
+  text-wrap: balance;
+}
+
+/* ================= PAINEL DOS PERFIS ================= */
+
+.home__painel {
   width: 100%;
-  display: block;
-justify-content: center;
-align-items: center;
-  background-color: #6f965f !important;
-  color: #ffffff !important;
+  background-color: var(--home-painel);
+  border: 1px solid var(--home-painel-borda);
+  border-radius: var(--home-raio);
+  padding: clamp(24px, 6vw, 36px) clamp(20px, 5vw, 32px);
 
+  /* Duas sombras: uma curta e firme que "assenta" o painel, outra larga e
+     difusa que faz o halo. Uma sombra só ou fica dura ou fica suja. */
+  box-shadow:
+    0 2px 6px rgba(10, 30, 8, 0.16),
+    0 24px 48px -20px rgba(10, 30, 8, 0.45);
+}
+
+.home__painel-titulo {
+  margin: 0 0 20px;
   text-align: center;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--home-texto-painel);
+}
+
+.home__perfis {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---- Cartão de perfil ---- */
+
+.home__perfil {
+  display: grid;
+  /* ícone | texto | seta */
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+
+  padding: 14px 16px;
+  border-radius: 16px;
   text-decoration: none;
 
-  padding: 14px;
-  border-radius: 25px;
-  font-weight: bold;
-  margin-bottom: 15px;
+  /* Superfície translúcida em vez de um verde chapado: o cartão se destaca
+     do painel sem precisar de uma quarta cor na paleta, e o contraste do
+     texto continua sendo medido contra o painel. */
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(158, 217, 139, 0.22);
 
-  cursor: pointer;
+  /* Alvo de toque confortável para dedo, independente do tamanho da fonte
+     do sistema. */
+  min-height: 64px;
 
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
 }
 
-/* HOVER */
-.container .box-container a.card-select:hover {
-  background-color: #5c7f4f !important;
-  color: #ffffff !important;
-  transform: scale(1.02);
+.home__perfil:hover {
+  background-color: rgba(158, 217, 139, 0.14);
+  border-color: var(--home-destaque);
+  transform: translateY(-2px);
 }
 
-/* CLICK */
-.container .box-container a.card-select:active {
-  background-color: #4a6a40 !important;
+.home__perfil:active {
+  transform: translateY(0);
+  background-color: rgba(158, 217, 139, 0.2);
 }
 
-/* TEXTO DE CADASTRO */
-.container .box-container .register-link {
-  margin-top: 20px;
-  color: #ffffff;
-  font-size: 14px;
+/* Anel de foco explícito. O padrão do navegador é um contorno escuro e
+   fino, praticamente invisível sobre o painel verde-escuro — quem navega
+   por Tab ficava sem saber onde estava. `:focus-visible` (e não `:focus`)
+   faz o anel aparecer só no teclado, não a cada clique de mouse. */
+.home__perfil:focus-visible,
+.home__cadastro a:focus-visible {
+  outline: 3px solid var(--home-destaque);
+  outline-offset: 3px;
 }
 
-/* LINK DE CADASTRO */
-.container .box-container .register-link a {
-  color: #9ed98b;
+.home__perfil-icone {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background-color: rgba(158, 217, 139, 0.16);
+  color: var(--home-destaque);
+  flex-shrink: 0;
+}
+
+.home__perfil-icone svg {
+  width: 20px;
+  height: 20px;
+}
+
+.home__perfil-texto {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Sem isto o texto longo do cartão empurra a seta para fora da caixa em
+     telas estreitas, em vez de quebrar linha. */
+  min-width: 0;
+}
+
+.home__perfil-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--home-texto-painel);
+  line-height: 1.3;
+}
+
+.home__perfil-descricao {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--home-texto-painel-suave);
+}
+
+.home__perfil-seta {
+  width: 18px;
+  height: 18px;
+  color: var(--home-destaque);
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+}
+
+.home__perfil:hover .home__perfil-seta {
+  transform: translateX(3px);
+}
+
+/* ================= RODAPÉ DO PAINEL ================= */
+
+.home__cadastro {
+  margin: 22px 0 0;
+  padding-top: 18px;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--home-texto-painel-suave);
+}
+
+.home__cadastro a {
+  color: var(--home-destaque);
+  font-weight: 600;
   text-decoration: none;
-  font-weight: bold;
+  border-radius: 4px;
+  /* Alvo de toque: o link tinha ~17 px de altura clicável. */
+  padding: 4px 2px;
 }
 
-.container .box-container .register-link a:hover {
+.home__cadastro a:hover {
   text-decoration: underline;
+}
+
+/* ================= PREFERÊNCIAS DO SISTEMA ================= */
+
+/* Quem liga "reduzir movimento" no sistema costuma fazê-lo por enxaqueca
+   ou por sensibilidade vestibular: o cartão continua reagindo pela cor,
+   mas sem deslizar. */
+@media (prefers-reduced-motion: reduce) {
+  .home__perfil,
+  .home__perfil-seta {
+    transition: none;
+  }
+
+  .home__perfil:hover,
+  .home__perfil:active {
+    transform: none;
+  }
+
+  .home__perfil:hover .home__perfil-seta {
+    transform: none;
+  }
+}
+
+/* No modo de alto contraste do Windows o navegador substitui as cores; as
+   bordas translúcidas somem e os cartões viram um bloco só. */
+@media (forced-colors: active) {
+  .home__perfil {
+    border-color: CanvasText;
+  }
+}
+
+/* ================= TELAS ESTREITAS ================= */
+
+@media (max-width: 400px) {
+  /* Em 360 px o ícone + a seta + 16 px de padding de cada lado deixam pouco
+     mais de 200 px para o texto. A seta sai (o cartão inteiro já é
+     clicável) e o ícone encolhe. */
+  .home__perfil {
+    grid-template-columns: auto 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .home__perfil-seta {
+    display: none;
+  }
+
+  .home__perfil-icone {
+    width: 36px;
+    height: 36px;
+  }
 }

@@ -13,7 +13,7 @@
   display: flex;
   gap: 2rem;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
   margin-bottom: 2rem;
 }
 
@@ -82,7 +82,7 @@
   background: #ffffff;
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .profile-card-header {
@@ -178,7 +178,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
 }
 
 .profile-danger-info {
@@ -206,5 +206,115 @@
   border: none;
   padding: 0.6rem 1rem;
   border-radius: 8px;
+  cursor: pointer;
+}
+/* =========================================================================
+   CLASSES QUE FALTAVAM
+
+   O componente já usava todas as classes abaixo, mas nenhuma estava
+   definida aqui — então, ao clicar em "Editar", os botões Salvar/Cancelar
+   apareciam como botões cinza padrão do navegador no meio de uma tela
+   estilizada, e o conteúdo dos cards ficava sem espaçamento.
+
+   Os botões seguem o mesmo padrão do resto do sistema (esmeralda #059669
+   no primário, hover #047857, raio 10px), o mesmo usado em
+   CompanyCreateJob.css e em styles/curriculumView.css.
+   ========================================================================= */
+
+.loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40vh;
+  color: #667085;
+  font-size: 0.95rem;
+}
+
+.profile-card-content {
+  padding-top: 1rem;
+}
+
+.profile-edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.profile-save-btn,
+.profile-cancel-btn,
+.secondary-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0.6rem 1.1rem;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.profile-save-btn {
+  background: #059669;
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);
+}
+
+.profile-save-btn:hover:not(:disabled) {
+  background: #047857;
+}
+
+.profile-cancel-btn,
+.secondary-btn {
+  background: #fff;
+  border-color: #e2e8f0;
+  color: #334155;
+}
+
+.profile-cancel-btn:hover:not(:disabled),
+.secondary-btn:hover:not(:disabled) {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.profile-save-btn:disabled,
+.profile-cancel-btn:disabled,
+.secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+.profile-save-btn:focus-visible,
+.profile-cancel-btn:focus-visible,
+.secondary-btn:focus-visible {
+  outline: 2px solid #059669;
+  outline-offset: 2px;
+}
+
+.profile-security {
+  margin-top: 1rem;
+}
+
+/* Rótulo do interruptor de notificações. */
+.switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  color: #334155;
+  cursor: pointer;
+}
+
+.switch-label input {
+  width: 16px;
+  height: 16px;
+  accent-color: #059669;
   cursor: pointer;
 }

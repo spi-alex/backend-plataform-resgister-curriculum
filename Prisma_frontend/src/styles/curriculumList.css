@@ -1,0 +1,355 @@
+/* =========================================================================
+   LISTAGEM DE CURRÍCULOS / CANDIDATOS (tabela com filtros e paginação)
+
+   Usada por duas telas com a MESMA marcação:
+
+     - gestor  -> ManagerCurriculums/ManagerCurriculumList.tsx
+     - empresa -> CompanyJobs/CandidateView/CandidateView.tsx
+
+   Três defeitos corrigidos ao trazer este arquivo para cá:
+
+   1. A classe raiz era `.manager-curriculum-view`, mas as DUAS telas
+      emitem `.manager-curriculum-list`. O nome nunca bateu, então o
+      container perdia fundo, fonte e o reset de `box-sizing`.
+
+   2. `CandidateView.tsx` (empresa) não importava CSS nenhum — nem as
+      regras globais deste arquivo chegavam nela.
+
+   3. TODAS as regras agora ficam sob `.manager-curriculum-list`. Antes
+      eram globais e colidiam com o layout do gestor em 12 classes
+      (`.manager-sidebar`, `.manager-layout`, `.menu`, `.logo`, `.filters`,
+      `.actions`, `.pagination`, `.table-section`, `.page-header`,
+      `.breadcrumbs`, `.active`, `.empty`) — com valores DIFERENTES dos de
+      ManagerLayout.css e ManagerHome.css. Como o Vite não descarrega o CSS
+      de uma rota quando você sai dela, quem ganhava dependia da ordem de
+      navegação: a sidebar do gestor mudava de cor e de padding conforme a
+      tela por onde o usuário tivesse passado antes.
+
+   Efeito colateral desejado: as regras que este arquivo trazia para o
+   header/sidebar (herança de quando a tela desenhava o próprio layout)
+   viraram inertes, porque esses elementos ficam FORA da raiz da página.
+   ========================================================================= */
+
+/* ===== RESET LOCAL ===== */
+.manager-curriculum-list * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== BASE ===== */
+.manager-curriculum-list {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column; /* Header em cima */
+  font-family: "Inter", sans-serif;
+  background-color: #f5f7f6;
+  color: #1f2937;
+}
+
+/* ===== HEADER GLOBAL (IGUAL AO DASHBOARD) ===== */
+.manager-curriculum-list .manager-header {
+  height: 64px;
+  background-color: #2f7d57; /* ✅ COR ORIGINAL */
+  color: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 0 32px; /* ✅ ESPAÇAMENTO IGUAL AO DASHBOARD */
+}
+.manager-curriculum-list .manager-header h1 {
+  font-size: 20px;
+  font-weight: 700;
+}
+.manager-curriculum-list .manager-header span {
+  font-size: 14px;
+  opacity: 0.9;
+}
+.manager-curriculum-list .header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.manager-curriculum-list .toggle-sidebar {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* ===== LAYOUT PRINCIPAL ===== */
+.manager-curriculum-list .manager-layout {
+  display: flex; /* Sidebar + Conteúdo lado a lado */
+  flex: 1;
+}
+
+/* ===== SIDEBAR ===== */
+.manager-curriculum-list .manager-sidebar {
+  width: 260px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+}
+.manager-curriculum-list .manager-sidebar .logo {
+  font-size: 20px;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 24px;
+  color: #2f7d57;
+}
+.manager-curriculum-list .manager-sidebar .menu {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.manager-curriculum-list .manager-sidebar .menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1f2937;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+.manager-curriculum-list .manager-sidebar .menu button:hover {
+  background-color: #e8f3ee;
+  color: #2f7d57;
+}
+.manager-curriculum-list .manager-sidebar .menu button.active {
+  background-color: #e8f3ee;
+  color: #2f7d57;
+  font-weight: 600;
+}
+
+/* Perfil */
+.manager-curriculum-list .manager-sidebar .profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid #e5e7eb;
+}
+.manager-curriculum-list .manager-sidebar .profile img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+.manager-curriculum-list .manager-sidebar .profile div {
+  display: flex;
+  flex-direction: column;
+  font-size: 12px;
+}
+.manager-curriculum-list .manager-sidebar .profile button {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+/* ===== MAIN CONTENT ===== */
+.manager-curriculum-list .main-content {
+  flex: 1;
+  padding: 32px; /* Igual ao dashboard */
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== BREADCRUMBS ===== */
+.manager-curriculum-list .breadcrumbs {
+  font-size: 13px;
+  color: #6b7280;
+}
+.manager-curriculum-list .breadcrumbs span {
+  cursor: pointer;
+}
+.manager-curriculum-list .breadcrumbs span:hover {
+  text-decoration: underline;
+}
+
+/* ===== PAGE HEADER (INTERNO) ===== */
+.manager-curriculum-list .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+.manager-curriculum-list .page-header h1 {
+  font-size: 22px;
+  font-weight: 700;
+}
+.manager-curriculum-list .page-header p {
+  font-size: 14px;
+  color: #6b7280;
+  max-width: 520px;
+}
+.manager-curriculum-list .export-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: #2f7d57;
+  color: #ffffff;
+}
+.manager-curriculum-list .export-btn:hover {
+  background-color: #256846;
+}
+
+/* ===== FILTERS ===== */
+.manager-curriculum-list .filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 12px;
+}
+.manager-curriculum-list .filters input,
+.manager-curriculum-list .filters select {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-size: 14px;
+  outline: none;
+}
+.manager-curriculum-list .filters input:focus,
+.manager-curriculum-list .filters select:focus {
+  border-color: #2f7d57;
+}
+
+/* ===== TABLE ===== */
+.manager-curriculum-list .table-section {
+  background-color: #ffffff;
+  border-radius: 16px;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+}
+.manager-curriculum-list .table-section table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.manager-curriculum-list .table-section thead {
+  background-color: #f9fafb;
+}
+.manager-curriculum-list .table-section th,
+.manager-curriculum-list .table-section td {
+  padding: 14px 16px;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+.manager-curriculum-list .table-section th {
+  font-weight: 600;
+  color: #374151;
+}
+.manager-curriculum-list .table-section tbody tr {
+  border-top: 1px solid #e5e7eb;
+}
+.manager-curriculum-list .table-section tbody tr:hover {
+  background-color: #f3f4f6;
+}
+
+/* ===== ACTIONS ===== */
+.manager-curriculum-list .actions {
+  display: flex;
+  gap: 8px;
+}
+.manager-curriculum-list .actions button {
+  background-color: #2f7d57;
+  color: #ffffff;
+  border: none;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.manager-curriculum-list .actions button:hover {
+  background-color: #256846;
+}
+
+/* ===== PAGINATION ===== */
+.manager-curriculum-list .pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 6px;
+  margin-top: 24px;
+}
+.manager-curriculum-list .pagination button {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid #d1e7dc;
+  background: #ffffff;
+  color: #1f2937;
+  cursor: pointer;
+  font-weight: 500;
+}
+.manager-curriculum-list .pagination button:hover:not(:disabled) {
+  background-color: #e8f3ee;
+}
+.manager-curriculum-list .pagination button.active {
+  background-color: #2f7d57;
+  color: #ffffff;
+  border-color: #2f7d57;
+}
+.manager-curriculum-list .pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.manager-curriculum-list .pagination .dots {
+  padding: 0 6px;
+  color: #6b7280;
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 1024px) {
+  .manager-curriculum-list .filters {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .manager-curriculum-list .manager-sidebar {
+    width: 80px;
+    padding: 24px 8px;
+  }
+  .manager-curriculum-list .manager-sidebar .logo,
+  .manager-curriculum-list .manager-sidebar .menu button span,
+  .manager-curriculum-list .manager-sidebar .profile div {
+    display: none;
+  }
+  .manager-curriculum-list .main-content {
+    padding: 20px;
+  }
+  .manager-curriculum-list .filters {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ESTADOS =====
+   `.loading` e `.empty` são emitidos pelas duas telas enquanto a lista
+   carrega ou quando não há resultado. Não existiam. */
+.manager-curriculum-list .loading,
+.manager-curriculum-list .empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30vh;
+  padding: 24px;
+  color: #667085;
+  font-size: 0.95rem;
+  text-align: center;
+}

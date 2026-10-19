@@ -1,10 +1,68 @@
 <!doctype html>
-<html lang="en">
+<!-- lang era "en" num site 100% em português: leitor de tela lia os textos com
+     fonemas de inglês e o Google classificava o idioma errado. -->
+<html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PRISMA – Plataforma de Registro e Integração de Sistemas para Mercado Acadêmico</title>
+
+    <!-- ================= Identidade / favicon =================
+         Antes apontava para /vite.svg, o logo padrão do Vite: a aba do
+         navegador e o atalho na tela inicial do celular mostravam a marca
+         da ferramenta de build, não a do projeto. -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/og-image.png" />
+    <meta name="theme-color" content="#12340f" />
+
+    <!-- ================= SEO =================
+         `title` já existia; `description` não. Sem description o Google
+         inventa o resumo a partir do primeiro texto que encontra na
+         página — que aqui é "Selecione seu tipo de usuário". -->
+    <title>PRISMA — Currículos e vagas para estudantes e egressos</title>
+    <meta
+      name="description"
+      content="PRISMA é a plataforma institucional que conecta estudantes e egressos a empresas: cadastre seu currículo, encontre vagas e acompanhe suas candidaturas em um só lugar."
+    />
+
+    <!-- A área logada não tem conteúdo indexável e carrega dado pessoal.
+         O bloqueio de verdade é o robots.txt + a autenticação; esta tag é
+         a segunda camada para o caso de a URL ser descoberta por link. -->
+    <meta name="robots" content="index, follow" />
+
+    <!-- ================= Open Graph (WhatsApp, Facebook, LinkedIn) =======
+         TROQUE `https://SEU-DOMINIO.com.br` pelo domínio real. Crawlers de
+         rede social exigem URL ABSOLUTA em og:image e og:url — caminho
+         relativo é ignorado e o link fica sem preview. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="PRISMA" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:url" content="https://SEU-DOMINIO.com.br/" />
+    <meta
+      property="og:title"
+      content="PRISMA — Currículos e vagas para estudantes e egressos"
+    />
+    <meta
+      property="og:description"
+      content="Cadastre seu currículo, encontre vagas e acompanhe suas candidaturas na plataforma institucional PRISMA."
+    />
+    <meta property="og:image" content="https://SEU-DOMINIO.com.br/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="PRISMA — currículos, vagas e candidaturas" />
+
+    <!-- ================= Twitter / X ================= -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="PRISMA — Currículos e vagas para estudantes e egressos"
+    />
+    <meta
+      name="twitter:description"
+      content="Cadastre seu currículo, encontre vagas e acompanhe suas candidaturas na plataforma institucional PRISMA."
+    />
+    <meta name="twitter:image" content="https://SEU-DOMINIO.com.br/og-image.png" />
+
+    <link rel="canonical" href="https://SEU-DOMINIO.com.br/" />
   </head>
   <body>
     <div id="root"></div>

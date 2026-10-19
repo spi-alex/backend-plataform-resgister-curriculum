@@ -1,13 +1,22 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useState, type ReactNode } from "react";
-import api from "../services/api";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
+import api, { renovarSessao } from "../services/api";
+import {
+  AUTH_USER_KEY,
+  clearAccessToken,
+  getAccessToken,
+  setAccessToken,
+} from "../services/authToken";
 
 // 'student' e 'manager' foram removidos daqui: o backend nunca emite esses
 // valores em `role` (ver User.ROLE_CHOICES) — só existiam neste tipo e
-// quebravam o `tsc -b` (usado pelo `npm run build`) em ProtectedRoute.tsx,
-// que não os aceita. Login.tsx já trata "student"/"manager" como aliases
-// defensivos via string comparada em minúsculas, então nada de
-// comportamento muda ao removê-los do tipo.
+// quebravam o `tsc -b` (usado pelo `npm run build`) em ProtectedRoute.tsx.
 type UserRole =
   | "admin"
   | "company"
@@ -34,71 +43,105 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [loading] = useState(false);
-
-  const getSafeStorage = (key: string) => {
-    const value = localStorage.getItem(key);
-    if (!value || value === "undefined" || value === "null" || value === "")
-      return null;
-    return value;
-  };
-
-  const [token, setToken] = useState<string | null>(() =>
-    getSafeStorage("access_token"),
-  );
-
-  const [user, setUser] = useState<User | null>(() => {
-    const storedUser = getSafeStorage("auth_user");
-    const hasToken = !!getSafeStorage("access_token");
-
-    if (storedUser && hasToken) {
-      try {
-        return JSON.parse(storedUser);
-      } catch {
-        return null;
-      }
-    }
+function lerUsuarioSalvo(): User | null {
+  const bruto = localStorage.getItem(AUTH_USER_KEY);
+  if (!bruto || bruto === "undefined" || bruto === "null") return null;
+  try {
+    return JSON.parse(bruto) as User;
+  } catch {
     return null;
-  });
+  }
+}
 
-  const login = async (email: string, password: string): Promise<User> => {
-    try {
-      // Ajustado para bater com o seu api.ts (users/login/)
-      const response = await api.post("users/login/", {
-        username: email,
-        password: password,
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(() => lerUsuarioSalvo());
+  const [token, setToken] = useState<string | null>(() => getAccessToken());
+
+  // `loading` só é true quando há de fato um refresh silencioso pela frente
+  // — ou seja, quando existe um perfil salvo indicando que já houve login
+  // neste navegador. Sem essa espera, `ProtectedRoute` avaliaria "não
+  // autenticado" no primeiro render de todo F5 (o token mora em memória e
+  // ainda não existe) e chutaria o usuário para /login com a sessão válida.
+  // Quem nunca logou não espera nada.
+  const [loading, setLoading] = useState(() => lerUsuarioSalvo() !== null);
+
+  /**
+   * Boot: tenta restaurar a sessão a partir do cookie httpOnly.
+   *
+   * Este passo é a contrapartida de tirar o token do `localStorage`. O access
+   * token vive só em memória, então some a cada recarga de página; o cookie
+   * de refresh (que o JavaScript não enxerga) é o que prova que a sessão
+   * ainda vale, e o backend devolve um access token novo em troca.
+   */
+  useEffect(() => {
+    let ativo = true;
+
+    // Sem perfil salvo, nunca houve login neste navegador — não vale gastar
+    // uma requisição que já se sabe que vai falhar. (`loading` já nasceu
+    // false nesse caso, na inicialização do estado acima.)
+    if (!lerUsuarioSalvo()) {
+      return;
+    }
+
+    renovarSessao()
+      .then((access) => {
+        if (!ativo) return;
+        setToken(access);
+      })
+      .catch(() => {
+        if (!ativo) return;
+        // Cookie expirado ou revogado: limpa o que sobrou na interface.
+        clearAccessToken();
+        localStorage.removeItem(AUTH_USER_KEY);
+        setUser(null);
+        setToken(null);
+      })
+      .finally(() => {
+        if (ativo) setLoading(false);
       });
 
-      const { access, refresh, role, name, id } = response.data;
+    return () => {
+      ativo = false;
+    };
+  }, []);
 
-      const userData: User = {
-        id,
-        name,
-        email,
-        role: role as UserRole,
-      };
+  const login = async (email: string, password: string): Promise<User> => {
+    // O corpo da resposta traz `access` mas NÃO traz mais `refresh` — esse
+    // vai num cookie httpOnly que o navegador guarda sozinho.
+    const response = await api.post("users/login/", {
+      username: email,
+      password: password,
+    });
 
-      localStorage.setItem("access_token", access);
-      localStorage.setItem("refresh_token", refresh);
-      localStorage.setItem("auth_user", JSON.stringify(userData));
+    const { access, role, name, id } = response.data;
 
-      setToken(access);
-      setUser(userData);
+    const userData: User = { id, name, email, role: role as UserRole };
 
-      return userData;
-    } catch (error) {
-      console.error("Erro no login:", error);
-      throw error;
-    }
+    setAccessToken(access);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(userData));
+
+    setToken(access);
+    setUser(userData);
+
+    return userData;
   };
 
   const logout = () => {
-    localStorage.clear();
-    sessionStorage.clear();
-    setToken(null);
-    setUser(null);
-    window.location.replace("/login?reset=true");
+    // Logout de verdade acontece no SERVIDOR: `POST users/logout/` revoga
+    // todos os tokens já emitidos para o usuário e apaga o cookie. Antes o
+    // logout era só `localStorage.clear()` — o token continuava válido no
+    // backend até expirar, então "sair da conta" num computador
+    // compartilhado não protegia nada.
+    const finalizar = () => {
+      clearAccessToken();
+      localStorage.clear();
+      sessionStorage.clear();
+      setToken(null);
+      setUser(null);
+      window.location.replace("/login?reset=true");
+    };
+
+    api.post("users/logout/").then(finalizar).catch(finalizar);
   };
 
   return (

@@ -60,8 +60,24 @@ class ApplicationSerializer(serializers.ModelSerializer):
 class JobSerializer(serializers.ModelSerializer):
     company_name = serializers.CharField(source='company.name', read_only=True)
     company_website = serializers.ReadOnlyField(source='company.website')
-    contact_email = serializers.ReadOnlyField(source='company.owner.email') 
+    # VAZAMENTO CORRIGIDO: este campo era `ReadOnlyField(source='company.owner.email')`
+    # e a listagem de vagas responde a visitante anônimo
+    # (`IsAuthenticatedOrReadOnly`). Ou seja, `GET /api/jobs/` devolvia, sem
+    # login nenhum, o e-mail PESSOAL de quem cadastrou cada empresa — prato
+    # feito para raspagem e spam.
+    #
+    # Agora: só aparece para usuário autenticado, e a preferência é o
+    # telefone/e-mail institucional da empresa, caindo no e-mail do
+    # responsável apenas quando não há alternativa.
+    contact_email = serializers.SerializerMethodField()
     created_at = serializers.DateTimeField(format="%d/%m/%Y", read_only=True)
+
+    def get_contact_email(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        if not user or not user.is_authenticated:
+            return None
+        return obj.company.owner.email
 
     class Meta:
         model = Job

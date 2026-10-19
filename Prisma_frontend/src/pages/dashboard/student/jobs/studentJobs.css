@@ -1,0 +1,35 @@
+/* =========================================================================
+   Container da listagem de vagas do aluno (studentJobs.tsx).
+
+   A tela não tinha arquivo de estilo nenhum: `.student-jobs` não existia em
+   lugar algum do projeto, então o conteúdo colava nas bordas, sem largura
+   máxima nem respiro.
+
+   ATENÇÃO para quem for mexer aqui: as demais classes desta tela
+   (`job-card`, `jobs-grid`, `filters-box`, `view-btn`, `status aberta`...)
+   estão definidas nos CSS de OUTRAS telas e chegam até aqui só porque CSS
+   é global. Ou seja, a aparência desta página depende de qual chunk o Vite
+   carregou antes. Vale mover essas regras para cá ou para `src/styles/`
+   numa próxima passada.
+   ========================================================================= */
+
+.student-jobs {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 48px;
+}
+
+.student-jobs .empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30vh;
+  color: #667085;
+  text-align: center;
+}
+
+@media (max-width: 640px) {
+  .student-jobs {
+    padding: 20px 16px 32px;
+  }
+}

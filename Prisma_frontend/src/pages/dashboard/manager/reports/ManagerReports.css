@@ -26,3 +26,13 @@
   padding: 16px;
   border-radius: 8px;
 }
+
+/* Barra de filtros do topo dos relatórios: classe usada pelo componente,
+   nunca definida aqui. */
+.manager-reports-filters {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  margin-bottom: 24px;
+}

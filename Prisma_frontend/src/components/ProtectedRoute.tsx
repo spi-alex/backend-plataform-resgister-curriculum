@@ -1,7 +1,6 @@
 import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../context/Authcontext";
 
-// Atualizamos aqui para incluir 'empresa' e 'gestor' explicitamente
 interface ProtectedRouteProps {
   allowedRoles?: (
     | "admin"
@@ -16,13 +15,23 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ allowedRoles }: ProtectedRouteProps) {
   const { user, isAuthenticated, loading } = useAuth();
 
-  // Checagem extra de segurança: verifica se o token realmente existe no navegador
-  const hasToken = !!localStorage.getItem("access_token");
-
+  // Enquanto o refresh silencioso do boot não termina, não decidimos nada.
+  // O access token agora mora em memória (ver services/authToken.ts), então
+  // logo depois de um F5 ele ainda não existe — decidir aqui cedo demais
+  // mandaria todo mundo para /login a cada recarga de página.
   if (loading) return null;
 
-  // Se o context diz que não está autenticado OU o token sumiu do storage
-  if (!isAuthenticated || !hasToken) {
+  // NOTA DE SEGURANÇA: esta guarda é de EXPERIÊNCIA DE USO, não de
+  // segurança. Ela evita desenhar uma tela que o usuário não deveria ver,
+  // mas quem controla o navegador controla o que está aqui. A trava que
+  // vale é a do backend, que revalida papel e propriedade a cada
+  // requisição (IsCompany/IsCandidate/IsGestor, filtros de queryset por
+  // dono, `_pode_acessar_curriculo`) — coberta pelos testes em
+  // PRISMA_backend/users/tests_authz.py.
+  //
+  // A checagem redundante em `localStorage.getItem("access_token")` que
+  // existia aqui saiu junto com o token do localStorage.
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

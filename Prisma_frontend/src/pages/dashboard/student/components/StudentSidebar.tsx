@@ -3,6 +3,7 @@ import {
   FileText,
   Briefcase,
   ClipboardList,
+  KeyRound,
   LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +55,15 @@ export default function StudentSidebar({ sidebarOpen }: SidebarProps) {
         >
           <ClipboardList size={20} />
           {sidebarOpen && <span>Minhas Candidaturas</span>}
+        </button>
+
+        {/* ALTERAR SENHA */}
+        <button
+          className="nav-item"
+          onClick={() => navigate("/alterar-senha")}
+        >
+          <KeyRound size={20} />
+          {sidebarOpen && <span>Alterar Senha</span>}
         </button>
 
         {/* SAIR */}

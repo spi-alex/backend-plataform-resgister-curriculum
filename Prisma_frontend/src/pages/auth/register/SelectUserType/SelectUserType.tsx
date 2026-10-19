@@ -3,7 +3,7 @@ import "./SelectUserType.css";
 
 export default function SelectUserType() {
   return (
-    <div className="container">
+    <div className="container select-user-page">
       <h1>PRISMA</h1>
 
       <div className="box-container">

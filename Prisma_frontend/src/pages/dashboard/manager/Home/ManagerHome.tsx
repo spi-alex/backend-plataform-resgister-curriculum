@@ -90,8 +90,11 @@ export default function ManagerHome() {
     return <p>Carregando painel do gestor...</p>;
   }
 
+  // Elemento raiz (antes era um fragmento `<>`): sem ele não há como
+  // limitar ManagerHome.css a esta tela, e as regras dele valiam para o
+  // documento inteiro — inclusive por cima do layout do gestor.
   return (
-    <>
+    <div className="manager-home">
       {/* KPIs */}
       <KPIGrid
         items={[
@@ -197,6 +200,6 @@ export default function ManagerHome() {
           )}
         </div>
       </section>
-    </>
+    </div>
   );
 }

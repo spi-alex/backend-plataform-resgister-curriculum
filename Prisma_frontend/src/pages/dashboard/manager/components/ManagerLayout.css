@@ -57,7 +57,9 @@
   font-size: 14px;
   color: #1f2937;
   cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
 
 .manager-sidebar .menu button:hover {

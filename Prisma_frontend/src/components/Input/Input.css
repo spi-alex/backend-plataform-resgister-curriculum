@@ -1,0 +1,83 @@
+/* =========================================================================
+   Campo de texto compartilhado (components/Input/Input.tsx).
+
+   Este arquivo não existia: o componente emitia `input-wrapper`,
+   `input-field`, `input-error` e `error-text`, e NENHUMA dessas classes
+   estava definida em lugar nenhum do projeto (a única ocorrência era o
+   ajuste pontual `.captcha-container .input-wrapper`).
+
+   Duas consequências visíveis:
+
+   1. Nos formulários de cadastro, os `<select>` tinham estilo próprio
+      (`.select-group select`: 44px, raio 10px, borda #cbd5e1) e o
+      `PasswordInput` também (PasswordInput.css) — mas os campos de texto
+      ao lado ficavam com a aparência crua do navegador.
+   2. `error-text`, que é onde a validação do formulário escreve
+      ("Senha obrigatória", "A senha precisa ter pelo menos 10
+      caracteres"), saía como texto preto comum, sem destaque nenhum. As
+      telas de cadastro definem uma classe `.error` que o componente nunca
+      usou — as duas metades nunca se encontraram.
+
+   Especificidade de propósito baixa (uma classe só): telas que já estilizam
+   os próprios inputs por seletor de ancestral — `.reset-inner input`,
+   `.senha-card input` — continuam ganhando, então nada muda onde já
+   funcionava.
+   ========================================================================= */
+
+.input-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+}
+
+.input-wrapper label {
+  font-weight: 600;
+  font-size: 14px;
+  color: #334155;
+}
+
+.input-field {
+  width: 100%;
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  background-color: #fff;
+  font-size: 14px;
+  font-family: inherit;
+  color: #0f172a;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.input-field::placeholder {
+  color: #94a3b8;
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: #059669;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15);
+}
+
+.input-field:disabled {
+  background-color: #f1f5f9;
+  cursor: not-allowed;
+}
+
+/* Campo reprovado na validação. */
+.input-field.input-error {
+  border-color: #dc2626;
+}
+
+.input-field.input-error:focus {
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.15);
+}
+
+/* Mensagem de erro sob o campo. */
+.error-text {
+  font-size: 12px;
+  color: #dc2626;
+}

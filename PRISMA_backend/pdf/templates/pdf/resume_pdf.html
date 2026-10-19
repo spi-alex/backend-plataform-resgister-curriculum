@@ -1,110 +1,387 @@
+{% comment %}
+Modelo do currículo em PDF (WeasyPrint) — baseado no layout de referência
+guardado em docs/img/.
+
+Contexto: `montar_contexto` (pdf/views.py) achata o JSON de `Resume.content`
+no topo do contexto. As chaves são as mesmas que o formulário do aluno grava
+(ver Prisma_frontend/src/utils/resume.ts):
+
+  fullName, location, area, email, phone, photo
+  education[]   -> course, institution, description
+  experiences[] -> role, company, period, description
+  projects[]    -> title, startYear, endYear, institution, advisor, description
+  skills, courses, languages  (texto livre, uma entrada por linha)
+
+Tudo é opcional: seção sem nenhum dado não é impressa.
+{% endcomment %}
 <!doctype html>
 <html lang="pt-br">
   <head>
     <meta charset="UTF-8" />
+    <title>{{ fullName|default:"Currículo" }}</title>
     <style>
+      /* ------------------------------------------------------------------
+         Página
+         ------------------------------------------------------------------ */
       @page {
-        margin: 1.5cm;
+        size: A4;
+        margin: 1.6cm 1.7cm 1.5cm;
+
+        @bottom-left {
+          content: "Documento gerado eletronicamente pelo Sistema PRISMA — {% now 'Y' %}";
+          font-family: "Helvetica", "Arial", sans-serif;
+          font-size: 7pt;
+          font-style: italic;
+          color: #9aa5a0;
+          padding-top: 10px;
+        }
       }
+
+      /* O selo "CURRICULUM VITAE" só aparece na primeira folha. */
+      @page :first {
+        @top-right {
+          content: "CURRICULUM VITAE · {% now 'Y' %}";
+          font-family: "Helvetica", "Arial", sans-serif;
+          font-size: 7pt;
+          letter-spacing: 1.2px;
+          color: #9aa5a0;
+          padding-bottom: 12px;
+        }
+      }
+
       body {
         font-family: "Helvetica", "Arial", sans-serif;
-        color: #333;
-        line-height: 1.5;
+        font-size: 9pt;
+        line-height: 1.45;
+        color: #3a3f3d;
+      }
+
+      /* ------------------------------------------------------------------
+         Cabeçalho: barra de destaque + foto + nome
+         ------------------------------------------------------------------ */
+      .accent-bar {
+        width: 120px;
+        height: 7px;
+        background: #0a5238;
+        border-radius: 0 0 4px 4px;
+        margin-bottom: 26px;
       }
 
       .header {
-        text-align: left;
-        border-bottom: 3px solid #004a8d;
-        padding-bottom: 15px;
+        display: table;
+        width: 100%;
         margin-bottom: 20px;
       }
-      .name {
-        font-size: 28pt;
+      .header-photo {
+        display: table-cell;
+        width: 110px;
+        vertical-align: middle;
+      }
+      .header-photo img {
+        width: 88px;
+        height: 88px;
+        object-fit: cover;
+        border-radius: 10px;
+      }
+      /* Sem foto utilizável, entra um selo com a inicial no lugar. */
+      .photo-placeholder {
+        width: 88px;
+        height: 88px;
+        border-radius: 10px;
+        background: #e8efeb;
+        color: #0f6b4f;
+        font-size: 24pt;
         font-weight: bold;
-        color: #004a8d;
+        text-align: center;
+        line-height: 88px;
+      }
+      .header-name {
+        display: table-cell;
+        vertical-align: middle;
+        padding-left: 6px;
+      }
+      .name {
+        font-size: 25pt;
+        font-weight: normal;
+        color: #14664a;
+        letter-spacing: 0.3px;
         margin: 0;
       }
-      .contact-info {
-        font-size: 10pt;
-        color: #666;
-        margin-top: 5px;
+      .headline {
+        font-size: 9pt;
+        color: #7b8480;
+        margin-top: 4px;
       }
 
+      /* ------------------------------------------------------------------
+         Contatos (duas colunas)
+         ------------------------------------------------------------------ */
+      .contact {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+        border-top: 1px solid #e4e9e7;
+        border-bottom: 1px solid #e4e9e7;
+        padding: 10px 0;
+        margin-bottom: 22px;
+      }
+      .contact-row {
+        display: table-row;
+      }
+      .contact-cell {
+        display: table-cell;
+        width: 50%;
+        font-size: 8.5pt;
+        padding: 2px 12px 2px 0;
+      }
+      .contact-label {
+        font-weight: bold;
+        color: #0f6b4f;
+      }
+
+      /* ------------------------------------------------------------------
+         Seções
+         ------------------------------------------------------------------ */
       .section {
-        margin-bottom: 25px;
+        margin-bottom: 20px;
       }
       .section-title {
-        font-size: 14pt;
+        font-size: 9.5pt;
         font-weight: bold;
-        color: #004a8d;
+        color: #0f6b4f;
         text-transform: uppercase;
-        border-bottom: 1px solid #004a8d;
-        margin-bottom: 10px;
+        letter-spacing: 0.7px;
+        border-bottom: 1px solid #e4e9e7;
+        padding-bottom: 5px;
+        margin-bottom: 12px;
+        page-break-after: avoid;
       }
 
-      .item {
-        margin-bottom: 15px;
+      .entry {
+        margin-bottom: 14px;
+        page-break-inside: avoid;
       }
-      .item-title {
+      /* Linha em itálico que nomeia o item (curso, nome do projeto...). */
+      .entry-label {
+        font-style: italic;
+        font-size: 9pt;
+        color: #2f3533;
+        margin-bottom: 4px;
+      }
+      .entry-row {
+        display: table;
+        width: 100%;
+        table-layout: fixed;
+      }
+      /* Coluna da esquerda: o período, alinhado com a barra verde. */
+      .entry-when {
+        display: table-cell;
+        width: 78px;
+        font-size: 9pt;
         font-weight: bold;
-        font-size: 12pt;
-        display: block;
+        color: #3a3f3d;
+        vertical-align: top;
+        padding-top: 1px;
       }
-      .item-subtitle {
-        font-style: italic;
-        color: #555;
+      .entry-body {
+        display: table-cell;
+        vertical-align: top;
+        border-left: 2px solid #1f7a57;
+        padding-left: 14px;
       }
-      .item-description {
-        margin-top: 5px;
-        text-align: justify;
+      .entry-body p {
+        margin: 0 0 4px;
+      }
+      .entry-role {
+        font-weight: bold;
+        font-size: 8.5pt;
+        margin-top: 6px;
+      }
+      .entry-meta {
+        font-size: 8pt;
+        color: #7b8480;
       }
 
-      .summary {
+      ul {
+        margin: 4px 0 0;
+        padding-left: 16px;
+      }
+      li {
+        margin-bottom: 3px;
+      }
+      .entry-body ul {
+        font-size: 8.5pt;
+        color: #5b625f;
         text-align: justify;
-        font-style: italic;
+      }
+      .plain-list li {
+        font-size: 9pt;
       }
     </style>
   </head>
   <body>
+    <div class="accent-bar"></div>
+
     <div class="header">
-      <h1 class="name">{{ fullName|default:"Nome não informado" }}</h1>
-      <div class="contact-info">
-        {{ email }} | {{ phone }} | {{ city }} - {{ state }}
+      <div class="header-photo">
+        {% comment %}
+        `photo` já chega filtrado por `_foto_segura` (pdf/views.py): ou é um
+        data URL de imagem, ou é None. A checagem lá é o que impede o
+        WeasyPrint de sair BUSCANDO um endereço escolhido pelo aluno na hora
+        de gerar o PDF.
+
+        Currículos salvos antes de 10 set 2026 guardavam aqui um endereço
+        `blob:`, que nunca foi a imagem de verdade — esses caem no selo com
+        a inicial do nome, e basta reenviar a foto no formulário.
+        {% endcomment %}
+        {% if photo %}
+        <img src="{{ photo }}" alt="Foto de {{ fullName|default:'candidato' }}" />
+        {% else %}
+        <div class="photo-placeholder">
+          {{ fullName|slice:":1"|upper|default:"?" }}
+        </div>
+        {% endif %}
+      </div>
+      <div class="header-name">
+        <h1 class="name">{{ fullName|default:"Nome não informado" }}</h1>
+        {% if area or location %}
+        <div class="headline">
+          {{ area }}{% if area and location %} · {% endif %}{{ location }}
+        </div>
+        {% endif %}
       </div>
     </div>
 
-    {% if summary %}
+    <div class="contact">
+      <div class="contact-row">
+        <div class="contact-cell">
+          <span class="contact-label">Telefone:</span>
+          {{ phone|default:"—" }}
+        </div>
+        <div class="contact-cell">
+          <span class="contact-label">Localidade:</span>
+          {{ location|default:"—" }}
+        </div>
+      </div>
+      <div class="contact-row">
+        <div class="contact-cell">
+          <span class="contact-label">E-mail:</span>
+          {% comment %}
+          `email` vem do JSON do formulário; quando o aluno não preencheu,
+          cai no e-mail da conta. O `{% if %}` é proposital: usar
+          `|default:user.email` estoura VariableDoesNotExist quando o
+          contexto não traz `user` (ex.: pré-visualização).
+          {% endcomment %}
+          {% if email %}{{ email }}{% elif user.email %}{{ user.email }}{% else %}—{% endif %}
+        </div>
+        <div class="contact-cell">
+          <span class="contact-label">Área:</span>
+          {{ area|default:"—" }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Formação acadêmica ---------------------------------------------- -->
+    {% if education %}
     <div class="section">
-      <div class="section-title">Resumo Profissional</div>
-      <div class="summary">{{ summary }}</div>
+      <div class="section-title">Formação Acadêmica</div>
+      {% for edu in education %}{% if edu.course or edu.institution %}
+      <div class="entry">
+        {% if edu.course %}
+        <div class="entry-label">{{ edu.course }}</div>
+        {% endif %}
+        <div class="entry-row">
+          <div class="entry-when">{{ edu.period }}</div>
+          <div class="entry-body">
+            {% if edu.institution %}<p>{{ edu.institution }}</p>{% endif %}
+            {% if edu.description %}
+            <ul>
+              <li>{{ edu.description }}</li>
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}{% endfor %}
     </div>
     {% endif %}
 
+    <!-- Formação complementar (cursos) ----------------------------------- -->
+    {% if courses %}
     <div class="section">
-      <div class="section-title">Experiência Profissional</div>
-      {% if experiences %} {% for exp in experiences %}
-      <div class="item">
-        <span class="item-title">{{ exp.role }} na {{ exp.company }}</span>
-        <span class="item-subtitle"
-          >{{ exp.startDate }} - {{ exp.endDate|default:"Atual" }}</span
-        >
-        <div class="item-description">{{ exp.description }}</div>
-      </div>
-      {% endfor %} {% else %}
-      <p>Nenhuma experiência registrada.</p>
-      {% endif %}
+      <div class="section-title">Formação Complementar</div>
+      <ul class="plain-list">
+        {% for linha in courses.splitlines %}{% if linha.strip %}
+        <li>{{ linha }}</li>
+        {% endif %}{% endfor %}
+      </ul>
     </div>
+    {% endif %}
 
+    <!-- Experiência e projetos ------------------------------------------- -->
+    {% if experiences or projects %}
     <div class="section">
-      <div class="section-title">Formação Acadêmica</div>
-      {% if education %} {% for edu in education %}
-      <div class="item">
-        <span class="item-title">{{ edu.course }}</span>
-        <span class="item-subtitle"
-          >{{ edu.institution }} | Conclusão: {{ edu.year }}</span
-        >
+      <div class="section-title">Experiência / Participação em Projetos</div>
+
+      {% for exp in experiences %}{% if exp.role or exp.company %}
+      <div class="entry">
+        <div class="entry-row">
+          <div class="entry-when">{{ exp.period }}</div>
+          <div class="entry-body">
+            {% if exp.company %}<p>{{ exp.company }}</p>{% endif %}
+            {% if exp.role %}
+            <div class="entry-role">Cargo/Função: {{ exp.role }}</div>
+            {% endif %}
+            {% if exp.description %}
+            <ul>
+              <li>{{ exp.description }}</li>
+            </ul>
+            {% endif %}
+          </div>
+        </div>
       </div>
-      {% endfor %} {% endif %}
+      {% endif %}{% endfor %}
+
+      {% for proj in projects %}{% if proj.title %}
+      <div class="entry">
+        <div class="entry-row">
+          <div class="entry-when">
+            {{ proj.startYear }}{% if proj.startYear and proj.endYear %} -
+            {% endif %}{{ proj.endYear }}
+          </div>
+          <div class="entry-body">
+            <p>{{ proj.title }}</p>
+            {% if proj.institution %}
+            <p class="entry-meta">{{ proj.institution }}</p>
+            {% endif %}
+            {% if proj.advisor %}
+            <div class="entry-role">Orientação: {{ proj.advisor }}</div>
+            {% endif %}
+            {% if proj.description %}
+            <ul>
+              <li>{{ proj.description }}</li>
+            </ul>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}{% endfor %}
     </div>
+    {% endif %}
+
+    <!-- Habilidades e idiomas -------------------------------------------- -->
+    {% if skills or languages %}
+    <div class="section">
+      <div class="section-title">Habilidades e Idiomas</div>
+      <ul class="plain-list">
+        {% for linha in skills.splitlines %}{% if linha.strip %}
+        <li>{{ linha }}</li>
+        {% endif %}{% endfor %}
+        {% for linha in languages.splitlines %}{% if linha.strip %}
+        <li>{{ linha }}</li>
+        {% endif %}{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
   </body>
 </html>

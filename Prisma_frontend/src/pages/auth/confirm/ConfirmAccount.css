@@ -16,7 +16,6 @@
   width: 480px;
   max-width: 100%;
 }
-
 .confirm-outer h1 {
   text-align: center;
   color: #fff;
@@ -34,7 +33,6 @@
   flex-direction: column;
   gap: 20px;
 }
-
 .confirm-hint {
   color: #e5e7eb;
   font-size: 14px;
@@ -63,7 +61,6 @@
   background-color: #f1f1f1;
   font-size: 14px;
 }
-
 .confirm-inner input:focus {
   outline: none;
   box-shadow: 0 0 0 2px #16a34a;
@@ -86,36 +83,32 @@
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
-
 .confirm-inner button:hover:not(:disabled) {
   background-color: #15803d;
 }
-
 .confirm-inner button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }
 
 /* ================= MENSAGEM ================= */
-.mensagem {
+.confirm-page .mensagem {
   font-size: 14px;
   text-align: center;
 }
 
 /* ================= LINK ================= */
-.link {
+.confirm-page .link {
   text-align: center;
   margin-top: 8px;
 }
-
-.link a {
+.confirm-page .link a {
   color: #16a34a;
   text-decoration: none;
   font-size: 14px;
   font-weight: 500;
 }
-
-.link a:hover {
+.confirm-page .link a:hover {
   text-decoration: underline;
 }
 
@@ -124,15 +117,12 @@
   .confirm-outer {
     padding: 24px;
   }
-
   .confirm-inner {
     padding: 24px;
   }
-
   .confirm-outer h1 {
     font-size: 22px;
   }
-
   .confirm-inner button {
     font-size: 15px;
   }

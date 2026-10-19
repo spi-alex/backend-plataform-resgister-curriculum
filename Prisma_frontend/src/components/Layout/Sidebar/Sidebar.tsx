@@ -8,18 +8,12 @@ interface SidebarProps {
 }
 
 export function Sidebar({ onSelect }: SidebarProps) {
-  // 1. Pegue a função logout do seu contexto global
+  // O `logout()` do contexto agora chama `POST users/logout/` no backend,
+  // que REVOGA os tokens já emitidos e apaga o cookie httpOnly, antes de
+  // limpar o estado local. A limpeza manual de storage que havia aqui (mais
+  // um `console.log` de depuração esquecido) só apagava o rastro no
+  // navegador — o token continuava valendo no servidor até expirar.
   const { logout } = useAuth();
-  const handleHardLogout = () => {
-    // Forçamos a limpeza antes mesmo de chamar o contexto
-    window.localStorage.clear();
-    window.sessionStorage.clear();
-
-    console.log("Storage limpo: ", localStorage.getItem("access_token")); // Deve imprimir 'null'
-
-    // Agora chamamos o logout do contexto para limpar o estado do React
-    logout();
-  };
   return (
     <aside className="sidebar">
       <nav className="menu">
@@ -31,8 +25,7 @@ export function Sidebar({ onSelect }: SidebarProps) {
           ✏️ Atualizar currículo
         </button>
 
-        {/* 2. Chame a função logout do Contexto aqui */}
-        <button className="danger" onClick={handleHardLogout}>
+        <button className="danger" onClick={logout}>
           🚪 Sair
         </button>
       </nav>

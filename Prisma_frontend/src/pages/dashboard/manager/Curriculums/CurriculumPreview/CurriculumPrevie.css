@@ -9,8 +9,12 @@
 
 /* Botão */
 .preview-actions {
-  width: 900px;
+  /* `width: 900px` fixo empurrava a barra do botão "Baixar" para fora da
+     tela do celular. */
+  width: 100%;
+  max-width: 900px;
   margin: 0 auto 20px;
+  padding: 0 16px;
   text-align: right;
 }
 
@@ -31,14 +35,28 @@
 
 /* Página A4 */
 .a4-page {
-  width: 210mm;
+  /* `width: 210mm` (~794 px) fazia a prévia do currículo estourar em
+     qualquer celular: rolagem horizontal e texto cortado. O tamanho de
+     folha real só importa na IMPRESSÃO — na tela basta o limite máximo.
+     A regra @media print no fim do arquivo devolve os 210mm exatos. */
+  width: 100%;
+  max-width: 210mm;
+
   min-height: 297mm;
-  max-width: 900px;
   margin: 0 auto;
   background: white;
   padding: 60px;
   position: relative;
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+}
+
+@media (max-width: 640px) {
+  .a4-page {
+    /* 60 px de padding em 360 px de tela deixam 240 px úteis de texto. */
+    padding: 24px 20px;
+    /* Altura de folha A4 numa tela estreita é só espaço branco no fim. */
+    min-height: auto;
+  }
 }
 
 /* Header */
@@ -139,9 +157,18 @@ li {
 
 /* Impressão */
 @media print {
-
   body {
     background: white;
+  }
+
+  /* Restaura a folha A4 exata para o PDF/impressão — na tela o .a4-page
+     usa width:100% para caber no celular. */
+  .a4-page {
+    width: 210mm;
+    max-width: none;
+    min-height: 297mm;
+    padding: 60px;
+    box-shadow: none;
   }
 
   .preview-actions {

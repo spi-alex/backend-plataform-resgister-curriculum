@@ -10,6 +10,8 @@ import {
   Loader2,
 } from "lucide-react";
 import api from "../../../../services/api";
+import { downloadResumePdf } from "../../../../utils/resume";
+import "../../../../styles/curriculumView.css";
 
 interface Education {
   course: string;
@@ -56,16 +58,9 @@ export default function StudentCurriculumView() {
 
   useEffect(() => {
     async function fetchRealCurriculum() {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
-      const config = { headers: { Authorization: `Bearer ${token}` } };
-
+      // Authorization sai do interceptor de `api` (services/api.ts).
       try {
-        const response = await api.get("/resumes/", config);
+        const response = await api.get("/resumes/");
 
         if (response.data && response.data.length > 0) {
           const firstResume = response.data[0];
@@ -87,27 +82,17 @@ export default function StudentCurriculumView() {
     fetchRealCurriculum();
   }, []);
 
+  // Reaproveita `downloadResumePdf` (utils/resume.ts), que é o mesmo
+  // download usado pelo gestor e pela empresa. A cópia manual que existia
+  // aqui repetia blob/anchor/revokeObjectURL linha por linha.
   async function handleDownloadPDF() {
     if (!curriculum?.dbId) return;
 
-    const token = localStorage.getItem("access_token");
-    const config = {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: "blob" as const,
-    };
-
     try {
-      const response = await api.get(`/pdf/export/${curriculum.dbId}/`, config);
-
-      const pdfBlob = new Blob([response.data], { type: "application/pdf" });
-      const url = window.URL.createObjectURL(pdfBlob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `curriculo_${curriculum.fullName || "aluno"}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
+      await downloadResumePdf(
+        curriculum.dbId,
+        `curriculo_${curriculum.fullName || "aluno"}.pdf`,
+      );
     } catch (error) {
       console.error("Erro ao baixar o PDF:", error);
       alert("Erro ao gerar/baixar o PDF do servidor.");
@@ -116,17 +101,13 @@ export default function StudentCurriculumView() {
 
   if (loading) {
     return (
-      <main
-        className="cv-container"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          height: "50vh",
-        }}
-      >
-        <Loader2 className="animate-spin" size={32} />
-        <p style={{ marginLeft: 8 }}>Carregando seu currículo...</p>
+      <main className="cv-container">
+        <div className="cv-state">
+          {/* `animate-spin` é do Tailwind, que este projeto não usa: o ícone
+              ficava parado. `cv-spinner` traz os keyframes de verdade. */}
+          <Loader2 className="cv-spinner" size={32} />
+          <p>Carregando seu currículo...</p>
+        </div>
       </main>
     );
   }
@@ -134,10 +115,22 @@ export default function StudentCurriculumView() {
   if (!curriculum) {
     return (
       <main className="cv-container">
-        <p>Você ainda não possui um currículo cadastrado no sistema.</p>
-        <button onClick={() => navigate("/dashboard/aluno")}>
-          Voltar para o Dashboard
-        </button>
+        <div className="cv-state">
+          <p>Você ainda não possui um currículo cadastrado no sistema.</p>
+          <button
+            className="cv-btn-primary"
+            onClick={() => navigate("/dashboard/aluno/curriculo")}
+          >
+            Criar meu currículo
+          </button>
+          <button
+            className="cv-back"
+            onClick={() => navigate("/dashboard/aluno")}
+          >
+            <ArrowLeft size={18} />
+            Voltar para o Dashboard
+          </button>
+        </div>
       </main>
     );
   }
@@ -166,16 +159,7 @@ export default function StudentCurriculumView() {
         <div className="cv-profile-left">
           <div className="cv-photo">
             {curriculum.photo ? (
-              <img
-                src={curriculum.photo}
-                alt="Foto de perfil"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  borderRadius: "50%",
-                  objectFit: "cover",
-                }}
-              />
+              <img src={curriculum.photo} alt="Foto de perfil" />
             ) : (
               <User size={48} />
             )}
@@ -221,11 +205,7 @@ export default function StudentCurriculumView() {
             <h3>Formação</h3>
             {curriculum.education && curriculum.education.length > 0 ? (
               curriculum.education.map((edu, index) => (
-                <div
-                  key={index}
-                  className="cv-timeline-item"
-                  style={{ marginBottom: "15px" }}
-                >
+                <div key={index} className="cv-timeline-item">
                   <h4>{edu.course}</h4>
                   <p>
                     <strong>{edu.institution}</strong>

@@ -26,39 +26,35 @@
   justify-content: space-between;
   padding: 0 32px;
 }
-
 .manager-header h1 {
   font-size: 20px;
   font-weight: 700;
 }
-
 .manager-header span {
   font-size: 14px;
   opacity: 0.9;
 }
 
 /* ===== LAYOUT ===== */
-.manager-layout {
+.manager-home .manager-layout {
   display: flex;
   flex: 1;
 }
 
 /* ===== SIDEBAR ===== */
-.manager-sidebar {
+.manager-home .manager-sidebar {
   width: 260px;
   background-color: #ffffff;
   border-right: 1px solid #e5e7eb;
   padding: 24px 16px;
 }
-
-.manager-sidebar nav {
+.manager-home .manager-sidebar nav {
   display: flex;
   flex-direction: column;
   gap: 10px;
   height: 100%;
 }
-
-.manager-sidebar button {
+.manager-home .manager-sidebar button {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -72,20 +68,19 @@
   color: #1f2937;
   cursor: pointer;
 
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
-
-.manager-sidebar button:hover {
+.manager-home .manager-sidebar button:hover {
   background-color: #e8f3ee;
   color: #2f7d57;
 }
-
-.manager-sidebar .danger {
+.manager-home .manager-sidebar .danger {
   margin-top: auto;
   color: #b91c1c;
 }
-
-.manager-sidebar .danger:hover {
+.manager-home .manager-sidebar .danger:hover {
   background-color: #fee2e2;
   color: #991b1b;
 }
@@ -105,8 +100,7 @@
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 20px;
 }
-
-.kpi-card {
+.manager-home .kpi-card {
   background-color: #ffffff;
   border-radius: 16px;
   padding: 20px 24px;
@@ -114,10 +108,11 @@
   border: 1px solid #d1e7dc;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
 
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
-
-.kpi-card::before {
+.manager-home .kpi-card::before {
   content: "";
   display: block;
   width: 32px;
@@ -126,18 +121,15 @@
   border-radius: 4px;
   margin-bottom: 12px;
 }
-
-.kpi-card:hover {
+.manager-home .kpi-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 18px rgba(0, 0, 0, 0.06);
 }
-
-.kpi-card p {
+.manager-home .kpi-card p {
   font-size: 13px;
   color: #6b7280;
 }
-
-.kpi-card strong {
+.manager-home .kpi-card strong {
   font-size: 28px;
   font-weight: 700;
   color: #2f7d57;
@@ -155,21 +147,17 @@
   align-items: center;
   gap: 24px;
 }
-
 .vacancy-text h2 {
   font-size: 18px;
 }
-
 .vacancy-text p {
   font-size: 14px;
   color: #6b7280;
 }
-
 .vacancy-actions {
   display: flex;
   gap: 12px;
 }
-
 .vacancy-actions button {
   display: flex;
   align-items: center;
@@ -185,7 +173,6 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .vacancy-actions button:hover {
   background-color: #256846;
 }
@@ -201,11 +188,9 @@
   flex-direction: column;
   gap: 24px;
 }
-
 .curriculums-header h2 {
   font-size: 18px;
 }
-
 .curriculums-header p {
   font-size: 14px;
   color: #6b7280;
@@ -220,8 +205,7 @@
   gap: 24px;
   flex-wrap: wrap;
 }
-
-.search-box {
+.manager-home .search-box {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -232,16 +216,13 @@
   padding: 10px 14px;
   width: 320px;
 }
-
-.search-box input {
+.manager-home .search-box input {
   border: none;
   outline: none;
   background: transparent;
   width: 100%;
 }
-
 .download-all-btn {
-
   display: flex;
   align-items: center;
   gap: 10px;
@@ -256,7 +237,6 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .download-all-btn:hover {
   background-color: #256846;
 }
@@ -280,7 +260,6 @@
   flex-direction: column;
   gap: 12px;
 }
-
 .curriculum-item {
   display: grid;
   grid-template-columns: 2fr 2fr 3fr 1fr;
@@ -293,17 +272,14 @@
   border-radius: 12px;
   border: 1px solid #e5e7eb;
 }
-
 .cv-name {
   font-weight: 600;
 }
-
-.cv-course,
+.manager-home .cv-course,
 .cv-email {
   font-size: 14px;
   color: #6b7280;
 }
-
 .curriculum-item button {
   background-color: #2f7d57;
   color: #ffffff;
@@ -315,29 +291,25 @@
   font-weight: 600;
   cursor: pointer;
 }
-
 .curriculum-item button:hover {
   background-color: #256846;
 }
 
 /* ===== EMPTY ===== */
-.empty {
+.manager-home .empty {
   text-align: center;
   color: #6b7280;
   font-size: 14px;
   padding: 24px;
 }
 
-
 /* ===== SIDEBAR TOGGLE ===== */ /*fechar sidebar*/
-
-.header-left {
+.manager-home .header-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
-.toggle-sidebar {
+.manager-home .toggle-sidebar {
   background: transparent;
   border: none;
   color: #ffffff;
@@ -346,35 +318,35 @@
 }
 
 /* FECHADA */
-.manager-sidebar.closed {
+.manager-home .manager-sidebar.closed {
   width: 80px;
   padding: 24px 8px;
 }
-
-.manager-sidebar.closed button {
+.manager-home .manager-sidebar.closed button {
   justify-content: center;
   padding: 12px;
 }
-
-.manager-sidebar.closed button span,
-.manager-sidebar.closed button:not(.danger) {
+.manager-home .manager-sidebar.closed button span,
+.manager-home .manager-sidebar.closed button:not(.danger) {
   font-size: 0;
 }
 
 /* Transição suave */
-.manager-sidebar {
-  transition: width 0.3s ease, padding 0.3s ease;
+.manager-home .manager-sidebar {
+  transition:
+    width 0.3s ease,
+    padding 0.3s ease;
 }
 
 /* NAV */
-.sidebar-nav {
+.manager-home .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 /* ITEM */
-.nav-item {
+.manager-home .nav-item {
   position: relative;
   display: flex;
   align-items: center;
@@ -389,18 +361,18 @@
 }
 
 /* HOVER NORMAL */
-.nav-item:hover {
+.manager-home .nav-item:hover {
   background-color: #e6f4ea;
   color: #14532d;
 }
 
 /* TEXTO SOME QUANDO SIDEBAR FECHADA */
-.manager-sidebar.closed .nav-item span {
+.manager-home .manager-sidebar.closed .nav-item span {
   display: none;
 }
 
 /* TOOLTIP (só aparece quando sidebar fechada) */
-.manager-sidebar.closed .nav-item::after {
+.manager-home .manager-sidebar.closed .nav-item::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 100%;
@@ -419,7 +391,7 @@
 }
 
 /* MOSTRA TOOLTIP NO HOVER */
-.manager-sidebar.closed .nav-item:hover::after {
+.manager-home .manager-sidebar.closed .nav-item:hover::after {
   opacity: 1;
 }
 
@@ -430,18 +402,16 @@
     grid-template-columns: 1fr;
     gap: 8px;
   }
-
   .curriculum-item button {
     width: 100%;
   }
 }
 
 @media (max-width: 768px) {
-  .manager-layout {
+  .manager-home .manager-layout {
     flex-direction: column;
   }
-
-  .manager-sidebar {
+  .manager-home .manager-sidebar {
     width: 100%;
   }
 }

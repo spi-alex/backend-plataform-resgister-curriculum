@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
 import "./StudentHome.css";
+import { FileText, UserSearch, Plus } from "lucide-react";
 
 export default function StudentHome() {
   const navigate = useNavigate();
@@ -10,16 +11,12 @@ export default function StudentHome() {
 
   useEffect(() => {
     async function checkCurriculum() {
-      const token = localStorage.getItem("access_token");
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-
+      // O cabeçalho Authorization é montado pelo interceptor de `api`
+      // (services/api.ts) a partir do token em memória. Antes esta função
+      // lia `localStorage.getItem("access_token")` e montava o header à
+      // mão — duplicando a lógica e prendendo o token ao localStorage.
       try {
-        const response = await api.get("/resumes/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const response = await api.get("/resumes/");
 
         // Se o array vier com itens, o usuário já tem currículo cadastrado
         if (response.data && response.data.length > 0) {
@@ -77,12 +74,7 @@ export default function StudentHome() {
         <div className="empty-card">
           <div className="empty-icon">
             <div className="icon-circle" style={{ backgroundColor: "#e8f5e9" }}>
-              <span
-                className="material-symbols-outlined"
-                style={{ color: "#2e7d32" }}
-              >
-                description
-              </span>
+              <FileText size={28} color="#2e7d32" />
             </div>
           </div>
           <h2>Seu currículo está ativo!</h2>
@@ -104,10 +96,10 @@ export default function StudentHome() {
         <div className="empty-card">
           <div className="empty-icon">
             <div className="icon-circle">
-              <span className="material-symbols-outlined">person_search</span>
+              <UserSearch size={28} />
             </div>
             <div className="icon-add">
-              <span className="material-symbols-outlined">add</span>
+              <Plus size={16} />
             </div>
           </div>
 

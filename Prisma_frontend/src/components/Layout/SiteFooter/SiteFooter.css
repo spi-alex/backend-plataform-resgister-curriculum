@@ -1,0 +1,88 @@
+/* Paleta das telas públicas (initial.css / Login.css). */
+.site-footer {
+  background-color: #12340f;
+  color: #dfe9dc;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  padding: 32px 20px 20px;
+}
+
+.site-footer__aviso-dev {
+  background-color: #7c2d12;
+  color: #fff7ed;
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 24px;
+  font-size: 12px;
+}
+
+.site-footer__aviso-dev code {
+  font-family: ui-monospace, "Courier New", monospace;
+  background-color: rgba(0, 0, 0, 0.25);
+  border-radius: 4px;
+  padding: 1px 4px;
+  /* O caminho do arquivo tem 48 caracteres sem espaço: sem isto o <code>
+     media 400px e criava rolagem horizontal na tela de 360px — foi
+     exatamente o que a checagem de mobile pegou. */
+  overflow-wrap: anywhere;
+}
+
+.site-footer__grid {
+  /* `auto-fit` + `minmax` resolve o rodapé no celular sem media query: as
+     três colunas viram uma só quando não cabem 240 px cada. */
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.site-footer__bloco p {
+  margin: 0 0 4px;
+}
+
+.site-footer__titulo {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 14px;
+  margin-bottom: 8px !important;
+}
+
+.site-footer a {
+  color: #9ed98b;
+  text-decoration: none;
+  /* Alvo de toque confortável para dedo sem esticar a linha do texto. */
+  display: inline-block;
+  padding: 2px 0;
+  /* E-mail longo não deve criar rolagem horizontal num celular estreito. */
+  overflow-wrap: anywhere;
+}
+
+.site-footer a:hover,
+.site-footer a:focus-visible {
+  text-decoration: underline;
+}
+
+.site-footer__cookies {
+  color: #b0c2ab;
+  font-size: 12px;
+  margin-top: 10px !important;
+}
+
+.site-footer__creditos {
+  max-width: 1100px;
+  margin: 28px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  color: #b0c2ab;
+  font-size: 12px;
+  text-align: center;
+}
+
+@media print {
+  /* O rodapé não deve sair no PDF do currículo. */
+  .site-footer {
+    display: none;
+  }
+}

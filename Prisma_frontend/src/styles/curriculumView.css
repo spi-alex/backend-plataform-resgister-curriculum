@@ -1,0 +1,414 @@
+/* =========================================================================
+   VISUALIZAÇÃO DE CURRÍCULO (classes `cv-*`)
+
+   Folha ÚNICA das três telas que mostram um currículo montado:
+
+     - aluno   -> pages/dashboard/student/curriculums/StudentCurriculumView.tsx
+     - gestor  -> pages/dashboard/manager/.../ManagerCurriculumView.tsx
+     - empresa -> pages/dashboard/company/.../CandidateViewProfile.tsx
+
+   Antes estas regras moravam em `ManagerCurriculumView.css`, importado por
+   UMA das três telas. As outras duas usavam exatamente as mesmas classes
+   sem importar CSS nenhum — e como o Vite divide o bundle por rota, o
+   arquivo do gestor nunca era carregado para um aluno ou uma empresa.
+   Resultado: as telas do aluno e da empresa apareciam totalmente sem
+   estilo (botões cinza do navegador, cards sem fundo, texto solto).
+
+   Além disso faltavam definições que as três telas já usavam:
+   `.cv-main`, `.cv-side`, `.cv-empty`, `.cv-project-item` e, na tela da
+   empresa, `.cv-decision-actions`, `.cv-btn-approve` e `.cv-btn-reject`.
+
+   Os botões seguem o padrão do resto do sistema (CompanyCreateJob.css,
+   CurriculumPrevie.css): esmeralda #059669 no primário, #ecfdf5/#059669 no
+   contorno, borda #e2e8f0 no secundário, raio de 10px. O `.cv-btn-primary`
+   estava em #13ec6d (verde-neon), que não aparece em nenhuma outra tela.
+   ========================================================================= */
+
+/* ===== PALETA ===== */
+:root {
+  --cv-verde: #059669;
+  --cv-verde-escuro: #047857;
+  --cv-verde-claro: #ecfdf5;
+  --cv-vermelho: #dc2626;
+  --cv-vermelho-claro: #fef2f2;
+  --cv-borda: #e2e8f0;
+  --cv-fundo: #f6f8f7;
+  --cv-texto: #0d1b13;
+  --cv-texto-suave: #667085;
+}
+
+/* ===== CONTAINER ===== */
+.cv-container {
+  padding: 40px;
+  background: var(--cv-fundo);
+  min-height: 100vh;
+  color: var(--cv-texto);
+}
+
+/* ===== HEADER ===== */
+.cv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+}
+
+.cv-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ===== BOTÕES =====
+   Base comum: os três variantes só trocam cor, nunca forma. */
+.cv-back,
+.cv-btn-outline,
+.cv-btn-primary,
+.cv-btn-approve,
+.cv-btn-reject {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+/* Secundário: "Voltar". Antes era um botão sem borda e sem fundo, que no
+   meio da página não parecia clicável. */
+.cv-back {
+  background: #fff;
+  border: 1px solid var(--cv-borda);
+  color: var(--cv-texto);
+}
+
+.cv-back:hover {
+  background: #f1f5f4;
+  border-color: #cbd5d1;
+}
+
+/* Contorno: ações neutras, como baixar o PDF. */
+.cv-btn-outline {
+  background: var(--cv-verde-claro);
+  border: 1px solid transparent;
+  color: var(--cv-verde);
+}
+
+.cv-btn-outline:hover {
+  background: #d7f5e6;
+}
+
+/* Primário: a ação principal da tela. */
+.cv-btn-primary,
+.cv-btn-approve {
+  background: var(--cv-verde);
+  border: 1px solid transparent;
+  color: #fff;
+  font-weight: 700;
+  padding: 10px 22px;
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);
+}
+
+.cv-btn-primary:hover,
+.cv-btn-approve:hover {
+  background: var(--cv-verde-escuro);
+}
+
+/* Recusar candidatura: destrutivo, então lê como o par vermelho do
+   contorno — visível, mas sem competir com o botão de aprovar. */
+.cv-btn-reject {
+  background: var(--cv-vermelho-claro);
+  border: 1px solid transparent;
+  color: var(--cv-vermelho);
+  font-weight: 700;
+  padding: 10px 22px;
+}
+
+.cv-btn-reject:hover {
+  background: #fee2e2;
+}
+
+.cv-back:disabled,
+.cv-btn-outline:disabled,
+.cv-btn-primary:disabled,
+.cv-btn-approve:disabled,
+.cv-btn-reject:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* Foco visível pelo teclado — a borda padrão do navegador some quando o
+   botão tem fundo próprio. */
+.cv-back:focus-visible,
+.cv-btn-outline:focus-visible,
+.cv-btn-primary:focus-visible,
+.cv-btn-approve:focus-visible,
+.cv-btn-reject:focus-visible {
+  outline: 2px solid var(--cv-verde);
+  outline-offset: 2px;
+}
+
+/* Aprovar/recusar candidato (tela da empresa). */
+.cv-decision-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+/* ===== CARD DE PERFIL ===== */
+.cv-profile-card {
+  background: #fff;
+  padding: 30px;
+  border-radius: 16px;
+  margin-bottom: 30px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.05);
+}
+
+.cv-profile-left {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.cv-photo {
+  width: 90px;
+  height: 90px;
+  flex-shrink: 0;
+  background: #eef5f1;
+  color: var(--cv-verde);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cv-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.cv-profile-card h2 {
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+
+.cv-course {
+  color: var(--cv-verde);
+  font-weight: 600;
+  margin: 0 0 10px;
+}
+
+.cv-meta {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  font-size: 14px;
+  color: var(--cv-texto-suave);
+}
+
+.cv-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* ===== GRID ===== */
+.cv-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 30px;
+  align-items: start;
+}
+
+.cv-main,
+.cv-side {
+  min-width: 0; /* impede que texto longo estoure a coluna do grid */
+}
+
+/* ===== CARDS ===== */
+.cv-card {
+  background: #fff;
+  padding: 24px;
+  border-radius: 16px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+.cv-card h3,
+.cv-card h4 {
+  margin: 0 0 16px;
+  font-weight: 700;
+}
+
+.cv-card h3 {
+  font-size: 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f0;
+}
+
+.cv-card p {
+  margin: 0;
+}
+
+.cv-description {
+  margin-top: 8px;
+  color: #555;
+  line-height: 1.6;
+  overflow-wrap: anywhere; /* texto colado sem espaço não estoura o card */
+}
+
+/* Seção sem dado preenchido. */
+.cv-empty {
+  color: var(--cv-texto-suave);
+  font-style: italic;
+  font-size: 14px;
+}
+
+/* ===== ITENS DE FORMAÇÃO / EXPERIÊNCIA / PROJETO ===== */
+.cv-timeline-item,
+.cv-project-item {
+  position: relative;
+  padding-left: 18px;
+  margin-bottom: 20px;
+  border-left: 2px solid #e4efe9;
+}
+
+.cv-timeline-item:last-child,
+.cv-project-item:last-child {
+  margin-bottom: 0;
+}
+
+.cv-timeline-item h4,
+.cv-project-item h4 {
+  margin: 0 0 4px;
+  font-size: 15px;
+}
+
+.cv-timeline-item p,
+.cv-project-item p {
+  margin: 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.cv-period {
+  display: inline-block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--cv-verde);
+}
+
+/* Coluna lateral: cards menores, sem concorrer com o conteúdo principal. */
+.cv-side .cv-card {
+  padding: 20px;
+}
+
+.cv-side .cv-card h4 {
+  font-size: 15px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eef2f0;
+}
+
+/* ===== ESTADOS: CARREGANDO / VAZIO =====
+   As três telas tinham um "Carregando..." e um "não encontrado" soltos na
+   página, com <button> sem classe nenhuma — o botão cinza padrão do
+   navegador no meio de uma tela esmeralda. */
+.cv-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 50vh;
+  text-align: center;
+  color: var(--cv-texto-suave);
+}
+
+.cv-state p {
+  margin: 0;
+  font-size: 15px;
+}
+
+/* `animate-spin` é classe do Tailwind, que este projeto não usa: o ícone de
+   carregamento ficava parado. */
+.cv-spinner {
+  color: var(--cv-verde);
+  animation: cv-girar 1s linear infinite;
+}
+
+@keyframes cv-girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-spinner {
+    animation: none;
+  }
+}
+
+/* ===== RESPONSIVO ===== */
+@media (max-width: 1024px) {
+  .cv-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .cv-container {
+    padding: 20px 16px;
+  }
+
+  .cv-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cv-actions,
+  .cv-decision-actions {
+    flex-direction: column;
+  }
+
+  .cv-profile-card {
+    padding: 20px;
+  }
+}
+
+/* ===== IMPRESSÃO ===== */
+@media print {
+  .cv-header,
+  .cv-decision-actions {
+    display: none; /* botões não vão para o papel */
+  }
+
+  .cv-container {
+    padding: 0;
+    background: #fff;
+  }
+
+  .cv-card,
+  .cv-profile-card {
+    box-shadow: none;
+    border: 1px solid var(--cv-borda);
+    break-inside: avoid;
+  }
+}

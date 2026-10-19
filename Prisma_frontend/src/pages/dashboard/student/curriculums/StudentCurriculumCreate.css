@@ -8,24 +8,20 @@
 }
 
 /* HEADER */
-
-.page-header {
+.student-curriculum .page-header {
   margin-bottom: 40px;
 }
-
-.page-header h2 {
+.student-curriculum .page-header h2 {
   font-size: 32px;
   font-weight: 700;
   margin-bottom: 8px;
 }
-
-.page-header p {
+.student-curriculum .page-header p {
   font-size: 16px;
   color: #6b7280;
 }
 
 /* SECTIONS */
-
 .card {
   background: transparent;
   padding: 0;
@@ -33,7 +29,6 @@
   border: none;
   box-shadow: none;
 }
-
 .card h3 {
   font-size: 20px;
   font-weight: 600;
@@ -43,19 +38,16 @@
 }
 
 /* GRID */
-
-.form-grid {
+.student-curriculum .form-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
 }
-
 .full {
   grid-column: 1 / -1;
 }
 
 /* INPUTS */
-
 label {
   display: block;
   font-size: 14px;
@@ -63,7 +55,6 @@ label {
   margin-bottom: 6px;
   color: #374151;
 }
-
 input,
 textarea {
   width: 100%;
@@ -74,27 +65,23 @@ textarea {
   background-color: #ffffff;
   transition: 0.2s ease;
 }
-
 input:focus,
 textarea:focus {
   outline: none;
   border-color: #2563eb;
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
-
 textarea {
   resize: vertical;
   min-height: 100px;
 }
 
 /* FOOTER BUTTON */
-
 .footer-action {
   margin-top: 40px;
   display: flex;
   justify-content: flex-end;
 }
-
 .save-btn {
   background-color: #2563eb;
   color: white;
@@ -106,16 +93,43 @@ textarea {
   cursor: pointer;
   transition: 0.2s;
 }
-
 .save-btn:hover {
   background-color: #1e40af;
   transform: translateY(-2px);
 }
-
 .photo-preview {
   margin-top: 10px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
+/* Texto de apoio abaixo de um campo (regra de tamanho, formato aceito). */
+.campo-ajuda {
+  display: block;
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.4;
+}
+.foto-remover {
+  padding: 8px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+.foto-remover:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
 .photo-preview img {
   width: 120px;
   height: 160px;
@@ -123,7 +137,6 @@ textarea {
   border-radius: 6px;
   border: 1px solid #ccc;
 }
-
 .project-card {
   border: 1px solid #ddd;
   padding: 15px;
@@ -131,23 +144,20 @@ textarea {
   margin-bottom: 15px;
   background: #f9f9f9;
 }
-
 .project-row {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
 }
-
 .add-btn {
   margin-top: 10px;
   padding: 8px 12px;
-  background: #4CAF50;
+  background: #4caf50;
   color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
 }
-
 .remove-btn {
   margin-top: 10px;
   padding: 6px 10px;
@@ -157,7 +167,6 @@ textarea {
   border-radius: 6px;
   cursor: pointer;
 }
-
 .save-btn {
   background: #1b5e20;
   color: white;

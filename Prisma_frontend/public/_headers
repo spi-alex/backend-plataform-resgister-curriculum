@@ -1,0 +1,66 @@
+# Cabeçalhos de segurança e cache — formato Netlify / Cloudflare Pages.
+# Equivalentes para nginx/Apache/Vercel estão em
+# docs/CHECKLIST_PUBLICACAO.md.
+#
+# O Django já manda os cabeçalhos dele nas respostas da API (ver o bloco
+# `if not DEBUG` em core/settings.py). Estes aqui valem para o HTML e os
+# assets do frontend, que são servidos por OUTRO servidor e por isso não
+# passam pelo SecurityMiddleware do Django.
+
+/*
+  # Impede que o site seja embutido em iframe de terceiro — a defesa contra
+  # clickjacking: uma página maliciosa que sobrepõe um botão invisível em
+  # cima do "Confirmar cadastro".
+  X-Frame-Options: DENY
+
+  # O navegador respeita o Content-Type declarado em vez de "adivinhar" pelo
+  # conteúdo. Sem isto, um upload de currículo servido com o tipo errado
+  # poderia ser interpretado como HTML e executar script.
+  X-Content-Type-Options: nosniff
+
+  # Não vaza a URL interna (que pode conter id de currículo) no cabeçalho
+  # Referer ao sair para outro site.
+  Referrer-Policy: strict-origin-when-cross-origin
+
+  # O app não usa câmera, microfone nem geolocalização. Declarar isso
+  # impede que um script injetado peça essas permissões.
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+  # HSTS: obriga HTTPS nas próximas visitas, inclusive se o usuário digitar
+  # "http://". 1 ano (31536000 s) é o valor exigido para entrar na lista de
+  # preload dos navegadores. Ative SÓ depois de confirmar que o HTTPS está
+  # funcionando em todos os subdomínios — o navegador guarda essa regra e
+  # não tem como desfazer rápido.
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+  # ⚠️ TROQUE `https://api.SEU-DOMINIO.com.br` pelo domínio real da API
+  # antes de publicar; com o valor errado, o login para de funcionar porque
+  # o navegador bloqueia a chamada.
+  #
+  #   default-src 'none'   — nada é permitido por padrão; o resto libera
+  #                          item por item (mais seguro que 'self').
+  #   script-src 'self'    — nenhum script de CDN: tudo é servido junto com
+  #                          o app, então script injetado de fora não roda.
+  #   style-src 'unsafe-inline' — necessário porque várias telas usam o
+  #                          atributo `style=` do React (ex.: a cor da
+  #                          mensagem de erro do login). Restringir isso
+  #                          exigiria remover todos os estilos inline.
+  #   img-src ... data:    — a imagem do captcha vem da API; `data:` cobre
+  #                          o favicon SVG embutido.
+  #   connect-src          — para onde o axios pode falar: só a própria
+  #                          origem e a API.
+  #   frame-ancestors      — mesma proteção do X-Frame-Options, na versão
+  #                          que os navegadores modernos leem.
+  Content-Security-Policy: default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://api.SEU-DOMINIO.com.br; font-src 'self'; connect-src 'self' https://api.SEU-DOMINIO.com.br; form-action 'self'; base-uri 'self'; frame-ancestors 'none'
+
+# Assets com hash no nome (index-tPgnW-F9.js): o conteúdo nunca muda para
+# aquele nome, então pode ficar em cache "para sempre". É o que faz a
+# segunda visita ser instantânea.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# O index.html NÃO pode ser cacheado: é ele que aponta para os assets com
+# hash novo. Se ficar em cache, o usuário continua carregando a versão
+# antiga do site depois de um deploy.
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate

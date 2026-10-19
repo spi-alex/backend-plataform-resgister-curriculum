@@ -6,7 +6,6 @@
 }
 
 /* ===== BASE ===== */
-
 .company-dashboard {
   min-height: 100vh;
   background-color: #f5f7f6;
@@ -17,7 +16,6 @@
 }
 
 /* ===== HEADER ===== */
-
 .company-header {
   height: 64px;
   background-color: #2f7d57;
@@ -28,24 +26,20 @@
   justify-content: space-between;
   padding: 0 32px;
 }
-
 .company-header h1 {
   font-size: 20px;
   font-weight: 700;
 }
-
 .company-header span {
   font-size: 14px;
   opacity: 0.9;
 }
-
-.header-left {
+.company-dashboard .header-left {
   display: flex;
   align-items: center;
   gap: 16px;
 }
-
-.toggle-sidebar {
+.company-dashboard .toggle-sidebar {
   background: transparent;
   border: none;
   color: #ffffff;
@@ -54,14 +48,12 @@
 }
 
 /* ===== LAYOUT ===== */
-
 .company-layout {
   display: flex;
   flex: 1;
 }
 
 /* ===== SIDEBAR ===== */
-
 .company-sidebar {
   width: 260px;
   background-color: #ffffff;
@@ -71,19 +63,19 @@
   display: flex;
   flex-direction: column;
 
-  transition: width 0.3s ease, padding 0.3s ease;
+  transition:
+    width 0.3s ease,
+    padding 0.3s ease;
 }
 
 /* Sidebar fechada */
-
-.company-sidebar.closed {
+.company-dashboard .company-sidebar.closed {
   width: 80px;
   padding: 24px 8px;
 }
 
 /* NAV */
-
-.sidebar-nav {
+.company-dashboard .sidebar-nav {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -91,8 +83,7 @@
 }
 
 /* NAV ITEM */
-
-.nav-item {
+.company-dashboard .nav-item {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -107,39 +98,35 @@
   font-size: 14px;
   text-align: left;
 
-  transition: background-color 0.2s ease, color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
 }
-
-.nav-item:hover {
+.company-dashboard .nav-item:hover {
   background-color: #e6f4ea;
   color: #14532d;
 }
 
 /* Logout */
-
-.nav-item.danger {
+.company-dashboard .nav-item.danger {
   margin-top: auto;
   color: #b91c1c;
 }
-
-.nav-item.danger:hover {
+.company-dashboard .nav-item.danger:hover {
   background-color: #fee2e2;
   color: #991b1b;
 }
 
 /* Quando fechada */
-
-.company-sidebar.closed .nav-item {
+.company-dashboard .company-sidebar.closed .nav-item {
   justify-content: center;
   padding: 12px;
 }
-
-.company-sidebar.closed .nav-item span {
+.company-dashboard .company-sidebar.closed .nav-item span {
   display: none;
 }
 
 /* ===== MAIN CONTENT ===== */
-
 .company-content {
   flex: 1;
   padding: 32px;
@@ -153,19 +140,16 @@
   .company-layout {
     flex-direction: column;
   }
-
   .company-sidebar {
     width: 100%;
   }
 }
 
 /* ===== HEADER ===== */
-
 .company-header {
   background-color: #2f7d57 !important;
   color: #ffffff !important;
 }
-
 .company-header h1,
 .company-header span,
 .company-header button {
@@ -173,12 +157,10 @@
 }
 
 /* ===== TOOLTIP QUANDO FECHADA ===== */
-
-.company-sidebar.closed .nav-item {
+.company-dashboard .company-sidebar.closed .nav-item {
   position: relative;
 }
-
-.company-sidebar.closed .nav-item::after {
+.company-dashboard .company-sidebar.closed .nav-item::after {
   content: attr(data-tooltip);
   position: absolute;
   left: 100%;
@@ -198,7 +180,6 @@
   pointer-events: none;
   transition: opacity 0.2s ease;
 }
-
-.company-sidebar.closed .nav-item:hover::after {
+.company-dashboard .company-sidebar.closed .nav-item:hover::after {
   opacity: 1;
 }

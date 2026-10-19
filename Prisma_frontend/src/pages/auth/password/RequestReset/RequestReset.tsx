@@ -24,7 +24,10 @@ export default function RequestPasswordReset() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async () => {
+  // `onSubmit` do <form>: sem preventDefault o navegador recarrega a página.
+  const handleSubmit = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+
     if (!email || !isValidEmail(email)) return;
 
     setLoading(true);
@@ -52,22 +55,26 @@ export default function RequestPasswordReset() {
       <div className="reset-outer">
         <h1>REDEFINIR SENHA</h1>
         <div className="reset-inner">
-          <Input
-            label="Email"
-            type="email"
-            placeholder="Digite seu email"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value);
-              setMensagem("");
-            }}
-          />
+          <form onSubmit={handleSubmit} noValidate>
+            <Input
+              label="Email"
+              name="email"
+              type="email"
+              placeholder="Digite seu email"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setMensagem("");
+              }}
+              autoComplete="email"
+            />
 
-          <Button
-            title={loading ? "Enviando..." : "enviar"}
-            disabled={!email || !isValidEmail(email) || loading}
-            onClick={handleSubmit}
-          />
+            <Button
+              title={loading ? "Enviando..." : "enviar"}
+              type="submit"
+              disabled={!email || !isValidEmail(email) || loading}
+            />
+          </form>
 
           {mensagem && (
             <p className="mensagem" style={{ color: "red", marginTop: "10px" }}>

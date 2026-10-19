@@ -5,7 +5,7 @@ import { View, FileText, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "../../../../../services/api";
 import type { RawResume } from "../../../../../utils/resume";
 import { parseResume, downloadResumePdf } from "../../../../../utils/resume";
-import "./ManagerCurriculumList.css";
+import "../../../../../styles/curriculumList.css";
 
 const ITEMS_PER_PAGE = 10;
 

@@ -1,3 +1,4 @@
+import logging
 import threading
 
 from rest_framework import viewsets, status, permissions, filters
@@ -12,16 +13,25 @@ from users.emails import enviar_email_async
 from .models import Job, Application
 from .serializers import JobSerializer, ApplicationSerializer
 
+logger = logging.getLogger(__name__)
+
 # --- PERMISSÕES CUSTOMIZADAS ---
 
 class IsCompany(BasePermission):
+    # Os dois `print(f"DEBUG: Usuário {request.user.email} ...")` que ficavam
+    # aqui foram removidos por dois motivos:
+    #
+    # 1. **Vazamento de dado pessoal**: rodavam a CADA requisição a rota de
+    #    vaga, despejando o e-mail do usuário no stdout do servidor.
+    # 2. **Erro 500 com visitante anônimo**: `AnonymousUser` não tem
+    #    atributo `.email`, e a checagem de permissão roda antes de exigir
+    #    autenticação — qualquer POST não autenticado em /api/jobs/ estourava
+    #    AttributeError em vez do 401/403 esperado.
     def has_permission(self, request, view):
-        print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
         return bool(request.user and request.user.is_authenticated and getattr(request.user, 'role', '') == 'company')
 
 class IsCandidate(BasePermission):
     def has_permission(self, request, view):
-        print(f"DEBUG: Usuário {request.user.email} tem role: {getattr(request.user, 'role', 'NÃO ENCONTRADO')}")
         # BUG CORRIGIDO: só aceitava role=='candidate'. Quem se cadastra
         # informando "situação = aluno" (StudentRegistration.tsx) recebe
         # role='aluno', não 'candidate' — com a checagem antiga, esse aluno
@@ -186,10 +196,10 @@ class JobViewSet(viewsets.ModelViewSet):
         def enviar():
             try:
                 enviar_email_async(subject, message, destinatario)
-            except Exception as e:
-                print(f"Erro e-mail: {e}")
+            except Exception:
+                logger.exception('Falha ao avisar candidato sobre mudança de status')
 
-        threading.Thread(target=enviar).start()
+        threading.Thread(target=enviar, daemon=True).start()
 
         return Response({"message": "Status atualizado!", "novo_status": application.get_status_display()})
 

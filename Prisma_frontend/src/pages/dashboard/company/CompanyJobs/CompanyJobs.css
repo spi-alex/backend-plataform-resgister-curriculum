@@ -1,7 +1,6 @@
 /* ======================== */
 /* BASE */
 /* ======================== */
-
 .company-jobs {
   padding: 32px;
   background: #f9fbfa;
@@ -11,7 +10,6 @@
 /* ======================== */
 /* TOP SECTION */
 /* ======================== */
-
 .jobs-top {
   display: flex;
   justify-content: space-between;
@@ -20,13 +18,11 @@
   flex-wrap: wrap;
   gap: 16px;
 }
-
 .jobs-top h1 {
   font-size: 28px;
   font-weight: 800;
   color: #0f172a;
 }
-
 .jobs-top p {
   color: #64748b;
   margin-top: 6px;
@@ -35,8 +31,7 @@
 /* ======================== */
 /* BUTTON */
 /* ======================== */
-
-.primary-button {
+.company-jobs .primary-button {
   background: #059669;
   color: white;
   border: none;
@@ -50,15 +45,13 @@
   transition: 0.2s ease;
   box-shadow: 0 4px 10px rgba(5, 150, 105, 0.2);
 }
-
-.primary-button:hover {
+.company-jobs .primary-button:hover {
   background: #047857;
 }
 
 /* ======================== */
 /* FILTERS */
 /* ======================== */
-
 .jobs-filters {
   background: white;
   padding: 16px;
@@ -70,8 +63,7 @@
   flex-wrap: wrap;
   align-items: center;
 }
-
-.search-box {
+.company-jobs .search-box {
   flex: 1;
   min-width: 260px;
   display: flex;
@@ -81,20 +73,17 @@
   padding: 8px 12px;
   border-radius: 10px;
 }
-
-.search-box input {
+.company-jobs .search-box input {
   border: none;
   background: transparent;
   outline: none;
   width: 100%;
 }
-
 .filter-group {
   display: flex;
   gap: 12px;
   flex-wrap: wrap;
 }
-
 .filter-group select {
   padding: 8px 12px;
   border-radius: 10px;
@@ -106,23 +95,19 @@
 /* ======================== */
 /* TABLE */
 /* ======================== */
-
 .jobs-table-container {
   background: white;
   border-radius: 16px;
   border: 1px solid #ecfdf5;
   overflow: hidden;
 }
-
 table {
   width: 100%;
   border-collapse: collapse;
 }
-
 thead {
   background: rgba(236, 253, 245, 0.5);
 }
-
 th {
   text-align: left;
   padding: 16px 24px;
@@ -131,34 +116,28 @@ th {
   color: #64748b;
   text-transform: uppercase;
 }
-
 td {
   padding: 20px 24px;
   font-size: 14px;
   color: #475569;
   vertical-align: middle;
 }
-
 td strong {
   display: block;
   font-weight: 700;
   color: #0f172a;
 }
-
 td span {
   font-size: 12px;
   color: #94a3b8;
 }
-
 tbody tr {
   border-top: 1px solid #f1f5f9;
   transition: 0.2s ease;
 }
-
 tbody tr:hover {
   background: rgba(236, 253, 245, 0.2);
 }
-
 .disabled {
   opacity: 0.6;
 }
@@ -166,20 +145,17 @@ tbody tr:hover {
 /* ======================== */
 /* STATUS */
 /* ======================== */
-
-.status {
+.company-jobs .status {
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 12px;
   font-weight: 700;
 }
-
-.status.active {
+.company-jobs .status.active {
   background: #d1fae5;
   color: #065f46;
 }
-
-.status.closed {
+.company-jobs .status.closed {
   background: #f1f5f9;
   color: #475569;
 }
@@ -187,12 +163,10 @@ tbody tr:hover {
 /* ======================== */
 /* ACTIONS */
 /* ======================== */
-
-.actions {
+.company-jobs .actions {
   text-align: right;
 }
-
-.actions button {
+.company-jobs .actions button {
   background: none;
   border: none;
   cursor: pointer;
@@ -202,13 +176,11 @@ tbody tr:hover {
   border-radius: 8px;
   transition: 0.2s;
 }
-
-.actions button:hover {
+.company-jobs .actions button:hover {
   background: #ecfdf5;
   color: #059669;
 }
-
-.actions .danger:hover {
+.company-jobs .actions .danger:hover {
   background: #fee2e2;
   color: #dc2626;
 }
@@ -216,8 +188,7 @@ tbody tr:hover {
 /* ======================== */
 /* PAGINATION */
 /* ======================== */
-
-.pagination {
+.company-jobs .pagination {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -225,12 +196,10 @@ tbody tr:hover {
   border-top: 1px solid #f1f5f9;
   background: rgba(236, 253, 245, 0.3);
 }
-
 .pagination-controls {
   display: flex;
   gap: 8px;
 }
-
 .pagination-controls button {
   background: none;
   border: 1px solid #e2e8f0;
@@ -239,13 +208,11 @@ tbody tr:hover {
   cursor: pointer;
   transition: 0.2s;
 }
-
-.pagination-controls button.active {
+.company-jobs .pagination-controls button.active {
   background: #059669;
   color: white;
   border: none;
 }
-
 .pagination-controls button:hover {
   background: #ecfdf5;
 }

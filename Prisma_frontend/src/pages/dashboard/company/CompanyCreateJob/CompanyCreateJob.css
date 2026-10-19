@@ -1,15 +1,13 @@
 .company-job-create {
   padding: 32px;
-  background: #F9FBFA;
+  background: #f9fbfa;
   min-height: 100%;
 }
-
 .job-create-header h1 {
   font-size: 28px;
   font-weight: 800;
   margin-bottom: 6px;
 }
-
 .job-create-header p {
   color: #64748b;
   margin-bottom: 32px;
@@ -23,7 +21,6 @@
   margin-bottom: 24px;
   overflow: hidden;
 }
-
 .form-card-header {
   padding: 16px 24px;
   border-bottom: 1px solid #f1f5f9;
@@ -32,22 +29,18 @@
   gap: 8px;
   font-weight: 700;
 }
-
 .form-card-body {
   padding: 24px;
 }
-
 .form-group {
   display: flex;
   flex-direction: column;
   margin-bottom: 20px;
 }
-
 .form-group label {
   font-weight: 600;
   margin-bottom: 6px;
 }
-
 input,
 select,
 textarea {
@@ -57,7 +50,6 @@ textarea {
   font-family: inherit;
   outline: none;
 }
-
 input:focus,
 select:focus,
 textarea:focus {
@@ -70,14 +62,12 @@ textarea:focus {
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-
 .radio-group,
 .status-group {
   display: flex;
   gap: 16px;
   margin-top: 8px;
 }
-
 .radio-group label,
 .status-group label {
   font-size: 14px;
@@ -85,19 +75,17 @@ textarea:focus {
 }
 
 /* ACTIONS */
-.form-actions {
+.company-job-create .form-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-top: 32px;
   padding-bottom: 40px;
 }
-
 .right-actions {
   display: flex;
   gap: 16px;
 }
-
 .btn-secondary {
   background: none;
   border: 1px solid #e2e8f0;
@@ -108,7 +96,6 @@ textarea:focus {
   gap: 6px;
   cursor: pointer;
 }
-
 .btn-outline {
   background: #ecfdf5;
   color: #059669;
@@ -118,7 +105,6 @@ textarea:focus {
   font-weight: 600;
   cursor: pointer;
 }
-
 .btn-primary {
   background: #059669;
   color: white;
@@ -130,9 +116,16 @@ textarea:focus {
   align-items: center;
   gap: 6px;
   cursor: pointer;
-  box-shadow: 0 6px 16px rgba(5,150,105,0.25);
+  box-shadow: 0 6px 16px rgba(5, 150, 105, 0.25);
 }
-
 .btn-primary:hover {
   background: #047857;
+}
+/* O <form> da tela: a classe era emitida por CompanyCreateJob.tsx e por
+   UpdateJob.tsx, mas nunca foi definida — os campos ficavam sem
+   espaçamento entre si. */
+.job-create-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }

@@ -1,0 +1,126 @@
+/* Mesma paleta das telas públicas (initial.css / Login.css). */
+.notfound-page {
+  min-height: 100vh;
+  background-color: #b0c2ab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px; /* respiro nas laterais no celular */
+}
+
+.notfound-card {
+  background-color: #12340f;
+  color: #ffffff;
+  /* `width: 420px` fixo (padrão usado nas outras telas) estoura a viewport
+     de um celular de 360 px. `max-width` + 100% encolhe junto. */
+  width: 100%;
+  max-width: 520px;
+  padding: 40px 32px;
+  border-radius: 20px;
+  text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.notfound-code {
+  font-size: 64px;
+  font-weight: bold;
+  line-height: 1;
+  color: #9ed98b;
+  letter-spacing: 4px;
+  margin-bottom: 8px;
+}
+
+.notfound-card h1 {
+  font-size: 24px;
+  margin-bottom: 16px;
+}
+
+.notfound-text {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #dfe9dc;
+  margin-bottom: 8px;
+}
+
+.notfound-path {
+  display: inline-block;
+  max-width: 100%;
+  /* Caminho longo não deve empurrar o card e criar scroll horizontal. */
+  overflow-wrap: anywhere;
+  background-color: rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 2px 6px;
+  font-family: ui-monospace, "Courier New", monospace;
+  font-size: 14px;
+}
+
+.notfound-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin: 28px 0 20px;
+}
+
+.notfound-btn {
+  /* 44 px de altura mínima é o alvo de toque recomendado para dedo. */
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 22px;
+  border-radius: 25px;
+  font-weight: bold;
+  font-size: 15px;
+  text-decoration: none;
+  color: #ffffff;
+  background-color: transparent;
+  border: 2px solid #6f965f;
+  transition:
+    background-color 0.3s ease,
+    transform 0.2s ease;
+}
+
+.notfound-btn:hover {
+  background-color: #5c7f4f;
+  transform: scale(1.02);
+}
+
+.notfound-btn--primary {
+  background-color: #6f965f;
+}
+
+.notfound-help {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #b0c2ab;
+}
+
+.notfound-help a {
+  color: #9ed98b;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.notfound-help a:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 480px) {
+  .notfound-card {
+    padding: 32px 20px;
+  }
+
+  .notfound-code {
+    font-size: 52px;
+  }
+
+  .notfound-actions {
+    /* Empilha: dois botões lado a lado em 360 px ficam apertados demais. */
+    flex-direction: column;
+  }
+
+  .notfound-btn {
+    width: 100%;
+  }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../../../services/api";
+import { useAuth } from "../../../../context/Authcontext";
 import "./CompanyProfile.css";
 import {
   Camera,
@@ -78,6 +79,7 @@ function ProfileField({
 
 export default function CompanyProfile() {
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const [profile, setProfile] = useState<CompanyData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -103,14 +105,11 @@ export default function CompanyProfile() {
     estado: "",
   });
 
-  const handleLogout = () => {
-    localStorage.removeItem("@Prisma:token");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.clear();
-    sessionStorage.clear();
-    window.location.href = "/login?reset=true";
-  };
+  // Usa o logout do contexto, que chama `POST users/logout/` para REVOGAR
+  // os tokens no servidor antes de limpar o navegador. A versão anterior
+  // apagava chaves de localStorage à mão (inclusive duas — "@Prisma:token" e
+  // "token" — que o app nem usa mais) e deixava a sessão viva no backend.
+  const handleLogout = logout;
 
   // 1. CARREGAR PERFIL DO BACK-END
   useEffect(() => {
@@ -160,17 +159,13 @@ export default function CompanyProfile() {
           estado: mappedData.estado || "",
         });
       } catch (error: unknown) {
+        // O tratamento de 401 que existia aqui (chamar handleLogout) saiu:
+        // o interceptor de `services/api.ts` já tenta renovar a sessão pelo
+        // cookie e, só se isso falhar, encerra e manda para /login. Deslogar
+        // aqui derrubaria o usuário num 401 transitório — que é justamente o
+        // caso em que o access token de 30 min acabou de expirar e a
+        // renovação teria funcionado.
         console.error("Erro ao carregar perfil:", error);
-        if (
-          typeof error === "object" &&
-          error !== null &&
-          "response" in error
-        ) {
-          const axiosError = error as { response?: { status: number } };
-          if (axiosError.response?.status === 401) {
-            handleLogout();
-          }
-        }
       } finally {
         setLoading(false);
       }

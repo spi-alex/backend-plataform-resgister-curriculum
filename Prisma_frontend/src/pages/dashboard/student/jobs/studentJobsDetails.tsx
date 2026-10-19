@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import api from "../../../../services/api";
 import type { Job } from "../../../../utils/job";
 import { formatSalary } from "../../../../utils/job";
+import "../../../../styles/jobDetails.css";
 
 export default function StudentJobDetails() {
   const { id } = useParams();

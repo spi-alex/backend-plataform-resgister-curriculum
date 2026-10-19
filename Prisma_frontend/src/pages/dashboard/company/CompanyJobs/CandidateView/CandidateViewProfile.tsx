@@ -6,9 +6,11 @@ import {
   Download,
   Mail,
   GraduationCap,
+  Loader2,
 } from "lucide-react";
 
 import api from "../../../../../services/api";
+import "../../../../../styles/curriculumView.css";
 import { downloadResumePdf } from "../../../../../utils/resume";
 
 interface ResumeDetails {
@@ -110,7 +112,10 @@ export default function CompanyCurriculumView() {
   if (loading) {
     return (
       <main className="cv-container">
-        <p>Carregando candidato...</p>
+        <div className="cv-state">
+          <Loader2 className="cv-spinner" size={32} />
+          <p>Carregando candidato...</p>
+        </div>
       </main>
     );
   }
@@ -118,8 +123,13 @@ export default function CompanyCurriculumView() {
   if (!candidate) {
     return (
       <main className="cv-container">
-        <p>Candidato não encontrado.</p>
-        <button onClick={() => navigate(-1)}>Voltar</button>
+        <div className="cv-state">
+          <p>Candidato não encontrado.</p>
+          <button className="cv-back" onClick={() => navigate(-1)}>
+            <ArrowLeft size={18} />
+            Voltar
+          </button>
+        </div>
       </main>
     );
   }

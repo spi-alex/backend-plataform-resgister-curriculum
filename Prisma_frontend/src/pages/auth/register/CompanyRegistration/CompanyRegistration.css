@@ -1,31 +1,26 @@
-.register-page {
+.register-company .register-page {
   min-height: 100vh;
   background-color: #f0f4f2;
   padding: 60px 20px;
 }
-
-.register-wrapper {
+.register-company .register-wrapper {
   max-width: 1000px;
   margin: 0 auto;
 }
-
-.register-header {
+.register-company .register-header {
   margin-bottom: 40px;
 }
-
-.register-header h1 {
+.register-company .register-header h1 {
   font-size: 32px;
   font-weight: 800;
   color: #0f172a;
   margin-bottom: 8px;
 }
-
-.register-header p {
+.register-company .register-header p {
   color: #64748b;
   font-size: 16px;
 }
-
-.register-card {
+.register-company .register-card {
   background: #ffffff;
   padding: 32px;
   border-radius: 16px;
@@ -34,54 +29,82 @@
   border-top: 6px solid #14532d;
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
 }
-
-.register-card h2 {
+.register-company .register-card h2 {
   font-size: 20px;
   font-weight: 700;
   color: #14532d;
   margin-bottom: 24px;
 }
-
-.form-grid {
+.register-company .register-page .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 20px;
 }
-
-.form-actions {
+.register-company .register-page .form-actions {
   margin-top: 20px;
   display: flex;
   justify-content: flex-end;
 }
-
-.cadastro-button .btn {
+.register-company .register-page .cadastro-button .btn {
   background-color: #14532d;
 }
-
-.cadastro-button .btn:hover {
+.register-company .register-page .cadastro-button .btn:hover {
   background-color: #166534;
 }
-
-.error {
+.register-company .error {
   font-size: 12px;
   color: #dc2626;
   margin-top: 4px;
 }
 
 @media (max-width: 768px) {
-  .form-grid {
+  .register-company .register-page .form-grid {
     grid-template-columns: 1fr;
   }
 }
-.form-actions button {
+.register-company .register-page .form-actions button {
   opacity: 1 !important;
   visibility: visible !important;
   background-color: #004d40; /* Ou a cor principal do seu tema */
   color: white;
   cursor: pointer;
 }
-
-.form-actions button:disabled {
+.register-company .register-page .form-actions button:disabled {
   opacity: 0.7; /* Um pouco menos de brilho se estiver desativado, mas não transparente */
   cursor: not-allowed;
+}
+
+/* ================= CAPTCHA (responsivo) =================
+   A linha do captcha (imagem + campo de código + botão 🔄) era um flex
+   declarado inline no JSX, sem `flex-wrap`. Em 360 px de tela os três itens
+   somavam ~400 px e o botão 🔄 vazava para fora da viewport, criando
+   rolagem horizontal na página de cadastro — e o cadastro é justamente
+   onde o usuário passa mais tempo no celular. */
+.register-company .captcha-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Deixa o botão descer para a linha de baixo em vez de estourar. */
+  flex-wrap: wrap;
+}
+.register-company .captcha-container img {
+  /* A imagem do captcha vem do backend com largura própria; sem isto ela
+     também podia estourar em telas muito estreitas. */
+  max-width: 100%;
+  height: 40px;
+  border-radius: 4px;
+}
+.register-company .register-page .captcha-container .input-wrapper {
+  /* Permite o campo encolher: sem `min-width: 0` um item flex se recusa a
+     ficar menor que o próprio conteúdo. */
+  flex: 1 1 140px;
+  min-width: 0;
+}
+
+/* Regra de senha do backend, exibida abaixo dos dois campos de senha. */
+.register-company .dica-senha {
+  display: block;
+  margin-top: 8px;
+  font-size: 12px;
+  color: #64748b;
 }

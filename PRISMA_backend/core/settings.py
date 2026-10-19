@@ -107,12 +107,22 @@ DATABASES = {
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
 
+# Política de senha. Os validadores já estavam aqui, mas NENHUMA rota da API
+# os chamava: `register_user` usava `create_user()` direto e o reset de senha
+# fazia `set_password()` sem validar. Na prática qualquer senha passava,
+# inclusive um único caractere. Hoje `users/views.py` chama
+# `validate_password()` no cadastro e no reset, então esta lista finalmente
+# vale para o fluxo real.
+#
+# O mínimo subiu de 8 (padrão do Django) para 10 caracteres: o sistema guarda
+# CPF, endereço e currículo completo dos alunos.
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {'min_length': 10},
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -180,29 +190,73 @@ MESSAGE_TAGS = {
 from datetime import timedelta
 
 REST_FRAMEWORK = {
+    # Autenticação JWT com revogação por usuário (users/authentication.py).
+    # A classe padrão do SimpleJWT não tinha como invalidar um token já
+    # emitido: logout, troca de senha e desativação de conta não surtiam
+    # nenhum efeito sobre sessões abertas.
     'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'users.authentication.RevocableJWTAuthentication',
     ),
-    # Limites de tentativas por IP nas rotas AllowAny mais sensíveis (login,
-    # cadastro, reset e confirmação de conta por PIN). Cada rota usa sua
-    # própria throttle class (ver users/throttles.py) com esta 'scope'.
-    # Antes não existia nenhum limite — o PIN de 6 dígitos ficava exposto a
-    # força-bruta sem nenhuma fricção.
+    # Limites de tentativas nas rotas AllowAny mais sensíveis. Duas camadas
+    # (ver users/throttles.py): por IP de origem e por conta alvo — a
+    # segunda existe porque a primeira desaparece quando o atacante troca
+    # de IP.
     'DEFAULT_THROTTLE_RATES': {
+        # por IP
         'login': '10/min',
         'register': '5/min',
         'password_reset': '5/min',
         'password_reset_confirm': '5/min',
         'confirm_registration': '5/min',
+        # por usuário autenticado (a rota exige login, então a chave é o id)
+        'change_password': '5/min',
+        # por conta alvo (sobrevive à troca de IP)
+        'login_account': '10/min',
+        'password_reset_account': '5/min',
+        'password_reset_confirm_account': '5/min',
+        'confirm_registration_account': '5/min',
     },
 }
+
+# Cache explícito. O throttle do DRF guarda os contadores aqui; sem uma
+# entrada `CACHES` declarada, o Django usa LocMemCache — que é POR PROCESSO.
+# Com o servidor rodando em mais de um worker (gunicorn/uwsgi em produção),
+# cada worker teria seu próprio contador e o limite efetivo viraria
+# N x o configurado. Em produção, troque por Redis/Memcached definindo
+# CACHE_URL (ver docs/FUNCIONAMENTO_DO_SISTEMA.md).
+_cache_location = os.getenv('CACHE_LOCATION', '')
+if _cache_location:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+            'LOCATION': _cache_location,
+        }
+    }
+else:
+    CACHES = {
+        'default': {
+            'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+            'LOCATION': 'prisma-throttle',
+        }
+    }
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    # CHECK_REVOCATION é do fluxo de certificado/OIDC do SimpleJWT e não
+    # serve para revogar sessão. A revogação real do projeto está em
+    # users/authentication.py::RevocableJWTAuthentication, que compara o
+    # `iat` do token com `User.sessions_revoked_at`.
     'CHECK_REVOCATION': False,
     'UPDATE_LAST_LOGIN': True,
 }
+
+# Atributo SameSite do cookie de refresh (users/cookies.py). 'Lax' cobre o
+# caso normal — front e back no mesmo site, incluindo o dev local em
+# localhost:5173 / localhost:8000, já que cookies ignoram a porta ao decidir
+# o que é "mesmo site". Um deploy com domínios diferentes precisa de 'None'
+# (que só funciona com Secure, ou seja, HTTPS — o que produção já tem).
+REFRESH_COOKIE_SAMESITE = os.getenv('REFRESH_COOKIE_SAMESITE', 'Lax')
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -210,11 +264,21 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend', # Mantém o padrão
     'users.backends.EmailOrPinBackend',          # Adiciona o seu novo tradutor
 ]
+# Origens do frontend. Antes vinha fixo no código, então subir para produção
+# exigia editar o settings.py — o atalho previsível nessa hora é
+# CORS_ALLOW_ALL_ORIGINS=True, que abre a API para qualquer site. Agora vem
+# do ambiente, com os valores de dev como padrão.
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173", # Porta comum do Vite
-    "http://127.0.0.1:5173",
+    o.strip() for o in os.getenv(
+        'CORS_ALLOWED_ORIGINS',
+        'http://localhost:5173,http://127.0.0.1:5173',
+    ).split(',') if o.strip()
 ]
 
+# Necessário para o navegador enviar/aceitar o cookie httpOnly do refresh
+# token entre o front (:5173) e a API (:8000). Sem isto o cookie é gravado
+# mas nunca reenviado, e o refresh silencioso falharia.
+CORS_ALLOW_CREDENTIALS = True
 
 # IMPORTANTE: Para o React conseguir ler o cabeçalho de autenticação se necessário
 CORS_ALLOW_HEADERS = [
@@ -237,3 +301,31 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_REFERRER_POLICY = 'same-origin'
+    X_FRAME_OPTIONS = 'DENY'
+
+# Logging. O projeto usava `print()` espalhado pelas views — inclusive
+# imprimindo o e-mail do usuário a cada checagem de permissão em
+# jobs/views.py. Além de virar um dump de dados pessoais no stdout do
+# servidor, `print` não tem nível, não tem timestamp e não dá para desligar
+# por ambiente. Tudo migrou para o logging padrão do Django.
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'padrao': {
+            'format': '[{asctime}] {levelname} {name}: {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'padrao',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': os.getenv('LOG_LEVEL', 'INFO'),
+    },
+}

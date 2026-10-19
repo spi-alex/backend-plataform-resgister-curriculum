@@ -1,0 +1,21 @@
+# PRISMA — Plataforma de Registro e Integração de Sistemas para Mercado Acadêmico
+#
+# A área pública do site é só a porta de entrada (home, login, cadastro e
+# recuperação de senha). Tudo sob /dashboard/ exige sessão autenticada e
+# carrega dado pessoal de aluno (CPF, endereço, currículo) — não deve nem
+# ser tentado por crawler, mesmo que a rota devolva a tela de login.
+#
+# Isto NÃO é controle de acesso: quem protege /dashboard/ é o
+# ProtectedRoute no front e a checagem de permissão na API. robots.txt só
+# evita que essas URLs entrem em índice de busca.
+
+User-agent: *
+Allow: /$
+Allow: /login
+Allow: /cadastro
+Disallow: /dashboard/
+Disallow: /confirmar-cadastro
+Disallow: /redefinir-senha
+Disallow: /esqueci-senha
+
+Sitemap: https://SEU-DOMINIO.com.br/sitemap.xml
